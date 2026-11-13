@@ -201,8 +201,10 @@ export function OverlaysPage() {
           <section className="card card-pad" style={{ marginTop: 14 }}>
             <div className="panel-label">Règles</div>
             <p className="muted" style={{ margin: 0, fontSize: "var(--fs-sm)" }}>
-              Les overlays sont des fenêtres Windows ordinaires : aucune injection dans le jeu, aucune lecture de sa mémoire, aucune information cachée. Pas de
-              probabilité de victoire ni d'avantage d'or estimé. Chaque forme d'assistance devra être validée auprès de Riot avant une diffusion publique.
+              Les overlays sont des fenêtres Windows ordinaires : aucune injection dans le jeu, aucune lecture de sa mémoire, aucune information cachée. L'or
+              des équipes et la probabilité de victoire ne sortent que de ce que le jeu publie lui-même (Live Client Data) et des parties collectées par NEX :
+              l'or des autres joueurs n'étant pas publié, il est estimé et marqué d'un « ≈ », et une situation trop peu observée n'affiche aucun pourcentage.
+              Chaque forme d'assistance devra être validée auprès de Riot avant une diffusion publique.
             </p>
           </section>
         </>
