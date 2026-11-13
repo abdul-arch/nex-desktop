@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { skillLabel } from "../domain/fromMatch";
 import { platform } from "../platform";
 import type { Catalog, ChampionBuildDto, LiveSnapshot, WidgetId, WidgetLayout } from "../platform/api";
-import { itemIcon } from "../data/assets";
+import { championIcon, itemIcon } from "../data/assets";
+import { kdiff, kgold, teamGold } from "../domain/livegold";
 import { MayhemLayer } from "./MayhemLayer";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -20,6 +21,9 @@ export function OverlayApp() {
   const [keys, setKeys] = useState<"AZER" | "QWER">("AZER");
   const [build, setBuild] = useState<ChampionBuildDto | null>(null);
   const [now, setNow] = useState(performance.now());
+  // Widgets fermes a la croix : masques jusqu'a la partie suivante, sans toucher
+  // a la disposition enregistree (la page Overlays reste la source de verite).
+  const [closed, setClosed] = useState<WidgetId[]>([]);
 
   useEffect(() => {
     document.documentElement.classList.add("overlay-root");
@@ -44,6 +48,11 @@ export function OverlayApp() {
       offs.forEach((o) => o());
     };
   }, []);
+
+  // Une nouvelle partie reaffiche tout ce qui avait ete ferme a la croix.
+  useEffect(() => {
+    if (!snap.s) setClosed((c) => (c.length === 0 ? c : []));
+  }, [snap.s]);
 
   // Une seule minuterie a 1 Hz, seulement pendant une partie.
   useEffect(() => {
@@ -74,9 +83,13 @@ export function OverlayApp() {
 
   const gameTime = snap.s ? snap.s.gameTime + Math.min(5, Math.max(0, (now - snap.at) / 1000)) : null;
 
+  // En configuration, pas de croix : on y place les widgets, on ne les ferme pas.
+  const shut = (id: WidgetId) => (config ? undefined : () => setClosed((c) => (c.includes(id) ? c : [...c, id])));
+
   const content: Record<WidgetId, React.ReactNode> = {
+    gold: GoldWidget({ snap: snap.s, gameTime, config, onClose: shut("gold") }),
     clock: (
-      <Widget title="NEX">
+      <Widget title="Partie" onClose={shut("clock")}>
         {gameTime === null ? (
           <span className="ov-wait">En attente de partie</span>
         ) : !me ? (
@@ -99,7 +112,7 @@ export function OverlayApp() {
       </Widget>
     ),
     objectives: (
-      <Widget title="Objectifs">
+      <Widget title="Objectifs" onClose={shut("objectives")}>
         {!snap.s || gameTime === null ? (
           <span className="ov-wait">En attente de partie</span>
         ) : snap.s.objectives.length === 0 ? (
@@ -116,11 +129,11 @@ export function OverlayApp() {
     ),
     // Appeles comme des fonctions (sans hooks) : `null` signifie vraiment « rien a afficher »,
     // sans conteneur vide a l'ecran.
-    build: BuildWidget({ build, owned: me?.items ?? [], catalog, version, live: !!snap.s, config }),
-    skills: SkillWidget({ snap: snap.s, build, keys, config }),
+    build: BuildWidget({ build, owned: me?.items ?? [], catalog, version, live: !!snap.s, config, onClose: shut("build") }),
+    skills: SkillWidget({ snap: snap.s, build, keys, config, onClose: shut("skills"), championKey: me?.championKey ?? null, version }),
     trinket:
       snap.s && me && snap.s.activeLevel >= 9 && me.items.includes(3340) ? (
-        <Widget title="Trinket">
+        <Widget title="Trinket" onClose={shut("trinket")}>
           <span>Niveau 9 : passer à la lentille d'oracle ?</span>
         </Widget>
       ) : config ? (
@@ -148,7 +161,7 @@ export function OverlayApp() {
       {layout
         // « Sur une touche » : masque sauf pendant le rappel. En mode configuration tout
         // reste visible, sinon on ne pourrait pas placer un widget qu'on ne voit pas.
-        .filter((w) => w.visible && (config || w.mode !== "hold" || hold))
+        .filter((w) => w.visible && !closed.includes(w.id) && (config || w.mode !== "hold" || hold))
         .map((w) => (
           <Draggable key={w.id} w={w} config={config} onDrop={(nw) => platform.overlayLayoutSet(nw).then(setLayout).catch(() => {})}>
             {content[w.id] ?? (config ? <Widget title={w.id}><span className="ov-wait">Aucune donnée</span></Widget> : null)}
@@ -158,10 +171,19 @@ export function OverlayApp() {
   );
 }
 
-function Widget({ title, children }: { title: string; children: React.ReactNode }) {
+function Widget({ title, onClose, children }: { title: string; onClose?: () => void; children: React.ReactNode }) {
   return (
     <div className="ov-widget-box">
-      <div className="ov-title">{title}</div>
+      <div className="ov-head">
+        <span className="ov-title">{title}</span>
+        {onClose && (
+          // `onPointerDown` arrete le glisser-deposer : sans cela, un clic sur la croix
+          // commencerait un deplacement du widget.
+          <button type="button" className="ov-close" aria-label={`Masquer ${title}`} onPointerDown={(e) => e.stopPropagation()} onClick={onClose}>
+            ✕
+          </button>
+        )}
+      </div>
       {children}
     </div>
   );
@@ -225,6 +247,7 @@ function BuildWidget({
   version,
   live,
   config,
+  onClose,
 }: {
   build: ChampionBuildDto | null;
   owned: number[];
@@ -232,18 +255,19 @@ function BuildWidget({
   version: string | null;
   live: boolean;
   config: boolean;
+  onClose?: () => void;
 }) {
-  if (!live) return <Widget title="Prochain objet"><span className="ov-wait">En attente de partie</span></Widget>;
+  if (!live) return <Widget title="Prochain objet" onClose={onClose}><span className="ov-wait">En attente de partie</span></Widget>;
   const core = build?.coreItems[0]?.ids ?? [];
   if (!build || core.length === 0)
     // En configuration, un widget sans donnee reste visible pour pouvoir etre place.
     return config ? <Widget title="Prochain objet"><span className="ov-wait">Pas de build observé pour ce champion</span></Widget> : null;
   const next = core.find((id) => !owned.includes(id));
-  if (!next) return <Widget title="Prochain objet"><span className="ov-wait">Build principal terminé</span></Widget>;
+  if (!next) return <Widget title="Prochain objet" onClose={onClose}><span className="ov-wait">Build principal terminé</span></Widget>;
   const item = catalog?.items[String(next)];
   const src = itemIcon(version, next);
   return (
-    <Widget title="Prochain objet">
+    <Widget title="Prochain objet" onClose={onClose}>
       <div className="ov-item">
         {src && <img src={src} alt="" width={34} height={34} />}
         <div>
@@ -257,7 +281,23 @@ function BuildWidget({
   );
 }
 
-function SkillWidget({ snap, build, keys, config }: { snap: LiveSnapshot | null; build: ChampionBuildDto | null; keys: "AZER" | "QWER"; config: boolean }) {
+function SkillWidget({
+  snap,
+  build,
+  keys,
+  config,
+  onClose,
+  championKey,
+  version,
+}: {
+  snap: LiveSnapshot | null;
+  build: ChampionBuildDto | null;
+  keys: "AZER" | "QWER";
+  config: boolean;
+  onClose?: () => void;
+  championKey: string | null;
+  version: string | null;
+}) {
   if (!snap || snap.unspentPoints === 0)
     return config ? (
       <Widget title="Compétence">
@@ -274,15 +314,80 @@ function SkillWidget({ snap, build, keys, config }: { snap: LiveSnapshot | null;
     const order = build?.skillPriority[0]?.ids ?? [1, 2, 3];
     pick = order.find((s) => ranks[s - 1] < 5 && ranks[s - 1] < Math.ceil(lvl / 2)) ?? null;
   }
+  // Barre horizontale : portrait du champion, touche a presser, puis les rangs actuels
+  // des quatre competences. Les rangs viennent de l'instantane, jamais d'une estimation.
+  const portrait = championKey ? championIcon(version, championKey) : null;
+  const allRanks: [number, number, number, number] = [q, w, e, r];
   return (
-    <Widget title="Compétence">
-      <div className="ov-row">
-        <span>
-          {snap.unspentPoints} point{snap.unspentPoints > 1 ? "s" : ""} à placer
-        </span>
-        {pick && <kbd className="skill-key">{skillLabel(pick, keys)}</kbd>}
-      </div>
-      <span className="ov-sub">{build?.skillPriority[0] ? "Priorité observée" : "Priorité par défaut"}</span>
-    </Widget>
+    <div className="ov-skill-bar" title={build?.skillPriority[0] ? "Priorité observée" : "Priorité par défaut"}>
+      {portrait ? (
+        <img className="ov-skill-portrait" src={portrait} alt="" width={30} height={30} />
+      ) : (
+        <span className="ov-skill-portrait placeholder" aria-hidden="true" />
+      )}
+      {pick ? (
+        <kbd className="ov-skill-key">{skillLabel(pick, keys)}</kbd>
+      ) : (
+        <span className="ov-sub">{snap.unspentPoints} à placer</span>
+      )}
+      <span className="ov-skill-ranks">
+        {allRanks.map((rank, i) => (
+          <i key={i} className={`ov-pip ${pick === i + 1 ? "next" : rank > 0 ? "on" : ""}`} aria-hidden="true" />
+        ))}
+      </span>
+      {onClose && (
+        <button type="button" className="ov-close" aria-label="Masquer le rappel de compétence" onPointerDown={(e) => e.stopPropagation()} onClick={onClose}>
+          ✕
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Or des deux equipes. La Live Client Data API ne publie que l'or du joueur actif : les
+ * totaux sont donc une ESTIMATION (cf. src/domain/livegold.ts), signalee par « ≈ ».
+ * L'ecart central, lui, est nettement plus fiable : l'or de depart et l'or passif
+ * s'annulent entre les deux equipes.
+ */
+function GoldWidget({
+  snap,
+  gameTime,
+  config,
+  onClose,
+}: {
+  snap: LiveSnapshot | null;
+  gameTime: number | null;
+  config: boolean;
+  onClose?: () => void;
+}) {
+  const g = snap && gameTime !== null ? teamGold(snap.players, gameTime) : null;
+  if (!g)
+    return config ? (
+      <Widget title="Or des équipes" onClose={onClose}>
+        <span className="ov-wait">En attente de partie</span>
+      </Widget>
+    ) : null;
+  const side = g.diff > 0 ? "ahead" : g.diff < 0 ? "behind" : "";
+  return (
+    <div className="ov-gold-box" title="Estimation : l'API locale ne publie pas l'or des autres joueurs">
+      <span className="ov-gold-mine">
+        <span className="ov-approx">≈</span>
+        {kgold(g.mine)}
+      </span>
+      <span className={`ov-gold-diff ${side}`}>
+        {kdiff(g.diff)}
+        <i className="ov-gold-coin" aria-hidden="true" />
+      </span>
+      <span className="ov-gold-theirs">
+        <span className="ov-approx">≈</span>
+        {kgold(g.theirs)}
+      </span>
+      {onClose && (
+        <button type="button" className="ov-close" aria-label="Masquer l'or des équipes" onPointerDown={(e) => e.stopPropagation()} onClick={onClose}>
+          ✕
+        </button>
+      )}
+    </div>
   );
 }

@@ -386,7 +386,7 @@ export interface LiveSnapshot {
   objectives: ObjectiveTimer[];
 }
 
-export type WidgetId = "clock" | "objectives" | "build" | "skills" | "trinket";
+export type WidgetId = "gold" | "clock" | "objectives" | "build" | "skills" | "trinket";
 
 export interface WidgetLayout {
   id: WidgetId;

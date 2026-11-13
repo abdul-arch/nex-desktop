@@ -342,9 +342,22 @@ Et pour chaque overlay : une description, un aperçu avec bascule « Début / Mi
 le mode d'affichage **Toujours / Sur Tab / Sur une touche** avec la touche à choisir, un
 curseur de taille, et une position déplaçable en jeu.
 
-**Où NEX en est.** Cinq widgets (`src/features/overlays/widgets.ts`) : chronomètre et stats,
-timers d'objectifs, prochain objet, rappel de compétence, rappel de trinket, avec un éditeur de
-disposition (`LayoutEditor.tsx`).
+**Où NEX en est.** Six widgets (`src/features/overlays/widgets.ts`) : or des équipes,
+chronomètre et stats, timers d'objectifs, prochain objet, rappel de compétence, rappel de
+trinket, avec un éditeur de disposition (`LayoutEditor.tsx`). Design repris de la page du site
+(cartes sombres translucides, intitulé discret, croix de fermeture jusqu'à la partie suivante).
+
+**Or des équipes : pourquoi c'est une estimation.** La Live Client Data API ne publie l'or que
+du joueur actif. Les totaux sont reconstitués dans `src/domain/livegold.ts` (or de départ, or
+passif, farm, éliminations, assistances) et portent un « ≈ » à l'écran ; primes, plaques,
+tourelles et objectifs ne sont pas comptés. L'écart entre les deux équipes est plus fiable que
+les totaux : l'or de départ et l'or passif s'annulent exactement dans la soustraction.
+
+**Probabilité de victoire : pas construite, et pourquoi.** Elle demande l'état des parties
+*minute par minute* (écart d'or, éliminations, objectifs à l'instant T). La base d'analyse ne
+retient que `gold_diff15` ; aucune image par minute n'est stockée, et la collecte de timelines
+est coupée depuis le 13/11/2026 pour doubler le débit (260 parties/heure contre 177). La
+rétablir et stocker une table « minute → issue » est le préalable.
 
 **À construire, par ordre de valeur.**
 1. **Réglages par widget** : mode d'affichage (toujours / sur une touche), taille, position.
