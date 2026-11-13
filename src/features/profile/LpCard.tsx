@@ -4,7 +4,7 @@
 // le premier releve. Aucune reconstitution du passe, aucune interpolation entre deux releves.
 import { useState } from "react";
 import { useAsync } from "../../app/useAsync";
-import { type LpChange, lpChanges, lpSeries } from "../../domain/lp";
+import { ladderPoints, type LpChange, lpChanges, lpSeries } from "../../domain/lp";
 import { platform } from "../../platform";
 import type { RankSnapshotDto } from "../../platform/api";
 import { LineChart } from "../../ui/LineChart";
@@ -22,7 +22,15 @@ export function LpCard({ puuid, plat }: { puuid: string; plat: string }) {
   const snaps = useAsync<RankSnapshotDto[]>(`ranks:${plat}:${puuid}`, () => platform.rankHistory(plat, puuid), 60_000);
   const all = snaps.data ?? [];
   const changes = lpChanges(all, queue);
-  const latest = [...all].filter((s) => s.queue === queue).sort((a, b) => b.at - a.at)[0];
+  const inQueue = all.filter((s) => s.queue === queue);
+  const latest = [...inQueue].sort((a, b) => b.at - a.at)[0];
+  // Meilleur rang jamais releve par NEX pour cette file. Pas « le record du compte » :
+  // seulement le sommet de ce que l'application a vu passer, d'ou le libelle.
+  const best = inQueue.reduce<RankSnapshotDto | null>((top, s) => {
+    const a = ladderPoints(s.tier, s.division, s.lp);
+    const b = top ? ladderPoints(top.tier, top.division, top.lp) : null;
+    return a !== null && (b === null || a > b) ? s : top;
+  }, null);
 
   return (
     <section className="card card-pad lp-card" aria-label="Historique des LP">
@@ -45,7 +53,7 @@ export function LpCard({ puuid, plat }: { puuid: string; plat: string }) {
       ) : changes.length === 0 ? (
         <Empty latest={latest} />
       ) : (
-        <Chart changes={changes} latest={latest} />
+        <Chart changes={changes} latest={latest} best={best} />
       )}
     </section>
   );
@@ -65,7 +73,7 @@ function Empty({ latest }: { latest: RankSnapshotDto | undefined }) {
   );
 }
 
-function Chart({ changes, latest }: { changes: LpChange[]; latest: RankSnapshotDto | undefined }) {
+function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSnapshotDto | undefined; best: RankSnapshotDto | null }) {
   const { values, net, since } = lpSeries(changes)!;
 
   return (
@@ -85,6 +93,13 @@ function Chart({ changes, latest }: { changes: LpChange[]; latest: RankSnapshotD
         xLabel={(i) => (i === 0 ? shortDate(since) : shortDate(changes[i - 1].at))}
         yFormat={(v) => signed(Math.round(v))}
       />
+      {best && (
+        <div className="lp-head">
+          <span className="muted">Meilleur relevé</span>
+          <span className="num" style={{ fontWeight: 600 }}>{rankText(best)}</span>
+          <span className="muted num">le {shortDate(best.at)}</span>
+        </div>
+      )}
       <p className="muted lp-note">
         Un point par changement observé, pas par partie : si NEX n'a pas lu ce profil entre deux parties, leurs variations sont regroupées.
       </p>

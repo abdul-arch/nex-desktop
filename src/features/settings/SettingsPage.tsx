@@ -218,6 +218,33 @@ export function SettingsPage() {
             officiellement impliquée dans la production ou la gestion des propriétés de Riot Games. Riot Games et toutes les propriétés
             associées sont des marques commerciales ou déposées de Riot Games, Inc.
           </p>
+          <Row label="Diagnostic" hint="Version, plateforme et état du backend, à coller dans un rapport. Ne contient aucune clé ni mot de passe.">
+            <button
+              className="btn btn-sm"
+              onClick={async () => {
+                // Jamais de secret ici : ni cle Riot, ni identifiants, ni jeton du client.
+                const lignes = [
+                  `NEX ${info?.version ?? "?"}${info?.debug ? " (développement)" : ""}`,
+                  `Schéma de base locale : v${info?.schemaVersion ?? "?"}`,
+                  `Score NEX : v${NEX_SCORE_VERSION}`,
+                  `Plateforme : ${platform.capabilities.kind}`,
+                  `Backend : ${backend?.reachable ? "joignable" : "injoignable"}${backend?.version ? ` (v${backend.version})` : ""}`,
+                  `Clé Riot configurée côté backend : ${backend?.riotKeyConfigured ? "oui" : "non"}`,
+                  `Données statiques : ${staticData?.version ?? "non chargées"}${staticDataError ? " — erreur de chargement" : ""}`,
+                  `Compte lié : ${settings.linkedRiotId ? "oui" : "non"}`,
+                  `Relevé le ${new Date().toLocaleString("fr-FR")}`,
+                ];
+                try {
+                  await navigator.clipboard.writeText(lignes.join("\n"));
+                  notify("Diagnostic copié dans le presse-papiers.", "success");
+                } catch {
+                  notify("Copie impossible : ton navigateur a refusé l'accès au presse-papiers.", "error");
+                }
+              }}
+            >
+              Copier le diagnostic
+            </button>
+          </Row>
           <button className="btn btn-ghost btn-sm" onClick={() => platform.openExternal("https://developer.riotgames.com/policies/general")}>
             Règles des développeurs Riot <ArrowUpRight />
           </button>

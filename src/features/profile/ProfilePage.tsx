@@ -239,6 +239,8 @@ function ProfileLoaded({
   const mates = useMemo(() => frequentTeammates(shown, profile.puuid), [shown, profile.puuid]);
   // ±LP par partie, a partir des releves deja enregistres (lecture locale du backend).
   const lp = useMemo(() => attributeLp(summaries, ranks.data ?? []), [summaries, ranks.data]);
+  // Fin de la partie la plus recente chargee, pour « Dernière partie il y a … ».
+  const lastPlayed = summaries.length ? Math.max(...summaries.map((m) => m.startedAt + m.durationSec * 1000)) : null;
   const period = counted.length
     ? `${new Date(Math.min(...counted.map((m) => m.startedAt))).toLocaleDateString("fr-FR")} – ${new Date(Math.max(...counted.map((m) => m.startedAt))).toLocaleDateString("fr-FR")}`
     : null;
@@ -264,6 +266,7 @@ function ProfileLoaded({
           <div className="muted" style={{ marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap" }}>
             <span className="chip">{platformLabel(profile.platform)}</span>
             <span>Niveau {profile.level}</span>
+            {lastPlayed !== null && <span>Dernière partie {timeAgo(lastPlayed)}</span>}
             <span>Actualisé {timeAgo(profile.fetchedAt)}</span>
           </div>
           {refreshError != null && <div className="neg" style={{ fontSize: "var(--fs-xs)", marginTop: 4 }}>Actualisation impossible : {errorMessage(refreshError)}</div>}
