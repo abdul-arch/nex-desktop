@@ -306,7 +306,8 @@ pub async fn stats_matchups(
 
 #[tauri::command]
 pub async fn champion_info(window: Window, state: State<'_, AppState>, key: String) -> AppResult<ddragon::ChampionInfo> {
-    require_main(&window)?;
+    // Lisible aussi par l'overlay : catalogue statique Data Dragon, aucune donnee de joueur.
+    require_main_or_overlay(&window)?;
     let version = ddragon::latest_version(&state.db, &state.http).await?.version;
     let lang = if state.db.with(settings::load)?.language == "en" { "en_US" } else { "fr_FR" };
     ddragon::champion_info(&state.db, &state.http, &version, lang, &key).await

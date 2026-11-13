@@ -10,8 +10,8 @@
 import { skillLabel } from "../domain/fromMatch";
 import { kdiff, kgold, teamGold } from "../domain/livegold";
 import { winProbability } from "../domain/winprob";
-import { itemIcon, championIcon } from "../data/assets";
-import type { Catalog, ChampionBuildDto, LiveSnapshot, WidgetId, WinProbDto } from "../platform/api";
+import { itemIcon, championIcon, spellIcon } from "../data/assets";
+import type { Catalog, ChampionBuildDto, ChampionSpell, LiveSnapshot, WidgetId, WinProbDto } from "../platform/api";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const OBJ_NAMES: Record<string, string> = { dragon: "Dragon", elder: "Dragon ancestral", baron: "Baron Nashor" };
@@ -24,6 +24,8 @@ export interface WidgetInputs {
   version: string | null;
   keys: "AZER" | "QWER";
   build: ChampionBuildDto | null;
+  /** Sorts du champion joue, dans l'ordre Q/W/E/R. Vide tant qu'ils ne sont pas charges. */
+  spells: ChampionSpell[];
   grid: WinProbDto | null;
   /**
    * `true` garde visible un widget qui n'aurait rien a afficher, en montrant son etat
@@ -37,7 +39,7 @@ export interface WidgetInputs {
 
 /** Rendu d'un widget. `null` signifie vraiment « rien a afficher ». */
 export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
-  const { snap, gameTime, catalog, version, keys, build, grid, config } = i;
+  const { snap, gameTime, catalog, version, keys, build, spells, grid, config } = i;
   const me = snap?.players.find((p) => p.isActive) ?? null;
   const shut = i.onClose ? () => i.onClose!(id) : undefined;
   switch (id) {
@@ -89,7 +91,7 @@ export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
     case "build":
       return BuildWidget({ build, owned: me?.items ?? [], catalog, version, live: !!snap, config, onClose: shut });
     case "skills":
-      return SkillWidget({ snap, build, keys, config, onClose: shut, championKey: me?.championKey ?? null, version });
+      return SkillWidget({ snap, build, keys, config, onClose: shut, championKey: me?.championKey ?? null, version, spells });
     case "trinket":
       return snap && me && snap.activeLevel >= 9 && me.items.includes(3340) ? (
         <Widget title="Trinket" onClose={shut}>
@@ -170,6 +172,7 @@ function SkillWidget({
   onClose,
   championKey,
   version,
+  spells,
 }: {
   snap: LiveSnapshot | null;
   build: ChampionBuildDto | null;
@@ -178,6 +181,7 @@ function SkillWidget({
   onClose?: () => void;
   championKey: string | null;
   version: string | null;
+  spells: ChampionSpell[];
 }) {
   if (!snap || snap.unspentPoints === 0)
     return config ? (
@@ -199,6 +203,10 @@ function SkillWidget({
   // des quatre competences. Les rangs viennent de l'instantane, jamais d'une estimation.
   const portrait = championKey ? championIcon(version, championKey) : null;
   const allRanks: [number, number, number, number] = [q, w, e, r];
+  // Icone du sort a monter. `spells` est vide tant que la fiche n'est pas chargee, et
+  // l'icone retombe alors sur la seule touche : jamais de case vide.
+  const spell = pick ? spells[pick - 1] : undefined;
+  const icon = spell ? spellIcon(version, spell.image) : null;
   return (
     <div className="ov-skill-bar" title={build?.skillPriority[0] ? "Priorité observée" : "Priorité par défaut"}>
       {portrait ? (
@@ -207,7 +215,10 @@ function SkillWidget({
         <span className="ov-skill-portrait placeholder" aria-hidden="true" />
       )}
       {pick ? (
-        <kbd className="ov-skill-key">{skillLabel(pick, keys)}</kbd>
+        <span className="ov-skill-pick">
+          {icon && <img className="ov-skill-icon" src={icon} alt="" width={30} height={30} title={spell?.name} />}
+          <kbd className="ov-skill-key">{skillLabel(pick, keys)}</kbd>
+        </span>
       ) : (
         <span className="ov-sub">{snap.unspentPoints} à placer</span>
       )}

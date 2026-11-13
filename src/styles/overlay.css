@@ -257,6 +257,27 @@ html.overlay-root #root {
   height: 30px;
   background: rgba(255, 255, 255, 0.08);
 }
+/* Icone du sort a monter, avec la touche posee dans son coin. */
+.ov-skill-pick {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+.ov-skill-icon {
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  display: block;
+}
+.ov-skill-pick .ov-skill-key {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 16px;
+  padding: 1px 3px;
+  font-size: 10.5px;
+  border: 1px solid rgba(13, 15, 21, 0.9);
+}
 .ov-skill-key {
   min-width: 24px;
   padding: 3px 0;

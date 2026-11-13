@@ -61,7 +61,7 @@ export const WIDGET_INFO: Record<
   skills: {
     name: "Rappel de compétence",
     summary: "Ne laisse jamais un point de compétence dormir.",
-    source: "Live Client Data (niveau, rangs des compétences) + priorité observée",
+    source: "Live Client Data (niveau, rangs des compétences) + priorité observée + fiche du champion (Data Dragon) pour l'icône",
     frequency: "Toutes les 2 s",
     transform: "Points libres = niveau − somme des rangs ; R proposé aux niveaux 6/11/16",
     missing: "Masqué quand aucun point n'est à placer",

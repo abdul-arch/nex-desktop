@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAppState } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
 import { errorMessage, platform } from "../../platform";
-import type { Catalog, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../../platform/api";
+import type { Catalog, ChampionSpell, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../../platform/api";
 import { EXAMPLE_BUILD, EXAMPLE_GRID, EXAMPLE_SNAPSHOT } from "../../overlay/example";
 // Capture de la Faille fournie par l'utilisateur. Decor uniquement : elle ne porte
 // aucune donnee et ne change jamais, contrairement aux apercus qu'elle accueille.
@@ -27,6 +27,7 @@ export function OverlaysPage() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [version, setVersion] = useState<string | null>(null);
   const [grid, setGrid] = useState<WinProbDto | null>(null);
+  const [spells, setSpells] = useState<ChampionSpell[]>([]);
   const caps = platform.capabilities;
 
   useEffect(() => {
@@ -43,6 +44,20 @@ export function OverlaysPage() {
 
   // Une partie en cours remplace les valeurs d'exemple par la realite.
   const live = !!snap;
+  // Sorts du champion de l'apercu, pour que la vignette du rappel de competence montre la
+  // meme icone qu'en jeu.
+  const previewChamp = (snap ?? EXAMPLE_SNAPSHOT).players.find((p) => p.isActive)?.championKey ?? null;
+  useEffect(() => {
+    if (!previewChamp) return;
+    let alive = true;
+    platform
+      .championInfo(previewChamp)
+      .then((c) => alive && setSpells(c.spells))
+      .catch(() => alive && setSpells([]));
+    return () => {
+      alive = false;
+    };
+  }, [previewChamp]);
 
   const preview: WidgetInputs = {
     snap: snap ?? EXAMPLE_SNAPSHOT,
@@ -51,6 +66,7 @@ export function OverlaysPage() {
     version,
     keys: settings.abilityKeys,
     build: EXAMPLE_BUILD,
+    spells,
     grid: live ? grid : EXAMPLE_GRID,
     // Les apercus montrent l'etat d'attente plutot que rien : une carte vide
     // n'apprendrait pas a quoi sert le widget.

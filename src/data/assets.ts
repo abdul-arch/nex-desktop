@@ -33,9 +33,16 @@ export function itemIcon(version: string | null, id: number): string | null {
   return `${DD}/${version}/img/item/${id}.png`;
 }
 
+/**
+ * Icone de sort. Deux formes arrivent ici : le catalogue donne « SummonerFlash », la fiche
+ * d'un champion donne « AhriW.png ». On accepte les deux, et l'extension n'est ajoutee
+ * qu'une fois. La validation porte sur le nom sans extension.
+ */
 export function spellIcon(version: string | null, image: string | undefined): string | null {
-  if (!version || !SAFE_VERSION.test(version) || !image || !ok(image)) return null;
-  return `${DD}/${version}/img/spell/${image}.png`;
+  if (!version || !SAFE_VERSION.test(version) || !image) return null;
+  const name = image.endsWith(".png") ? image.slice(0, -4) : image;
+  if (!ok(name)) return null;
+  return `${DD}/${version}/img/spell/${name}.png`;
 }
 
 const SAFE_PERK = /^perk-images\/[A-Za-z0-9_/.-]+\.png$/;

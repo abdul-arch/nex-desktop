@@ -2,7 +2,7 @@
 // pas de navigation, aucun appel reseau hors catalogue et build du champion joue.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { platform } from "../platform";
-import type { Catalog, ChampionBuildDto, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../platform/api";
+import type { Catalog, ChampionBuildDto, ChampionSpell, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../platform/api";
 import { MayhemLayer } from "./MayhemLayer";
 import { renderWidget } from "./render";
 
@@ -16,6 +16,7 @@ export function OverlayApp() {
   const [keys, setKeys] = useState<"AZER" | "QWER">("AZER");
   const [build, setBuild] = useState<ChampionBuildDto | null>(null);
   const [grid, setGrid] = useState<WinProbDto | null>(null);
+  const [spells, setSpells] = useState<ChampionSpell[]>([]);
   const [now, setNow] = useState(performance.now());
   // Widgets fermes a la croix : masques jusqu'a la partie suivante, sans toucher
   // a la disposition enregistree (la page Overlays reste la source de verite).
@@ -79,10 +80,28 @@ export function OverlayApp() {
     };
   }, [champId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sorts du champion joue : charges une fois par champion, pour l'icone du rappel de
+  // competence. Donnees statiques Data Dragon, aucune information de partie.
+  const champKey = me?.championKey ?? null;
+  useEffect(() => {
+    if (!champKey) {
+      setSpells([]);
+      return;
+    }
+    let alive = true;
+    platform
+      .championInfo(champKey)
+      .then((c) => alive && setSpells(c.spells))
+      .catch(() => alive && setSpells([]));
+    return () => {
+      alive = false;
+    };
+  }, [champKey]);
+
   const gameTime = snap.s ? snap.s.gameTime + Math.min(5, Math.max(0, (now - snap.at) / 1000)) : null;
 
   // En configuration, pas de croix : on y place les widgets, on ne les ferme pas.
-  const inputs = { snap: snap.s, gameTime, catalog, version, keys, build, grid, config, onClose: config ? undefined : (id: WidgetId) => setClosed((c) => (c.includes(id) ? c : [...c, id])) };
+  const inputs = { snap: snap.s, gameTime, catalog, version, keys, build, spells, grid, config, onClose: config ? undefined : (id: WidgetId) => setClosed((c) => (c.includes(id) ? c : [...c, id])) };
 
   return (
     <div className={`ov-surface ${config ? "config" : ""}`}>
