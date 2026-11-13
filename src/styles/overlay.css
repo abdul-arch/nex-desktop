@@ -510,6 +510,196 @@ html.overlay-root #root {
   font-size: var(--fs-xs);
 }
 
+/* Page Overlays : grille de cartes (apercu, intitule, interrupteur, roue dentee). */
+.ov-group {
+  margin-bottom: 18px;
+}
+.ov-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+  grid-auto-rows: 210px;
+  gap: 12px;
+  margin-top: 8px;
+}
+.ov-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(63, 120, 90, 0.22), transparent 68%),
+    linear-gradient(180deg, #11141b, #0b0d12);
+}
+/* Carte vedette : deux rangees et deux colonnes, de quoi montrer le widget en entier. */
+.ov-card.featured {
+  grid-row: span 2;
+  grid-column: span 2;
+}
+.ov-card.off {
+  opacity: 0.55;
+}
+.ov-card.off .ov-card-preview {
+  filter: grayscale(1);
+}
+/* L'apercu ne reagit a rien : c'est une vignette, pas un widget utilisable. */
+.ov-card-preview {
+  position: absolute;
+  /* 74 px : la hauteur du pied (intitule + une ligne). En dessous, l'apercu passerait
+     sous le texte. */
+  inset: 0 0 74px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  /* Le haut est reserve a l'etiquette « exemple » et a la roue dentee : sans cette
+     marge, les widgets larges passent dessous. */
+  padding: 34px 10px 10px;
+}
+/* Les widgets font jusqu'a 268 px de large : on les reduit pour qu'ils tiennent dans la
+   vignette sans jamais deborder sur le pied ni sur les bords. */
+.ov-card-scale {
+  transform: scale(0.84);
+  transform-origin: center;
+}
+.ov-card.featured .ov-card-scale {
+  transform: scale(1);
+}
+.ov-card-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(10, 11, 15, 0.8);
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+}
+.ov-card-gear {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  border: 0;
+  background: rgba(10, 11, 15, 0.7);
+  color: var(--dim);
+  cursor: pointer;
+}
+.ov-card-gear:hover {
+  background: rgba(10, 11, 15, 0.95);
+  color: var(--text);
+}
+.ov-card-gear svg {
+  width: 15px;
+  height: 15px;
+}
+.ov-card-foot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  background: linear-gradient(180deg, transparent, rgba(8, 9, 12, 0.92) 42%);
+}
+.ov-card-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.ov-card-text b {
+  font-size: var(--fs-md);
+}
+.ov-card-text span {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: 1.35;
+}
+/* Interrupteur : le seul reglage directement sur la carte. */
+.ov-switch {
+  flex: none;
+  margin-left: auto;
+  cursor: pointer;
+}
+.ov-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.ov-switch i {
+  display: block;
+  width: 34px;
+  height: 19px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  position: relative;
+  transition: background 120ms ease;
+}
+.ov-switch i::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: transform 120ms ease, background 120ms ease;
+}
+.ov-switch input:checked + i {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.ov-switch input:checked + i::after {
+  transform: translateX(15px);
+  background: #fff;
+}
+.ov-switch input:focus-visible + i {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+/* Panneau de reglages d'un widget. */
+.ov-panel-back {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(6, 7, 10, 0.55);
+  display: flex;
+  justify-content: flex-end;
+}
+.ov-panel {
+  width: min(420px, 100%);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--panel);
+  border-left: 1px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+}
+.ov-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ov-panel-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  align-content: start;
+}
+
 /* Import vers le client */
 .import-choice {
   display: grid;

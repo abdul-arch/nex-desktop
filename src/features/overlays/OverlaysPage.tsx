@@ -1,9 +1,11 @@
-import { LayoutGrid, Move, RotateCcw, X } from "lucide-react";
+import { LayoutGrid, Move, RotateCcw, Settings2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAppState } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
 import { errorMessage, platform } from "../../platform";
-import type { WidgetLayout } from "../../platform/api";
+import type { Catalog, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../../platform/api";
+import { EXAMPLE_BUILD, EXAMPLE_GRID, EXAMPLE_SNAPSHOT } from "../../overlay/example";
+import { renderWidget, type WidgetInputs } from "../../overlay/render";
 import { EmptyState } from "../../ui/primitives";
 import { LayoutEditor } from "./LayoutEditor";
 import { WIDGET_INFO } from "./widgets";
@@ -15,6 +17,13 @@ export function OverlaysPage() {
   // Raccourcis qu'une autre application retenait au demarrage : sans cela, la fonction
   // concernee paraissait simplement cassee.
   const [failed, setFailed] = useState<string[]>([]);
+  // Widget dont le panneau de reglages est ouvert.
+  const [panel, setPanel] = useState<WidgetId | null>(null);
+  // Apercus : instantane reel en partie, valeurs d'exemple sinon (carte marquee).
+  const [snap, setSnap] = useState<LiveSnapshot | null>(null);
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [version, setVersion] = useState<string | null>(null);
+  const [grid, setGrid] = useState<WinProbDto | null>(null);
   const caps = platform.capabilities;
 
   useEffect(() => {
@@ -22,8 +31,27 @@ export function OverlaysPage() {
     platform.overlayLayoutGet().then(setLayout).catch(() => {});
     platform.appInfo().then((i) => setFailed(i.failedShortcuts ?? [])).catch(() => {});
     platform.on<WidgetLayout[]>("overlay://layout", setLayout).then((o) => (off = o));
+    platform.staticCatalog().then(setCatalog).catch(() => {});
+    platform.staticDataVersion().then((v) => setVersion(v.version)).catch(() => {});
+    platform.statsWinprob().then(setGrid).catch(() => setGrid(null));
+    platform.liveSnapshot().then(setSnap).catch(() => setSnap(null));
     return () => off?.();
   }, []);
+
+  // Une partie en cours remplace les valeurs d'exemple par la realite.
+  const live = !!snap;
+  const preview: WidgetInputs = {
+    snap: snap ?? EXAMPLE_SNAPSHOT,
+    gameTime: (snap ?? EXAMPLE_SNAPSHOT).gameTime,
+    catalog,
+    version,
+    keys: settings.abilityKeys,
+    build: EXAMPLE_BUILD,
+    grid: live ? grid : EXAMPLE_GRID,
+    // Les apercus montrent l'etat d'attente plutot que rien : une carte vide
+    // n'apprendrait pas a quoi sert le widget.
+    config: true,
+  };
 
   const update = async (w: WidgetLayout) => {
     setLayout((l) => l.map((x) => (x.id === w.id ? w : x)));
@@ -101,54 +129,33 @@ export function OverlaysPage() {
             {client.state?.stage === "in_game" ? "partie en cours" : "aucune partie"}.
           </p>
 
-          <div className="widget-list">
-            {layout.map((w) => {
-              const info = WIDGET_INFO[w.id];
-              return (
-                <section key={w.id} className="card card-pad widget-row">
-                  <div className="widget-head">
-                    <label className="check" style={{ fontSize: "var(--fs-md)", color: "var(--text)", fontWeight: 600 }}>
-                      <input type="checkbox" checked={w.visible} onChange={(e) => update({ ...w, visible: e.target.checked })} /> {info.name}
-                    </label>
-                    <span className="spacer" />
-                    <label className="check">
-                      <input type="checkbox" checked={w.locked} onChange={(e) => update({ ...w, locked: e.target.checked })} /> Verrouillé
-                    </label>
-                    <label className="field">
-                      <span>Échelle {Math.round(w.scale * 100)} %</span>
-                      <input type="range" min={0.5} max={2} step={0.05} value={w.scale} onChange={(e) => update({ ...w, scale: Number(e.target.value) })} />
-                    </label>
-                    <label className="field">
-                      <span>Opacité {Math.round(w.opacity * 100)} %</span>
-                      <input type="range" min={0.2} max={1} step={0.05} value={w.opacity} onChange={(e) => update({ ...w, opacity: Number(e.target.value) })} />
-                    </label>
-                    <label className="field">
-                      <span>Affichage</span>
-                      <select className="select" value={w.mode} onChange={(e) => update({ ...w, mode: e.target.value as WidgetLayout["mode"] })}>
-                        <option value="always">Toujours</option>
-                        <option value="hold">Sur une touche</option>
-                      </select>
-                    </label>
-                  </div>
-                  {w.mode === "hold" && (
-                    <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "4px 0 0" }}>
-                      Visible uniquement tant que <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd> est maintenue.
-                    </p>
-                  )}
-                  <dl className="kv widget-kv">
-                    <dt>Source</dt>
-                    <dd>{info.source}</dd>
-                    <dt>Fréquence</dt>
-                    <dd>{info.frequency}</dd>
-                    <dt>Calcul</dt>
-                    <dd>{info.transform}</dd>
-                    <dt>Si absent</dt>
-                    <dd>{info.missing}</dd>
-                  </dl>
-                </section>
-              );
-            })}
-          </div>
+          {GROUPS.map(([label, ids]) => (
+            <section key={label} className="ov-group">
+              <div className="panel-label">{label}</div>
+              <div className="ov-cards">
+                {ids
+                  .map((id) => layout.find((w) => w.id === id))
+                  .filter((w): w is WidgetLayout => !!w)
+                  .map((w) => (
+                    <WidgetCard
+                      key={w.id}
+                      w={w}
+                      inputs={preview}
+                      featured={w.id === "winprob"}
+                      live={live}
+                      onToggle={(visible) => update({ ...w, visible })}
+                      onOpen={() => setPanel(w.id)}
+                    />
+                  ))}
+              </div>
+            </section>
+          ))}
+          {panel &&
+            (() => {
+              const w = layout.find((x) => x.id === panel);
+              return w ? <WidgetPanel w={w} onChange={update} onClose={() => setPanel(null)} /> : null;
+            })()}
+
           <section className="card card-pad" style={{ marginTop: 14 }}>
             <div className="panel-label">Badges ARAM Mayhem</div>
             <p className="muted" style={{ margin: "0 0 8px", fontSize: "var(--fs-sm)" }}>
@@ -212,3 +219,116 @@ export function OverlaysPage() {
     </div>
   );
 }
+
+/** Regroupement des cartes, dans l'ordre d'affichage. */
+const GROUPS: [string, WidgetId[]][] = [
+  ["En jeu", ["gold", "winprob", "clock", "objectives"]],
+  ["Rappels", ["build", "skills", "trinket"]],
+];
+
+/**
+ * Carte d'un overlay : apercu du vrai widget, intitule, une ligne d'usage, un
+ * interrupteur, et une roue dentee pour le reste. L'apercu est inerte (aucun clic ne le
+ * traverse) et mis a l'echelle pour tenir dans la vignette.
+ */
+function WidgetCard({
+  w,
+  inputs,
+  featured,
+  live,
+  onToggle,
+  onOpen,
+}: {
+  w: WidgetLayout;
+  inputs: WidgetInputs;
+  featured: boolean;
+  live: boolean;
+  onToggle: (visible: boolean) => void;
+  onOpen: () => void;
+}) {
+  const info = WIDGET_INFO[w.id];
+  return (
+    <article className={`ov-card ${featured ? "featured" : ""} ${w.visible ? "" : "off"}`}>
+      <div className="ov-card-preview" aria-hidden="true">
+        <div className="ov-card-scale">{renderWidget(w.id, inputs)}</div>
+      </div>
+      {!live && <span className="ov-card-tag">exemple</span>}
+      <button type="button" className="ov-card-gear" onClick={onOpen} aria-label={`Réglages de ${info.name}`} title={`Réglages de ${info.name}`}>
+        <Settings2 aria-hidden="true" />
+      </button>
+      <div className="ov-card-foot">
+        <div className="ov-card-text">
+          <b>{info.name}</b>
+          <span>{info.summary}</span>
+        </div>
+        <label className="ov-switch" title={w.visible ? "Masquer cet overlay" : "Afficher cet overlay"}>
+          <input type="checkbox" checked={w.visible} onChange={(e) => onToggle(e.target.checked)} />
+          <i aria-hidden="true" />
+          <span className="sr-only">{info.name}</span>
+        </label>
+      </div>
+    </article>
+  );
+}
+
+/**
+ * Panneau de reglages d'un widget. Il porte tout ce qui ne tient pas sur la carte, y
+ * compris les quatre champs de provenance : d'ou vient la donnee, a quelle frequence,
+ * comment elle est calculee, et ce qui s'affiche quand elle manque.
+ */
+function WidgetPanel({ w, onChange, onClose }: { w: WidgetLayout; onChange: (w: WidgetLayout) => void; onClose: () => void }) {
+  const info = WIDGET_INFO[w.id];
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return (
+    <div className="ov-panel-back" onClick={onClose}>
+      <aside className="ov-panel" role="dialog" aria-label={`Réglages de ${info.name}`} onClick={(e) => e.stopPropagation()}>
+        <div className="ov-panel-head">
+          <b>{info.name}</b>
+          <button type="button" className="btn btn-sm btn-ghost" onClick={onClose} aria-label="Fermer">
+            <X aria-hidden="true" />
+          </button>
+        </div>
+        <div className="ov-panel-body">
+          <label className="field">
+            <span>Échelle {Math.round(w.scale * 100)} %</span>
+            <input type="range" min={0.5} max={2} step={0.05} value={w.scale} onChange={(e) => onChange({ ...w, scale: Number(e.target.value) })} />
+          </label>
+          <label className="field">
+            <span>Opacité {Math.round(w.opacity * 100)} %</span>
+            <input type="range" min={0.2} max={1} step={0.05} value={w.opacity} onChange={(e) => onChange({ ...w, opacity: Number(e.target.value) })} />
+          </label>
+          <label className="field">
+            <span>Affichage</span>
+            <select className="select" value={w.mode} onChange={(e) => onChange({ ...w, mode: e.target.value as WidgetLayout["mode"] })}>
+              <option value="always">Toujours</option>
+              <option value="hold">Sur une touche</option>
+            </select>
+          </label>
+          {w.mode === "hold" && (
+            <p className="muted" style={{ margin: 0, fontSize: "var(--fs-xs)" }}>
+              Visible uniquement tant que <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd> est maintenue.
+            </p>
+          )}
+          <label className="check">
+            <input type="checkbox" checked={w.locked} onChange={(e) => onChange({ ...w, locked: e.target.checked })} /> Verrouillé (non déplaçable en jeu)
+          </label>
+          <dl className="kv widget-kv">
+            <dt>Source</dt>
+            <dd>{info.source}</dd>
+            <dt>Fréquence</dt>
+            <dd>{info.frequency}</dd>
+            <dt>Calcul</dt>
+            <dd>{info.transform}</dd>
+            <dt>Si absent</dt>
+            <dd>{info.missing}</dd>
+          </dl>
+        </div>
+      </aside>
+    </div>
+  );
+}
+

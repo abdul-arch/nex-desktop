@@ -1,5 +1,11 @@
 # Prompt — refaire la page Overlays en grille de cartes
 
+> **Construit le 13/11/2026.** Ce document reste la référence de ce qui a été décidé.
+> Écarts assumés : l'aperçu est mis à l'échelle à 0,84 (1 pour la carte vedette) parce que
+> les widgets font jusqu'à 268 px de large ; la carte vedette occupe deux rangées **et**
+> deux colonnes. Un drapeau `?desktop`, limité au développement, permet d'ouvrir dans un
+> navigateur les pages réservées à l'application desktop.
+
 ## Ce qu'on veut obtenir
 
 La page de réglages des overlays doit ressembler à la référence : **une grille de cartes,

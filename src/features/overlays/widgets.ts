@@ -1,9 +1,22 @@
 import type { WidgetId } from "../../platform/api";
 
 /** Fiche de chaque widget : source, frequence, transformation, comportement si absent. */
-export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequency: string; transform: string; missing: string }> = {
+export const WIDGET_INFO: Record<
+  WidgetId,
+  {
+    name: string;
+    /** Une ligne orientee usage, affichee sur la carte. Distincte de `transform`,
+     *  qui explique le calcul et vit dans le panneau de reglages. */
+    summary: string;
+    source: string;
+    frequency: string;
+    transform: string;
+    missing: string;
+  }
+> = {
   gold: {
     name: "Or des équipes",
+    summary: "Qui est le plus riche, d'un coup d'œil.",
     source: "Live Client Data (CS, éliminations, assistances et poste des dix joueurs)",
     frequency: "Recalculé à chaque instantané, toutes les 2 s",
     transform:
@@ -13,6 +26,7 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
   },
   winprob: {
     name: "Probabilité de victoire",
+    summary: "Tes chances de gagner, mesurées sur les parties collectées.",
     source: "Grille observée par NEX (backend) + écart d'or estimé de la partie en cours",
     frequency: "Grille chargée une fois par partie ; case relue à chaque instantané",
     transform:
@@ -22,6 +36,7 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
   },
   clock: {
     name: "Chronomètre et stats",
+    summary: "Ton CS et ton KDA sans ouvrir le tableau des scores.",
     source: "Live Client Data (gameTime, scores du joueur)",
     frequency: "Instantané toutes les 2 s, chronomètre interpolé à la seconde",
     transform: "CS/min = CS / minutes de jeu ; KDA = (É + A) / max(1, M)",
@@ -29,6 +44,7 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
   },
   objectives: {
     name: "Timers d'objectifs",
+    summary: "Dragon et baron : ne sois plus pris de court.",
     source: "Live Client Data (événements DragonKill, BaronKill annoncés à tous)",
     frequency: "Recalculé à chaque instantané",
     transform: "Premier dragon 5:00 ; réapparitions : dragon +5:00, Ancien +6:00, baron +6:00 après l'événement",
@@ -36,6 +52,7 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
   },
   build: {
     name: "Prochain objet",
+    summary: "Le prochain objet à acheter, d'après les parties observées.",
     source: "Build observé NEX (backend) pour ton champion + inventaire visible",
     frequency: "Build chargé une fois par partie ; inventaire toutes les 2 s",
     transform: "Premier objet du build principal pas encore possédé",
@@ -43,6 +60,7 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
   },
   skills: {
     name: "Rappel de compétence",
+    summary: "Ne laisse jamais un point de compétence dormir.",
     source: "Live Client Data (niveau, rangs des compétences) + priorité observée",
     frequency: "Toutes les 2 s",
     transform: "Points libres = niveau − somme des rangs ; R proposé aux niveaux 6/11/16",
@@ -50,6 +68,7 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
   },
   trinket: {
     name: "Rappel de trinket",
+    summary: "Pense à passer à la lentille au niveau 9.",
     source: "Live Client Data (objet en emplacement 7, niveau)",
     frequency: "Toutes les 2 s",
     transform: "Rappel au niveau 9+ si le totem invisible est encore équipé",

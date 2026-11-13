@@ -2,6 +2,7 @@
 // Pas de client local, pas de fenetre native ; preferences en memoire + localStorage.
 import { parseRiotId } from "../domain/riotId";
 import { DEFAULT_SETTINGS, type Platform, type SavedPlayer, type Settings } from "./contracts";
+import { EXAMPLE_SNAPSHOT } from "../overlay/example";
 import type {
   LeaderboardDto,
   LiveGameDto,
@@ -24,8 +25,6 @@ import type {
   MayhemDataset,
   MayhemRateResult,
   MayhemRulesInfo,
-  LivePlayer,
-  LiveSnapshot,
   WinProbDto,
 } from "./api";
 
@@ -153,51 +152,16 @@ const defaultOverlayLayout = (): WidgetLayout[] => [
   { id: "skills", x: 0.01, y: 0.62, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "trinket", x: 0.8, y: 0.55, scale: 1, opacity: 0.92, visible: false, locked: false, mode: "always" as const },
 ];
+/**
+ * Drapeau d'URL reserve au developpement. `typeof location` est verifie parce que ce
+ * module est aussi charge par les tests, qui tournent sans navigateur : sans cette garde,
+ * une lecture a l'import fait echouer la suite entiere.
+ */
+const devFlag = (name: string) => import.meta.env.DEV && typeof location !== "undefined" && new URLSearchParams(location.search).has(name);
+
 let overlayLayout = defaultOverlayLayout();
 
-/** Instantane fictif pour l'apercu `?overlay&demo` en developpement. */
-function demoSnapshot(): LiveSnapshot {
-  const p = (riotId: string, championKey: string, team: string, position: string, kills: number, deaths: number, assists: number, cs: number, extra: Partial<LivePlayer> = {}): LivePlayer => ({
-    riotId,
-    championKey,
-    team,
-    position,
-    level: 11,
-    kills,
-    deaths,
-    assists,
-    cs,
-    items: [],
-    isDead: false,
-    respawnTimer: 0,
-    isActive: false,
-    ...extra,
-  });
-  return {
-    gameTime: 900,
-    gameMode: "CLASSIC",
-    activeLevel: 12,
-    abilities: [5, 3, 2, 1],
-    unspentPoints: 1,
-    currentGold: 740,
-    players: [
-      p("Demo#EUW", "Ahri", "ORDER", "MIDDLE", 4, 1, 3, 128, { isActive: true, items: [3340], level: 12 }),
-      p("Allie1#EUW", "Jinx", "ORDER", "BOTTOM", 3, 2, 2, 140),
-      p("Allie2#EUW", "Leona", "ORDER", "UTILITY", 0, 2, 6, 16),
-      p("Allie3#EUW", "Jarvan IV", "ORDER", "JUNGLE", 2, 2, 5, 88),
-      p("Allie4#EUW", "Garen", "ORDER", "TOP", 2, 2, 1, 118),
-      p("Rival1#EUW", "Zed", "CHAOS", "MIDDLE", 2, 4, 2, 112, { isDead: true, respawnTimer: 21 }),
-      p("Rival2#EUW", "Caitlyn", "CHAOS", "BOTTOM", 4, 2, 2, 131),
-      p("Rival3#EUW", "Thresh", "CHAOS", "UTILITY", 0, 3, 6, 18),
-      p("Rival4#EUW", "Lee Sin", "CHAOS", "JUNGLE", 1, 3, 4, 78),
-      p("Rival5#EUW", "Sett", "CHAOS", "TOP", 2, 2, 3, 104),
-    ],
-    objectives: [
-      { kind: "dragon", nextSpawn: 1000, source: "event" },
-      { kind: "baron", nextSpawn: 1200, source: "first_spawn" },
-    ],
-  };
-}
+
 const desktopOnly = { code: "unavailable", message: "L'assistant ARAM Mayhem nécessite l'application desktop (moteur et lecture locaux)." };
 
 export function createWebPlatform(): Platform {
@@ -222,7 +186,15 @@ export function createWebPlatform(): Platform {
   };
 
   return {
-    capabilities: { kind: "web", windowControls: false, localClient: false, persistentStorage: true },
+    // `?desktop` en developpement seulement : permet d'ouvrir dans un navigateur les pages
+    // reservees a l'application desktop, pour travailler leur mise en page. Les appels IPC
+    // qu'elles declenchent echouent proprement avec « necessite l'application desktop ».
+    capabilities: {
+      kind: "web",
+      windowControls: devFlag("desktop"),
+      localClient: false,
+      persistentStorage: true,
+    },
     appInfo: async () => ({ name: "NEX", version: "web", schemaVersion: 0, debug: true, failedShortcuts: [] }),
     getSettings: async () => ({ ...store.settings }),
     setSetting: async (key, value) => {
@@ -300,7 +272,7 @@ export function createWebPlatform(): Platform {
     // En developpement seulement, `?demo` fournit un instantane fictif pour regarder le
     // rendu des widgets hors partie. Jamais present dans l'application : la version
     // desktop passe par l'adaptateur Tauri, et `import.meta.env.DEV` est faux en build.
-    liveSnapshot: async () => (import.meta.env.DEV && new URLSearchParams(location.search).has("demo") ? demoSnapshot() : null),
+    liveSnapshot: async () => (devFlag("demo") ? EXAMPLE_SNAPSHOT : null),
     importRunes: async () => {
       throw { code: "unavailable", message: "L'import vers le client nécessite l'application desktop." };
     },
@@ -313,7 +285,7 @@ export function createWebPlatform(): Platform {
     overlayClose: async () => {},
     overlaySetMode: async () => {},
     // Apercu de developpement : `?overlay&config` ouvre le mode configuration.
-    overlayMode: async () => import.meta.env.DEV && new URLSearchParams(location.search).has("config"),
+    overlayMode: async () => devFlag("config"),
     // Disposition en memoire (miroir de persistence/overlay.rs) : apercu et essais en developpement.
     overlayLayoutGet: async () => overlayLayout.map((w) => ({ ...w })),
     overlayLayoutSet: async (w) => {

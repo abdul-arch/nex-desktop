@@ -1,0 +1,98 @@
+// Jeu de valeurs d'exemple pour les apercus hors partie.
+//
+// POURQUOI CE FICHIER EXISTE : la page Overlays montre chaque widget tel qu'il
+// s'affichera en jeu. En partie, l'apercu utilise l'instantane reel. Hors partie, il faut
+// bien lui donner quelque chose — et ce quelque chose doit etre reconnaissable comme un
+// exemple, jamais confondu avec une vraie partie.
+//
+// REGLE : toute surface qui rend un widget a partir de ces valeurs porte la mention
+// « exemple ». Ces valeurs ne doivent jamais atteindre la fenetre d'overlay en partie :
+// OverlayApp ne les importe pas, il ne lit que `platform.liveSnapshot()`.
+
+import type { ChampionBuildDto, LivePlayer, LiveSnapshot, WinProbDto } from "../platform/api";
+
+const p = (
+  riotId: string,
+  championKey: string,
+  team: string,
+  position: string,
+  kills: number,
+  deaths: number,
+  assists: number,
+  cs: number,
+  extra: Partial<LivePlayer> = {},
+): LivePlayer => ({
+  riotId,
+  championKey,
+  team,
+  position,
+  level: 11,
+  kills,
+  deaths,
+  assists,
+  cs,
+  items: [],
+  isDead: false,
+  respawnTimer: 0,
+  isActive: false,
+  ...extra,
+});
+
+/**
+ * Une 15e minute plausible, avec un ecart d'or qui tombe dans une case reellement
+ * observee de la grille de probabilite (+2K) : l'apercu montre ainsi un widget peuple
+ * plutot que son etat « pas assez observe ».
+ */
+export const EXAMPLE_SNAPSHOT: LiveSnapshot = {
+  gameTime: 900,
+  gameMode: "CLASSIC",
+  activeLevel: 12,
+  abilities: [5, 3, 2, 1],
+  unspentPoints: 1,
+  currentGold: 740,
+  players: [
+    p("Exemple#EUW", "Ahri", "ORDER", "MIDDLE", 4, 1, 3, 128, { isActive: true, items: [3340], level: 12 }),
+    p("Allie1#EUW", "Jinx", "ORDER", "BOTTOM", 3, 2, 2, 140),
+    p("Allie2#EUW", "Leona", "ORDER", "UTILITY", 0, 2, 6, 16),
+    p("Allie3#EUW", "Jarvan IV", "ORDER", "JUNGLE", 2, 2, 5, 88),
+    p("Allie4#EUW", "Garen", "ORDER", "TOP", 2, 2, 1, 118),
+    p("Rival1#EUW", "Zed", "CHAOS", "MIDDLE", 2, 4, 2, 112, { isDead: true, respawnTimer: 21 }),
+    p("Rival2#EUW", "Caitlyn", "CHAOS", "BOTTOM", 4, 2, 2, 131),
+    p("Rival3#EUW", "Thresh", "CHAOS", "UTILITY", 0, 3, 6, 18),
+    p("Rival4#EUW", "Lee Sin", "CHAOS", "JUNGLE", 1, 3, 4, 78),
+    p("Rival5#EUW", "Sett", "CHAOS", "TOP", 2, 2, 3, 104),
+  ],
+  objectives: [
+    { kind: "dragon", nextSpawn: 1000, source: "event" },
+    { kind: "baron", nextSpawn: 1200, source: "first_spawn" },
+  ],
+};
+
+const scope = { patch: "all", platform: "all", queueId: 420, tier: "all", matches: 0 };
+
+/** Build d'exemple : Chapeau de Rabadon (3089) en premier objet du build principal. */
+export const EXAMPLE_BUILD: ChampionBuildDto = {
+  scope,
+  championId: 103,
+  position: "MIDDLE",
+  games: 0,
+  wins: 0,
+  positions: [],
+  runePages: [],
+  spells: [],
+  startItems: [],
+  coreItems: [{ ids: [3089, 3157, 3135], games: 240, wins: 132 }],
+  boots: [],
+  lateItems: [],
+  skillPriority: [{ ids: [2, 1, 3], games: 240, wins: 132 }],
+  skillStart: [],
+  timelineGames: 240,
+};
+
+/** Grille d'exemple : une seule case, celle que l'instantane d'exemple vise. */
+export const EXAMPLE_GRID: WinProbDto = {
+  cells: [{ minute: 15, bucket: 2, games: 135, wins: 92 }],
+  observations: 0,
+  minGames: 60,
+  maxBucket: 10,
+};
