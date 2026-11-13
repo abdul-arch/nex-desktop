@@ -50,7 +50,7 @@ export function Sidebar() {
       <div className="brand" data-tauri-drag-region>
         <NexLogo />
         <div className="brand-text" data-tauri-drag-region>
-          <strong>NEX</strong>
+          <strong>nex.lol</strong>
           <span>App v{info?.version ?? "…"}</span>
         </div>
       </div>

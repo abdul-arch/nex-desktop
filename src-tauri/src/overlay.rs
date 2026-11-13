@@ -20,7 +20,7 @@ pub fn open(app: &AppHandle, config: bool) -> AppResult<()> {
         Some(w) => w,
         None => {
             let w = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html".into()))
-                .title("NEX Overlay")
+                .title("nex.lol — overlay")
                 .transparent(true)
                 .decorations(false)
                 .always_on_top(true)

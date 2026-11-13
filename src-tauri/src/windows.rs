@@ -19,7 +19,7 @@ pub fn open_main(app: &AppHandle) -> tauri::Result<()> {
         return Ok(());
     }
     WebviewWindowBuilder::new(app, MAIN, WebviewUrl::App("index.html".into()))
-        .title("NEX")
+        .title("nex.lol")
         .inner_size(1440.0, 900.0)
         .min_inner_size(1024.0, 640.0)
         .center()
