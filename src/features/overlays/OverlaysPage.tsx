@@ -1,5 +1,5 @@
 import { LayoutGrid, Move, RotateCcw, Settings2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppState } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
 import { errorMessage, platform } from "../../platform";
@@ -41,9 +41,20 @@ export function OverlaysPage() {
 
   // Une partie en cours remplace les valeurs d'exemple par la realite.
   const live = !!snap;
-  // Illustration de fond : le champion joue, sinon celui de l'instantane d'exemple. Un
-  // seul champion pour toutes les cartes, donc une seule image a telecharger.
-  const artKey = (snap ?? EXAMPLE_SNAPSHOT).players.find((p) => p.isActive)?.championKey ?? null;
+  // Illustration de fond : un champion different par carte, pris dans la partie en cours
+  // (ceux qui y sont vraiment) ou dans l'instantane d'exemple. La carte vedette recoit le
+  // champion joue ; les autres se partagent le reste de la composition.
+  const artOf = useMemo(() => {
+    const source = snap ?? EXAMPLE_SNAPSHOT;
+    const mine = source.players.find((p) => p.isActive)?.championKey ?? null;
+    const others = source.players.filter((p) => !p.isActive).map((p) => p.championKey);
+    const map = new Map<WidgetId, string | null>();
+    let i = 0;
+    for (const id of CARD_ORDER) {
+      map.set(id, id === "winprob" && mine ? mine : (others[i++ % others.length] ?? mine));
+    }
+    return map;
+  }, [snap]);
   const preview: WidgetInputs = {
     snap: snap ?? EXAMPLE_SNAPSHOT,
     gameTime: (snap ?? EXAMPLE_SNAPSHOT).gameTime,
@@ -147,7 +158,7 @@ export function OverlaysPage() {
                       inputs={preview}
                       featured={w.id === "winprob"}
                       live={live}
-                      artKey={artKey}
+                      artKey={artOf.get(w.id) ?? null}
                       onToggle={(visible) => update({ ...w, visible })}
                       onOpen={() => setPanel(w.id)}
                     />
@@ -230,6 +241,9 @@ const GROUPS: [string, WidgetId[]][] = [
   ["En jeu", ["gold", "winprob", "clock", "objectives"]],
   ["Rappels", ["build", "skills", "trinket"]],
 ];
+
+/** Ordre a plat des cartes, pour repartir les illustrations sans doublon. */
+const CARD_ORDER: WidgetId[] = GROUPS.flatMap(([, ids]) => ids);
 
 /**
  * Carte d'un overlay : apercu du vrai widget, intitule, une ligne d'usage, un

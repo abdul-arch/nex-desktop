@@ -5,6 +5,11 @@
 > titre 11,9 à 16,5 · ligne de description 6,0 · étiquette « exemple » 5,2 à 6,0.
 > La roue dentée tombait à **2,4**, sous le seuil de 3 d'un élément non textuel : son fond
 > est passé de 0,7 à 0,88 et sa couleur de `--dim` à `--muted`, ce qui la remonte à 5,6.
+>
+> **Écart au prompt, demandé après coup :** un champion *différent* par carte, pris dans la
+> composition de la partie (ou de l'exemple), au lieu d'un seul champion partout. On perd
+> l'image unique en cache, on gagne en vie. Contrôle refait sur les sept illustrations
+> réelles : pire titre 13,4 · pire ligne 6,1 · pire étiquette 5,2 · pire roue 5,6.
 
 ## Le problème
 

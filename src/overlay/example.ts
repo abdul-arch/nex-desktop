@@ -11,6 +11,9 @@
 
 import type { ChampionBuildDto, LivePlayer, LiveSnapshot, WinProbDto } from "../platform/api";
 
+// Les cles de champion sont celles de Data Dragon (« JarvanIV », pas « Jarvan IV ») :
+// c'est ce que le client local fournit, derive de `rawChampionName`, et c'est ce que
+// les URL d'illustration acceptent.
 const p = (
   riotId: string,
   championKey: string,
@@ -54,12 +57,12 @@ export const EXAMPLE_SNAPSHOT: LiveSnapshot = {
     p("Exemple#EUW", "Ahri", "ORDER", "MIDDLE", 4, 1, 3, 128, { isActive: true, items: [3340], level: 12 }),
     p("Allie1#EUW", "Jinx", "ORDER", "BOTTOM", 3, 2, 2, 140),
     p("Allie2#EUW", "Leona", "ORDER", "UTILITY", 0, 2, 6, 16),
-    p("Allie3#EUW", "Jarvan IV", "ORDER", "JUNGLE", 2, 2, 5, 88),
+    p("Allie3#EUW", "JarvanIV", "ORDER", "JUNGLE", 2, 2, 5, 88),
     p("Allie4#EUW", "Garen", "ORDER", "TOP", 2, 2, 1, 118),
     p("Rival1#EUW", "Zed", "CHAOS", "MIDDLE", 2, 4, 2, 112, { isDead: true, respawnTimer: 21 }),
     p("Rival2#EUW", "Caitlyn", "CHAOS", "BOTTOM", 4, 2, 2, 131),
     p("Rival3#EUW", "Thresh", "CHAOS", "UTILITY", 0, 3, 6, 18),
-    p("Rival4#EUW", "Lee Sin", "CHAOS", "JUNGLE", 1, 3, 4, 78),
+    p("Rival4#EUW", "LeeSin", "CHAOS", "JUNGLE", 1, 3, 4, 78),
     p("Rival5#EUW", "Sett", "CHAOS", "TOP", 2, 2, 3, 104),
   ],
   objectives: [
