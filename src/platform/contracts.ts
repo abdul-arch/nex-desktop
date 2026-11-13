@@ -137,6 +137,7 @@ export interface Platform {
   clientState(): Promise<ClientState>;
   champSelect(): Promise<ChampSelectState | null>;
   loadingRoster(): Promise<LoadingRosterDto | null>;
+  ranksBulk(platform: string, puuids: string[]): Promise<PlayerRanksDto[]>;
   liveSnapshot(): Promise<LiveSnapshot | null>;
   importRunes(input: RunePageInput): Promise<ImportOutcome>;
   importItems(input: ItemSetInput): Promise<ImportOutcome>;
@@ -275,5 +276,6 @@ import type {
   TimelineDto,
   WinProbDto,
   LoadingRosterDto,
+  PlayerRanksDto,
 } from "./api";
 export type * from "./api";

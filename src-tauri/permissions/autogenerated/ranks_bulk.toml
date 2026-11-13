@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-ranks-bulk"
+description = "Enables the ranks_bulk command without any pre-configured scope."
+commands.allow = ["ranks_bulk"]
+
+[[permission]]
+identifier = "deny-ranks-bulk"
+description = "Denies the ranks_bulk command without any pre-configured scope."
+commands.deny = ["ranks_bulk"]

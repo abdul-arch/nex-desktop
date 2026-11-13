@@ -65,7 +65,13 @@ cartes. Les widgets de partie s'effacent tant que le panneau est à l'écran.
 ### 2. Rang, LP, victoires et défaites — 10 appels
 
 `league-v4/entries/by-puuid/{puuid}`, un par joueur. À 20 requêtes/seconde, c'est une
-demi-seconde de budget. Ça donne le tier, la division, les LP, les `wins`/`losses` de la
+demi-seconde de budget.
+
+**Fait le 13/11/2026** : route backend `/v1/ranks/{platform}?puuids=…` (au plus dix, en
+cache deux minutes comme la lecture de profil), commande `ranks_bulk`, affichage sur les
+cartes. Un joueur dont la lecture échoue est absent de la réponse et n'empêche pas les
+autres d'être servis. Le panneau distingue **trois** états, sans jamais en substituer un à
+un autre : « rang en lecture… », « rang indisponible » et « non classé ». Ça donne le tier, la division, les LP, les `wins`/`losses` de la
 saison — donc `117 LP` et `52.9% (245W-218L)`.
 
 Ça donne aussi `hotStreak`, **mais seulement un booléen** : « en série » ou non. Le

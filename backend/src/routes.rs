@@ -29,6 +29,7 @@ pub fn router(state: Shared) -> Router {
         .route("/v1/match/{platform}/{match_id}", get(match_one))
         .route("/v1/match/{platform}/{match_id}/timeline", get(timeline))
         .route("/v1/ranks/{platform}/{puuid}", get(rank_history))
+        .route("/v1/ranks/{platform}", get(ranks_bulk))
         .route("/v1/leaderboard/{platform}", get(leaderboard))
         .route("/v1/pro/teams", get(crate::pro::get_teams))
         .route("/v1/live/{platform}/{puuid}", get(live_game))
@@ -416,6 +417,40 @@ struct RanksQuery {
 
 /// Releves de rang deja observes par NEX pour ce joueur. Aucune requete Riot : ce que le
 /// backend n'a pas vu passer n'existe pas, et la liste est alors vide.
+#[derive(Deserialize)]
+struct BulkRanksQuery {
+    /// Liste de PUUID separes par des virgules.
+    #[serde(default)]
+    puuids: String,
+}
+
+/// Rangs de plusieurs joueurs d'un coup (ecran de chargement : les dix de la partie).
+///
+/// Un appel Riot par joueur, mis en cache deux minutes comme la lecture de profil. Un
+/// joueur dont la lecture echoue est simplement absent de la reponse : l'appelant affiche
+/// alors « rang indisponible » plutot qu'un rang invente, et un seul joueur en echec ne
+/// prive pas les neuf autres de leur rang.
+async fn ranks_bulk(State(s): State<Shared>, Path(platform): Path<String>, Query(q): Query<BulkRanksQuery>) -> BResult<Json<Vec<PlayerRanksDto>>> {
+    let platform = Platform::parse(&platform)?;
+    let host = platform.host();
+    let mut puuids: Vec<&str> = q.puuids.split(',').map(str::trim).filter(|p| !p.is_empty()).collect();
+    puuids.dedup();
+    if puuids.is_empty() || puuids.len() > 10 {
+        return Err(BackendError::InvalidInput("entre 1 et 10 PUUID attendus".into()));
+    }
+    for p in &puuids {
+        validate_puuid(p)?;
+    }
+    let mut out = Vec::with_capacity(puuids.len());
+    for puuid in puuids {
+        let Ok(url) = RiotClient::url(&host, &["lol", "league", "v4", "entries", "by-puuid", puuid], &[]) else { continue };
+        let Ok(body) = s.riot.get_cached(&format!("league:{host}:{puuid}"), url, Freshness::Ttl(Duration::from_secs(120)), false).await else { continue };
+        let Ok(ranks) = normalize::league_entries(&body) else { continue };
+        out.push(PlayerRanksDto { puuid: puuid.to_string(), ranks });
+    }
+    Ok(Json(out))
+}
+
 async fn rank_history(State(s): State<Shared>, Path((platform, puuid)): Path<(String, String)>, Query(q): Query<RanksQuery>) -> BResult<Json<Vec<RankSnapshotDto>>> {
     let platform = Platform::parse(&platform)?;
     validate_puuid(&puuid)?;

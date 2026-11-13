@@ -39,6 +39,7 @@ export function createDesktopPlatform(): Platform {
     clientState: () => invoke("client_state"),
     champSelect: () => invoke("client_champ_select"),
     loadingRoster: () => invoke("loading_roster"),
+    ranksBulk: (platform, puuids) => invoke("ranks_bulk", { platform, puuids }),
     liveSnapshot: () => invoke("live_snapshot"),
     importRunes: (input) => invoke("lcu_import_runes", { input }),
     importItems: (input) => invoke("lcu_import_items", { input }),

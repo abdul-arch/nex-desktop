@@ -371,6 +371,26 @@ html.overlay-root #root {
   color: var(--accent-strong);
   letter-spacing: 0.06em;
 }
+.ld-card {
+  width: 104px;
+}
+.ld-rank {
+  display: grid;
+  gap: 1px;
+  font-size: 10.5px;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.ld-rank b {
+  font-size: 11px;
+}
+.ld-rank.muted {
+  color: var(--muted);
+}
+.ld-wl {
+  color: var(--muted);
+  font-size: 10px;
+}
 
 /* Assistant ARAM Mayhem : badges sur les cartes (aucune interaction, clics traverses). */
 .mh-layer {

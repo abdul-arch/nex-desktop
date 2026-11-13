@@ -2,7 +2,7 @@
 // Pas de client local, pas de fenetre native ; preferences en memoire + localStorage.
 import { parseRiotId } from "../domain/riotId";
 import { DEFAULT_SETTINGS, type Platform, type SavedPlayer, type Settings } from "./contracts";
-import { EXAMPLE_ROSTER, EXAMPLE_SNAPSHOT } from "../overlay/example";
+import { EXAMPLE_RANKS, EXAMPLE_ROSTER, EXAMPLE_SNAPSHOT } from "../overlay/example";
 import type {
   LeaderboardDto,
   LiveGameDto,
@@ -26,6 +26,7 @@ import type {
   MayhemRateResult,
   MayhemRulesInfo,
   WinProbDto,
+  PlayerRanksDto,
 } from "./api";
 
 /** Equivalent web de la commande Rust : texte brut, balises retirees via DOMParser (jamais injecte). */
@@ -272,6 +273,8 @@ export function createWebPlatform(): Platform {
     // Aucun client local depuis un navigateur ; `?roster` montre une composition
     // d'exemple en developpement, pour travailler le panneau de chargement.
     loadingRoster: async () => (devFlag("roster") ? EXAMPLE_ROSTER : null),
+    ranksBulk: async (platform, puuids) =>
+      devFlag("roster") ? EXAMPLE_RANKS : api<PlayerRanksDto[]>(["v1", "ranks", platform], { puuids: puuids.join(",") }),
     // En developpement seulement, `?demo` fournit un instantane fictif pour regarder le
     // rendu des widgets hors partie. Jamais present dans l'application : la version
     // desktop passe par l'adaptateur Tauri, et `import.meta.env.DEV` est faux en build.

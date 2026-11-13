@@ -27,6 +27,7 @@ const COMMANDS: &[&str] = &[
     "client_state",
     "client_champ_select",
     "loading_roster",
+    "ranks_bulk",
     "live_snapshot",
     "lcu_import_runes",
     "lcu_import_items",

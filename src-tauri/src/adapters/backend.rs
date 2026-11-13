@@ -174,6 +174,13 @@ pub async fn stats_baselines(http: &reqwest::Client, base: &str, p: &StatsParams
     get_json(http, base, &["v1", "stats", "baselines"], &p.query(), Duration::from_secs(20)).await
 }
 
+/// Rangs de plusieurs joueurs d'un coup (ecran de chargement). Un joueur dont la lecture
+/// echoue est absent de la reponse, les autres sont servis quand meme.
+pub async fn ranks_bulk(http: &reqwest::Client, base: &str, platform: &str, puuids: &[String]) -> AppResult<Vec<nex_domain::api::PlayerRanksDto>> {
+    let joined = puuids.join(",");
+    get_json(http, base, &["v1", "ranks", platform], &[("puuids", joined)], Duration::from_secs(25)).await
+}
+
 /// Grille « probabilite de victoire ». Sans parametre : la grille est globale.
 pub async fn stats_winprob(http: &reqwest::Client, base: &str) -> AppResult<nex_domain::api::WinProbDto> {
     get_json(http, base, &["v1", "stats", "winprob"], &[], Duration::from_secs(20)).await

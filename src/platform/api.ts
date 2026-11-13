@@ -408,6 +408,13 @@ export interface WinProbDto {
   maxBucket: number;
 }
 
+/** Rangs d'un joueur, pour une lecture groupee (miroir de PlayerRanksDto). */
+export interface PlayerRanksDto {
+  puuid: string;
+  /** Vide quand le joueur n'est classé dans aucune file. */
+  ranks: RankDto[];
+}
+
 /** Un joueur de la partie en chargement (miroir de LoadingPlayerDto). */
 export interface LoadingPlayerDto {
   puuid: string;

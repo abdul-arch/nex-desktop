@@ -361,6 +361,17 @@ pub async fn loading_roster(window: Window, svc: State<'_, ClientService>) -> Ap
     Ok(crate::client::model::loading_roster(&session, &me))
 }
 
+/// Rangs des joueurs de la partie en chargement. Un appel Riot par joueur, par le
+/// backend, qui les met en cache deux minutes. Au plus dix a la fois.
+#[tauri::command]
+pub async fn ranks_bulk(window: Window, state: State<'_, AppState>, platform: String, puuids: Vec<String>) -> AppResult<Vec<nex_domain::api::PlayerRanksDto>> {
+    require_main_or_overlay(&window)?;
+    if puuids.is_empty() || puuids.len() > 10 {
+        return Err(AppError::InvalidInput("entre 1 et 10 joueurs attendus".into()));
+    }
+    backend::ranks_bulk(&state.http, &backend_url(&state)?, &platform, &puuids).await
+}
+
 fn connected_lcu(svc: &ClientService) -> AppResult<crate::adapters::lcu::Lcu> {
     svc.lcu().ok_or_else(|| AppError::Unavailable("client League non connecté : lance le client puis réessaie".into()))
 }

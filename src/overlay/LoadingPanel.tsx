@@ -9,7 +9,8 @@
 import { useEffect, useState } from "react";
 import { championIcon } from "../data/assets";
 import { platform } from "../platform";
-import type { Catalog, LoadingRosterDto } from "../platform/api";
+import type { Catalog, LoadingRosterDto, PlayerRanksDto, RankDto } from "../platform/api";
+import { TIER_COLOR, tierText } from "../features/leaderboards/shared";
 
 const QUEUES: Record<number, string> = {
   420: "Classée Solo/Duo",
@@ -25,6 +26,9 @@ const QUEUES: Record<number, string> = {
 /** Interrogation du client tant qu'aucune composition n'est publiee. */
 const POLL_MS = 2000;
 
+/** File dont on montre le rang : celle de la partie, Solo/Duo par defaut. */
+const rankedQueue = (queueId: number) => (queueId === 440 ? "RANKED_FLEX_SR" : "RANKED_SOLO_5x5");
+
 export function LoadingPanel({
   catalog,
   version,
@@ -38,6 +42,9 @@ export function LoadingPanel({
   onActive: (active: boolean) => void;
 }) {
   const [roster, setRoster] = useState<LoadingRosterDto | null>(null);
+  // `null` tant que la lecture des rangs n'a pas abouti : on ne sait pas encore, ce qui
+  // n'est pas la meme chose que « non classe ».
+  const [ranks, setRanks] = useState<PlayerRanksDto[] | null>(null);
   useEffect(() => onActive(!!roster), [roster, onActive]);
 
   useEffect(() => {
@@ -60,7 +67,37 @@ export function LoadingPanel({
     };
   }, [live]);
 
+  // Rangs : un appel groupe par partie, pas a chaque sondage du client.
+  const gameId = roster?.gameId ?? null;
+  useEffect(() => {
+    if (!roster) {
+      setRanks(null);
+      return;
+    }
+    let alive = true;
+    setRanks(null);
+    platform
+      .getSettings()
+      .then((st) => platform.ranksBulk(st.linkedPlatform || st.defaultPlatform, roster.players.map((p) => p.puuid)))
+      .then((r) => alive && setRanks(r))
+      .catch(() => alive && setRanks([]));
+    return () => {
+      alive = false;
+    };
+    // Une nouvelle partie relance la lecture ; les sondages suivants ne la relancent pas.
+  }, [gameId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!roster) return null;
+  const queue = rankedQueue(roster.queueId);
+  // Trois etats distincts, et aucun ne doit en remplacer un autre : pas encore lu,
+  // lecture echouee pour ce joueur, et classe ou non dans la file de la partie.
+  const rankOf = (puuid: string): RankState => {
+    if (!ranks) return { state: "loading" };
+    const e = ranks.find((r) => r.puuid === puuid);
+    if (!e) return { state: "unavailable" };
+    const entry = e.ranks.find((r) => r.queue === queue);
+    return entry ? { state: "ok", entry } : { state: "unranked" };
+  };
   const name = (id?: number) => (id && catalog ? catalog.champions[String(id)] : undefined);
   const team = (n: number) => roster.players.filter((p) => p.team === n);
 
@@ -80,11 +117,34 @@ export function LoadingPanel({
                 {src ? <img src={src} alt="" width={44} height={44} /> : <span className="ld-slot" aria-hidden="true" />}
                 <b>{c?.name ?? "Champion non publié"}</b>
                 {p.isMe && <span className="ld-me">toi</span>}
+                <Rank s={rankOf(p.puuid)} />
               </div>
             );
           })}
         </div>
       ))}
     </div>
+  );
+}
+
+type RankState = { state: "loading" } | { state: "unavailable" } | { state: "unranked" } | { state: "ok"; entry: RankDto };
+
+/** Rang d'un joueur, avec ses trois etats d'ignorance distincts. */
+function Rank({ s }: { s: RankState }) {
+  if (s.state === "loading") return <span className="ld-rank muted">rang en lecture…</span>;
+  if (s.state === "unavailable") return <span className="ld-rank muted">rang indisponible</span>;
+  if (s.state === "unranked") return <span className="ld-rank muted">non classé</span>;
+  const entry = s.entry;
+  const total = entry.wins + entry.losses;
+  return (
+    <span className="ld-rank">
+      <b style={{ color: TIER_COLOR[entry.tier] ?? "var(--text)" }}>{tierText(entry.tier, entry.division)}</b>
+      <span>{entry.lp} LP</span>
+      {total > 0 && (
+        <span className="ld-wl">
+          {Math.round((entry.wins / total) * 100)} % · {entry.wins}V-{entry.losses}D
+        </span>
+      )}
+    </span>
   );
 }

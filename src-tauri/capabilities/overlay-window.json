@@ -14,6 +14,7 @@
     "allow-stats-winprob",
     "allow-live-snapshot",
     "allow-loading-roster",
+    "allow-ranks-bulk",
     "allow-overlay-set-mode",
     "allow-overlay-mode",
     "allow-overlay-layout-get",

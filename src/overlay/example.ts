@@ -9,7 +9,7 @@
 // « exemple ». Ces valeurs ne doivent jamais atteindre la fenetre d'overlay en partie :
 // OverlayApp ne les importe pas, il ne lit que `platform.liveSnapshot()`.
 
-import type { ChampionBuildDto, LivePlayer, LiveSnapshot, LoadingRosterDto, WinProbDto } from "../platform/api";
+import type { ChampionBuildDto, LivePlayer, LiveSnapshot, LoadingRosterDto, PlayerRanksDto, WinProbDto } from "../platform/api";
 
 // Les cles de champion sont celles de Data Dragon (« JarvanIV », pas « Jarvan IV ») :
 // c'est ce que le client local fournit, derive de `rawChampionName`, et c'est ce que
@@ -120,3 +120,19 @@ export const EXAMPLE_ROSTER: LoadingRosterDto = {
     { puuid: "y5", team: 2, championId: 875, isMe: false },
   ],
 };
+
+/**
+ * Rangs d'exemple pour l'apercu. « y5 » est volontairement absent et « y4 » sans rang
+ * classe : l'apercu montre ainsi les trois etats, y compris ceux qu'on ne connait pas.
+ */
+export const EXAMPLE_RANKS: PlayerRanksDto[] = [
+  { puuid: "x1", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "MASTER", division: null, lp: 60, wins: 197, losses: 176 }] },
+  { puuid: "x2", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "DIAMOND", division: "I", lp: 42, wins: 88, losses: 71 }] },
+  { puuid: "x3", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "EMERALD", division: "II", lp: 14, wins: 55, losses: 50 }] },
+  { puuid: "x4", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "DIAMOND", division: "IV", lp: 7, wins: 120, losses: 118 }] },
+  { puuid: "x5", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "PLATINUM", division: "I", lp: 73, wins: 31, losses: 24 }] },
+  { puuid: "y1", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "GRANDMASTER", division: null, lp: 412, wins: 310, losses: 264 }] },
+  { puuid: "y2", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "MASTER", division: null, lp: 128, wins: 204, losses: 181 }] },
+  { puuid: "y3", ranks: [{ queue: "RANKED_SOLO_5x5", tier: "DIAMOND", division: "III", lp: 55, wins: 76, losses: 70 }] },
+  { puuid: "y4", ranks: [{ queue: "RANKED_FLEX_SR", tier: "GOLD", division: "II", lp: 20, wins: 12, losses: 9 }] },
+];

@@ -264,6 +264,15 @@ pub struct StatsScopeDto {
     pub matches: u32,
 }
 
+/// Rangs d'un joueur, pour une lecture groupee (ecran de chargement).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PlayerRanksDto {
+    pub puuid: String,
+    /// Vide quand le joueur n'est classe dans aucune file.
+    pub ranks: Vec<RankDto>,
+}
+
 /// Un joueur de la partie en cours de chargement, tel que le client local le publie.
 ///
 /// Le client ne donne ici que l'identifiant et le champion : ni pseudo, ni poste, ni sorts
