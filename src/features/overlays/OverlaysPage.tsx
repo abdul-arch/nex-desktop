@@ -1,11 +1,13 @@
 import { LayoutGrid, Move, RotateCcw, Settings2, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppState } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
 import { errorMessage, platform } from "../../platform";
 import type { Catalog, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../../platform/api";
 import { EXAMPLE_BUILD, EXAMPLE_GRID, EXAMPLE_SNAPSHOT } from "../../overlay/example";
-import { championLoading, championSplash } from "../../data/assets";
+// Capture de la Faille fournie par l'utilisateur. Decor uniquement : elle ne porte
+// aucune donnee et ne change jamais, contrairement aux apercus qu'elle accueille.
+import riftArt from "../../assets/rift.webp";
 import { renderWidget, type WidgetInputs } from "../../overlay/render";
 import { EmptyState } from "../../ui/primitives";
 import { LayoutEditor } from "./LayoutEditor";
@@ -41,20 +43,7 @@ export function OverlaysPage() {
 
   // Une partie en cours remplace les valeurs d'exemple par la realite.
   const live = !!snap;
-  // Illustration de fond : un champion different par carte, pris dans la partie en cours
-  // (ceux qui y sont vraiment) ou dans l'instantane d'exemple. La carte vedette recoit le
-  // champion joue ; les autres se partagent le reste de la composition.
-  const artOf = useMemo(() => {
-    const source = snap ?? EXAMPLE_SNAPSHOT;
-    const mine = source.players.find((p) => p.isActive)?.championKey ?? null;
-    const others = source.players.filter((p) => !p.isActive).map((p) => p.championKey);
-    const map = new Map<WidgetId, string | null>();
-    let i = 0;
-    for (const id of CARD_ORDER) {
-      map.set(id, id === "winprob" && mine ? mine : (others[i++ % others.length] ?? mine));
-    }
-    return map;
-  }, [snap]);
+
   const preview: WidgetInputs = {
     snap: snap ?? EXAMPLE_SNAPSHOT,
     gameTime: (snap ?? EXAMPLE_SNAPSHOT).gameTime,
@@ -158,7 +147,7 @@ export function OverlaysPage() {
                       inputs={preview}
                       featured={w.id === "winprob"}
                       live={live}
-                      artKey={artOf.get(w.id) ?? null}
+
                       onToggle={(visible) => update({ ...w, visible })}
                       onOpen={() => setPanel(w.id)}
                     />
@@ -242,8 +231,20 @@ const GROUPS: [string, WidgetId[]][] = [
   ["Rappels", ["build", "skills", "trinket"]],
 ];
 
-/** Ordre a plat des cartes, pour repartir les illustrations sans doublon. */
-const CARD_ORDER: WidgetId[] = GROUPS.flatMap(([, ids]) => ids);
+/**
+ * Cadrage de la capture par carte. Une seule image a charger, mais chaque carte en montre
+ * une autre zone : l'echoppe, la fontaine, les tonneaux, le dallage. C'est ce qui evite
+ * sept vignettes identiques.
+ */
+const CARD_FRAMING: Record<WidgetId, string> = {
+  gold: "18% 28%",
+  winprob: "52% 42%",
+  clock: "64% 52%",
+  objectives: "88% 14%",
+  build: "13% 74%",
+  skills: "40% 88%",
+  trinket: "78% 76%",
+};
 
 /**
  * Carte d'un overlay : apercu du vrai widget, intitule, une ligne d'usage, un
@@ -255,7 +256,6 @@ function WidgetCard({
   inputs,
   featured,
   live,
-  artKey,
   onToggle,
   onOpen,
 }: {
@@ -263,17 +263,13 @@ function WidgetCard({
   inputs: WidgetInputs;
   featured: boolean;
   live: boolean;
-  artKey: string | null;
   onToggle: (visible: boolean) => void;
   onOpen: () => void;
 }) {
   const info = WIDGET_INFO[w.id];
-  // Splash (1215x717) seulement pour la carte vedette, assez grande pour en profiter ;
-  // l'illustration verticale, bien plus legere, pour les autres.
-  const art = artKey ? (featured ? championSplash(artKey) : championLoading(artKey)) : null;
   return (
     <article className={`ov-card ${featured ? "featured" : ""} ${w.visible ? "" : "off"}`}>
-      <CardArt src={art} />
+      <CardArt src={riftArt} position={CARD_FRAMING[w.id]} />
       <div className="ov-card-preview" aria-hidden="true">
         <div className="ov-card-scale">{renderWidget(w.id, inputs)}</div>
       </div>
@@ -304,13 +300,13 @@ function WidgetCard({
  * grand au milieu. Ici un echec ne laisse rien : la carte retrouve son degrade, qui reste
  * la couche de base et s'affiche aussi avant le chargement et hors connexion.
  */
-function CardArt({ src }: { src: string | null }) {
+function CardArt({ src, position }: { src: string | null; position?: string }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   if (!src || failed) return null;
   return (
     <>
-      <img className="ov-card-art" src={src} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
+      <img className="ov-card-art" style={position ? { objectPosition: position } : undefined} src={src} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
       <div className="ov-card-scrim" aria-hidden="true" />
     </>
   );

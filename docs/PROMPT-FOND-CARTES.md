@@ -6,10 +6,14 @@
 > La roue dentée tombait à **2,4**, sous le seuil de 3 d'un élément non textuel : son fond
 > est passé de 0,7 à 0,88 et sa couleur de `--dim` à `--muted`, ce qui la remonte à 5,6.
 >
-> **Écart au prompt, demandé après coup :** un champion *différent* par carte, pris dans la
-> composition de la partie (ou de l'exemple), au lieu d'un seul champion partout. On perd
-> l'image unique en cache, on gagne en vie. Contrôle refait sur les sept illustrations
-> réelles : pire titre 13,4 · pire ligne 6,1 · pire étiquette 5,2 · pire roue 5,6.
+> **Deux écarts au prompt, demandés après coup.** D'abord un champion *différent* par carte
+> au lieu d'un seul (pire titre 13,4 · ligne 6,1 · étiquette 5,2 · roue 5,6). Puis le
+> remplacement des illustrations Data Dragon par **une capture de la Faille fournie par
+> l'utilisateur** (`src/assets/rift.webp`, 189 ko), chaque carte en cadrant une zone
+> différente : une seule image à charger et la variété est conservée. Le prompt déconseillait
+> d'embarquer une capture du jeu ; c'est le choix de l'utilisateur, pour son propre outil, et
+> l'app sert déjà des ressources Riot. Contrôle refait : pire titre 14,4 · ligne 6,1 ·
+> étiquette 5,9 · roue 5,9 — meilleur qu'avec les illustrations de champions.
 
 ## Le problème
 
