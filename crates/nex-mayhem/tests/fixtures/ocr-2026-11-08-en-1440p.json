@@ -1,0 +1,33 @@
+﻿{
+  "provenance": "Partie ARAM Mayhem reelle (Windows, 2560x1440, client en anglais), 8 novembre 2026 16:08. Textes : lecture OCR Windows en-US de la zone centrale (15-85 % x, 10-90 % y), recopiee telle quelle, erreurs comprises. Rectangles : mesures par l'OCR pour Firebrand et Still Here, mesures sur la capture pour les autres lignes (approximation de quelques pixels).",
+  "width": 2560,
+  "height": 1440,
+  "ocrLang": "en-US",
+  "ocrMs": 153,
+  "expected": ["ARAM_Firebrand", "StillHere", "ARAM_OkBoomerang"],
+  "cardTitleCentersX": [0.3086, 0.5, 0.6914],
+  "lines": [
+    { "text": "Firebrand", "x": 0.2859, "y": 0.4035, "w": 0.0453, "h": 0.0139 },
+    { "text": "Damage", "x": 0.2966, "y": 0.4285, "w": 0.0238, "h": 0.0090 },
+    { "text": "Your Attacks apply an infinitely stacking", "x": 0.2464, "y": 0.4660, "w": 0.1240, "h": 0.0110 },
+    { "text": "Burn On-Hit, dealing damage over time.", "x": 0.2445, "y": 0.4810, "w": 0.1280, "h": 0.0110 },
+    { "text": "c", "x": 0.3055, "y": 0.6990, "w": 0.0060, "h": 0.0090 },
+    { "text": "Soraka", "x": 0.3594, "y": 0.7382, "w": 0.0184, "h": 0.0076 },
+    { "text": "Still Here", "x": 0.4785, "y": 0.4035, "w": 0.0430, "h": 0.0139 },
+    { "text": "Resilience", "x": 0.4855, "y": 0.4285, "w": 0.0290, "h": 0.0090 },
+    { "text": "Gain Attack Speed and % Lifesteal", "x": 0.4430, "y": 0.4660, "w": 0.1140, "h": 0.0110 },
+    { "text": "based on your missing Health.", "x": 0.4505, "y": 0.4810, "w": 0.0990, "h": 0.0110 },
+    { "text": "Aurora", "x": 0.5090, "y": 0.6750, "w": 0.0188, "h": 0.0125 },
+    { "text": "c", "x": 0.4970, "y": 0.6990, "w": 0.0060, "h": 0.0090 },
+    { "text": "LEVEL UP! +1", "x": 0.4398, "y": 0.8597, "w": 0.0469, "h": 0.0097 },
+    { "text": "0k Boomerang", "x": 0.6551, "y": 0.4035, "w": 0.0725, "h": 0.0139 },
+    { "text": "Damage", "x": 0.6795, "y": 0.4285, "w": 0.0238, "h": 0.0090 },
+    { "text": "Autocast throw a boomerang at a nearby", "x": 0.6300, "y": 0.4660, "w": 0.1230, "h": 0.0110 },
+    { "text": "enemy every IOS.", "x": 0.6640, "y": 0.4810, "w": 0.0540, "h": 0.0110 },
+    { "text": "c", "x": 0.6880, "y": 0.6990, "w": 0.0060, "h": 0.0090 },
+    { "text": "Bard", "x": 0.8050, "y": 0.2780, "w": 0.0120, "h": 0.0080 },
+    { "text": "PROCHAIN OBJET", "x": 0.8012, "y": 0.7583, "w": 0.0371, "h": 0.0049 },
+    { "text": "Build Observe -", "x": 0.8176, "y": 0.7938, "w": 0.0336, "h": 0.0056 },
+    { "text": "parties - 2000 PO", "x": 0.8176, "y": 0.8035, "w": 0.0324, "h": 0.0069 }
+  ]
+}

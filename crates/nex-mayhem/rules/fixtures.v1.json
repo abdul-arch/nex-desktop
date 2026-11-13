@@ -1,0 +1,73 @@
+{
+  "version": "fixtures-2026.11.08",
+  "engine": 1,
+  "mode": "KIWI",
+  "patch": "16.22",
+  "reviewedAt": "2026-11-08",
+  "validation": "fixture",
+  "augments": [
+    {
+      "key": "ARAM_Firebrand",
+      "base": "B",
+      "benefits": ["attaques_de_base", "effets_a_l_impact", "vitesse_d_attaque"],
+      "orientation": ["degats"],
+      "note": "Donnée d'essai : brûlure cumulable appliquée par les attaques (texte de la carte)."
+    },
+    {
+      "key": "StillHere",
+      "base": "B",
+      "benefits": ["attaques_de_base", "vitesse_d_attaque", "melee"],
+      "orientation": ["degats", "resistance"],
+      "note": "Donnée d'essai : vitesse d'attaque et vol de vie selon les PV manquants (texte de la carte)."
+    },
+    {
+      "key": "ARAM_OkBoomerang",
+      "base": "C",
+      "orientation": ["degats"],
+      "note": "Donnée d'essai : boomerang automatique toutes les 10 s (texte de la carte)."
+    },
+    {
+      "key": "ARAM_DualWield",
+      "base": "A",
+      "benefits": ["attaques_de_base", "effets_a_l_impact"],
+      "orientation": ["degats"],
+      "combos": ["ARAM_Firebrand"],
+      "note": "Donnée d'essai."
+    },
+    {
+      "key": "ARAM_DrawYourSword",
+      "base": "B",
+      "requires": ["melee"],
+      "benefits": ["attaques_de_base"],
+      "orientation": ["degats"],
+      "note": "Donnée d'essai."
+    },
+    {
+      "key": "UltimateAwakening",
+      "base": "A",
+      "benefits": ["degats_de_competences"],
+      "note": "Donnée d'essai."
+    },
+    {
+      "key": "CriticalRhythm",
+      "base": "B",
+      "requires": ["critique"],
+      "benefits": ["attaques_de_base"],
+      "orientation": ["degats"],
+      "note": "Donnée d'essai."
+    },
+    {
+      "key": "EscapePlan",
+      "base": "C",
+      "orientation": ["resistance", "mobilite"],
+      "note": "Donnée d'essai."
+    },
+    {
+      "key": "GlassCannon",
+      "base": "A",
+      "orientation": ["degats"],
+      "conflicts": ["EscapePlan"],
+      "note": "Donnée d'essai."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+[package]
+name = "nex-domain"
+version = "0.1.0"
+edition = "2024"
+description = "Domaine NEX partage (app desktop + backend) : identites Riot, routage, contrats d'API."
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

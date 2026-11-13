@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-recording-set-favorite"
+description = "Enables the recording_set_favorite command without any pre-configured scope."
+commands.allow = ["recording_set_favorite"]
+
+[[permission]]
+identifier = "deny-recording-set-favorite"
+description = "Denies the recording_set_favorite command without any pre-configured scope."
+commands.deny = ["recording_set_favorite"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mayhem-confirmed"
+description = "Enables the mayhem_confirmed command without any pre-configured scope."
+commands.allow = ["mayhem_confirmed"]
+
+[[permission]]
+identifier = "deny-mayhem-confirmed"
+description = "Denies the mayhem_confirmed command without any pre-configured scope."
+commands.deny = ["mayhem_confirmed"]

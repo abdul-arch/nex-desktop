@@ -1,0 +1,1944 @@
+{
+    "mode":  "KIWI",
+    "patch":  "16.22.8348910+branch.releases-16-22.content.release",
+    "fetchedAt":  1794150000000,
+    "source":  "CommunityDragon (instantané de test)",
+    "augments":  [
+                     {
+                         "id":  2062,
+                         "key":  "Ability_SelfAOE_DoubleCast",
+                         "nameEn":  "Echo Cast",
+                         "nameFr":  "Écho",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1205,
+                         "key":  "ARAM_ADAPt",
+                         "nameEn":  "ADAPt",
+                         "nameFr":  "Adaptation",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1141,
+                         "key":  "ARAM_AllForYou",
+                         "nameEn":  "All For You",
+                         "nameFr":  "Rien que pour toi",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1002,
+                         "key":  "ARAM_ApexInventor",
+                         "nameEn":  "Apex Inventor",
+                         "nameFr":  "Super-inventeur",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2087,
+                         "key":  "ARAM_Archmage",
+                         "nameEn":  "Archmage",
+                         "nameFr":  "Archimage",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1004,
+                         "key":  "ARAM_BacktoBasics",
+                         "nameEn":  "Back To Basics",
+                         "nameFr":  "Retour aux bases",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2103,
+                         "key":  "ARAM_BangBang",
+                         "nameEn":  "From Downtown",
+                         "nameFr":  "Sniper explosif",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1180,
+                         "key":  "ARAM_BigBrain",
+                         "nameEn":  "Big Brain",
+                         "nameFr":  "Gros cerveau",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1006,
+                         "key":  "ARAM_BladeWaltz",
+                         "nameEn":  "Blade Waltz",
+                         "nameFr":  "Valse de l\u0027épée",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1007,
+                         "key":  "ARAM_BluntForce",
+                         "nameEn":  "Blunt Force",
+                         "nameFr":  "Force brute",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1103,
+                         "key":  "ARAM_BreadAndButter",
+                         "nameEn":  "Bread And Butter",
+                         "nameFr":  "Maîtrise du A",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1151,
+                         "key":  "ARAM_BreadAndCheese",
+                         "nameEn":  "Bread and Cheese",
+                         "nameFr":  "Maîtrise du E",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1150,
+                         "key":  "ARAM_BreadAndJam",
+                         "nameEn":  "Bread And Jam",
+                         "nameFr":  "Maîtrise du Z",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1011,
+                         "key":  "ARAM_CantTouchThis",
+                         "nameEn":  "Can\u0027t Touch This",
+                         "nameFr":  "Invulnérabilité ultime",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1013,
+                         "key":  "ARAM_CelestialBody",
+                         "nameEn":  "Celestial Body",
+                         "nameFr":  "Corps céleste",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1015,
+                         "key":  "ARAM_CircleofDeath",
+                         "nameEn":  "Circle of Death",
+                         "nameFr":  "Soins meurtriers",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1310,
+                         "key":  "ARAM_ClownCollege",
+                         "nameEn":  "Clown College",
+                         "nameFr":  "Université des clowns",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1018,
+                         "key":  "ARAM_CourageoftheColossus",
+                         "nameEn":  "Courage of the Colossus",
+                         "nameFr":  "Courage du colosse",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1118,
+                         "key":  "ARAM_CriticalHealing",
+                         "nameEn":  "Critical Healing",
+                         "nameFr":  "Soins critiques",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1323,
+                         "key":  "ARAM_Cruelty",
+                         "nameEn":  "Cruelty",
+                         "nameFr":  "Cruauté",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1019,
+                         "key":  "ARAM_Dashing",
+                         "nameEn":  "Dashing",
+                         "nameFr":  "Ruée des braves",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1020,
+                         "key":  "ARAM_DawnbringersResolve",
+                         "nameEn":  "Dawnbringer\u0027s Resolve",
+                         "nameFr":  "Détermination du héraut de l\u0027aube",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1022,
+                         "key":  "ARAM_Deft",
+                         "nameEn":  "Deft",
+                         "nameFr":  "Zèle",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1025,
+                         "key":  "ARAM_DiveBomber",
+                         "nameEn":  "Dive Bomber",
+                         "nameFr":  "Kamikaze",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2099,
+                         "key":  "ARAM_DivineDomain",
+                         "nameEn":  "Rite of Ascension",
+                         "nameFr":  "Rituel d\u0027ascension",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1301,
+                         "key":  "ARAM_DivineIntervention",
+                         "nameEn":  "Divine Intervention",
+                         "nameFr":  "Intervention divine",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1026,
+                         "key":  "ARAM_DontBlink",
+                         "nameEn":  "Don\u0027t Blink",
+                         "nameFr":  "Rapidité létale",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2010,
+                         "key":  "ARAM_DoubleTap",
+                         "nameEn":  "Double Tap",
+                         "nameFr":  "Maléfices de zone",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1134,
+                         "key":  "ARAM_DrawYourSword",
+                         "nameEn":  "Draw Your Sword",
+                         "nameFr":  "Combat rapproché",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1225,
+                         "key":  "ARAM_DualWield",
+                         "nameEn":  "Dual Wield",
+                         "nameFr":  "Ambidextrie",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1027,
+                         "key":  "ARAM_Earthwake",
+                         "nameEn":  "Earthwake",
+                         "nameFr":  "Traînée tellurique",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2004,
+                         "key":  "ARAM_EmpoweredByTheFaithful",
+                         "nameEn":  "Empowered By The Faithful",
+                         "nameFr":  "Dévotion",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2098,
+                         "key":  "ARAM_EndlessHunt",
+                         "nameEn":  "En Passant",
+                         "nameFr":  "Points vitaux",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1028,
+                         "key":  "ARAM_Erosion",
+                         "nameEn":  "Erosion",
+                         "nameFr":  "Érosion",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1206,
+                         "key":  "ARAM_escAPADe",
+                         "nameEn":  "escAPADe",
+                         "nameFr":  "Conversion physique",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1029,
+                         "key":  "ARAM_EtherealWeapon",
+                         "nameEn":  "Ethereal Weapon",
+                         "nameFr":  "Arme éthérée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1030,
+                         "key":  "ARAM_Eureka",
+                         "nameEn":  "Eureka",
+                         "nameFr":  "Eurêka",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1194,
+                         "key":  "ARAM_FeyMagic",
+                         "nameEn":  "Fey Magic",
+                         "nameFr":  "Féerie",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1036,
+                         "key":  "ARAM_Firebrand",
+                         "nameEn":  "Firebrand",
+                         "nameFr":  "Brasier",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1308,
+                         "key":  "ARAM_Firefox",
+                         "nameEn":  "FireFox",
+                         "nameFr":  "Lucioles",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1037,
+                         "key":  "ARAM_FirstAidKit",
+                         "nameEn":  "First-Aid Kit",
+                         "nameFr":  "Trousse de secours",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1187,
+                         "key":  "ARAM_Flashbang",
+                         "nameEn":  "Flashbang",
+                         "nameFr":  "Grenade éclair",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1116,
+                         "key":  "ARAM_Flashy",
+                         "nameEn":  "Flashy",
+                         "nameFr":  "Sauts éclair",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1038,
+                         "key":  "ARAM_FromBeginningToEnd",
+                         "nameEn":  "From Beginning To End",
+                         "nameFr":  "Du début à la fin",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1322,
+                         "key":  "ARAM_GetExcited",
+                         "nameEn":  "Get Excited!",
+                         "nameFr":  "Enthousiasme !",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1195,
+                         "key":  "ARAM_GiantSlayer",
+                         "nameEn":  "Giant Slayer",
+                         "nameFr":  "Tueur de géants",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1041,
+                         "key":  "ARAM_Goliath",
+                         "nameEn":  "Goliath",
+                         "nameFr":  "Goliath",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1138,
+                         "key":  "ARAM_Goredrink",
+                         "nameEn":  "Goredrink",
+                         "nameFr":  "Éviscération",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1181,
+                         "key":  "ARAM_HeavyHitter",
+                         "nameEn":  "Heavy Hitter",
+                         "nameFr":  "Gros bras",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2107,
+                         "key":  "ARAM_Hellbent",
+                         "nameEn":  "Hellbent",
+                         "nameFr":  "Reviviscence",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1105,
+                         "key":  "ARAM_Homeguard",
+                         "nameEn":  "Homeguard",
+                         "nameFr":  "Doux foyer",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1044,
+                         "key":  "ARAM_IceCold",
+                         "nameEn":  "Ice Cold",
+                         "nameFr":  "Froid glacial",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1149,
+                         "key":  "ARAM_Impassable",
+                         "nameEn":  "Impassable",
+                         "nameFr":  "Après-glacial",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1001,
+                         "key":  "ARAM_ImTheJuggernaut",
+                         "nameEn":  "Titan\u0027s Resolve",
+                         "nameFr":  "Détermination du titan",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1045,
+                         "key":  "ARAM_InfernalConduit",
+                         "nameEn":  "Infernal Conduit",
+                         "nameFr":  "Conduit infernal",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1046,
+                         "key":  "ARAM_InfernalSoul",
+                         "nameEn":  "Infernal Soul",
+                         "nameFr":  "Âme infernale",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2005,
+                         "key":  "ARAM_InfernoTriggered",
+                         "nameEn":  "Triggered Inferno",
+                         "nameFr":  "Gâchette infernale",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1047,
+                         "key":  "ARAM_ItsCritical",
+                         "nameEn":  "It\u0027s Critical",
+                         "nameFr":  "État critique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1211,
+                         "key":  "ARAM_ItsKillingTime",
+                         "nameEn":  "It\u0027s Killing Time",
+                         "nameFr":  "Coups de grâce",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1048,
+                         "key":  "ARAM_JeweledGauntlet",
+                         "nameEn":  "Jeweled Gauntlet",
+                         "nameFr":  "Gantelet précieux",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2016,
+                         "key":  "ARAM_Juiced",
+                         "nameEn":  "Juiced",
+                         "nameFr":  "À plein gaz",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1305,
+                         "key":  "ARAM_LegDay",
+                         "nameEn":  "Leg Day",
+                         "nameFr":  "Jambes en béton",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1051,
+                         "key":  "ARAM_LightemUp",
+                         "nameEn":  "Light \u0027Em Up!",
+                         "nameFr":  "Allumez-les !",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1053,
+                         "key":  "ARAM_MadScientist",
+                         "nameEn":  "Mad Scientist",
+                         "nameFr":  "Savant fou",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1133,
+                         "key":  "ARAM_MagicMissile",
+                         "nameEn":  "Magic Missile",
+                         "nameFr":  "Projectiles magiques",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1129,
+                         "key":  "ARAM_Marksmage",
+                         "nameEn":  "Marksmage",
+                         "nameFr":  "Tireur magique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1054,
+                         "key":  "ARAM_MasterofDuality",
+                         "nameEn":  "Master of Duality",
+                         "nameFr":  "Dualité",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1056,
+                         "key":  "ARAM_MindtoMatter",
+                         "nameEn":  "Mind to Matter",
+                         "nameFr":  "De l\u0027esprit à la matière",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1104,
+                         "key":  "ARAM_Minionmancer",
+                         "nameEn":  "Minionmancer",
+                         "nameFr":  "Sbiromancie",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1057,
+                         "key":  "ARAM_MountainSoul",
+                         "nameEn":  "Mountain Soul",
+                         "nameFr":  "Âme des montagnes",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2055,
+                         "key":  "ARAM_Multishot",
+                         "nameEn":  "Multishot",
+                         "nameFr":  "Multiples coups",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1058,
+                         "key":  "ARAM_MysticPunch",
+                         "nameEn":  "Mystic Punch",
+                         "nameFr":  "Coups accélérants",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1060,
+                         "key":  "ARAM_OceanSoul",
+                         "nameEn":  "Ocean Soul",
+                         "nameFr":  "Âme des océans",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1061,
+                         "key":  "ARAM_OkBoomerang",
+                         "nameEn":  "Ok Boomerang",
+                         "nameFr":  "Ça boomerang ?",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1062,
+                         "key":  "ARAM_OmniSoul",
+                         "nameEn":  "Omni Soul",
+                         "nameFr":  "Âmes draconiques",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1063,
+                         "key":  "ARAM_OutlawsGrit",
+                         "nameEn":  "Outlaw\u0027s Grit",
+                         "nameFr":  "Nerfs d\u0027acier",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1311,
+                         "key":  "ARAM_Overflow",
+                         "nameEn":  "Overflow",
+                         "nameFr":  "Surcharge",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  12317,
+                         "key":  "ARAM_PandorasBox",
+                         "nameEn":  "Pandora\u0027s Box",
+                         "nameFr":  "Boîte de Pandore",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1390,
+                         "key":  "ARAM_PhenomenalEvil",
+                         "nameEn":  "Phenomenal Evil",
+                         "nameFr":  "Pouvoir maléfique phénoménal",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1324,
+                         "key":  "ARAM_ProteinShake",
+                         "nameEn":  "Protein Shake",
+                         "nameFr":  "Boisson énergisante",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2018,
+                         "key":  "ARAM_Purist_Caster",
+                         "nameEn":  "Purist - Caster",
+                         "nameFr":  "Puriste - Lanceur de compétence",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1152,
+                         "key":  "ARAM_Quest_SteelYourHeart",
+                         "nameEn":  "Steel Your Heart",
+                         "nameFr":  "Un cœur d\u0027acier",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1154,
+                         "key":  "ARAM_Quest_UrfsChampion",
+                         "nameEn":  "Urf\u0027s Champion",
+                         "nameFr":  "Champion d\u0027Urf",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1361,
+                         "key":  "ARAM_Quest_VoidImmolation",
+                         "nameEn":  "Icathia\u0027s Fall",
+                         "nameFr":  "Chute d\u0027Icathia",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1156,
+                         "key":  "ARAM_Quest_WoogletsWitchcap",
+                         "nameEn":  "Wooglet\u0027s Witchcap",
+                         "nameFr":  "Coiffe de Wooglet",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2064,
+                         "key":  "ARAM_Quickstep",
+                         "nameEn":  "Quickstep",
+                         "nameFr":  "Pied léger",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1067,
+                         "key":  "ARAM_RabbleRousing",
+                         "nameEn":  "Rejuvenation",
+                         "nameFr":  "Rajeunissement",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1068,
+                         "key":  "ARAM_Recursion",
+                         "nameEn":  "Recursion",
+                         "nameFr":  "Récursivité",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1170,
+                         "key":  "ARAM_ScopedWeapons",
+                         "nameEn":  "Scoped Weapons",
+                         "nameFr":  "Armes à lunette",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1071,
+                         "key":  "ARAM_ScopierWeapons",
+                         "nameEn":  "Scopier Weapons",
+                         "nameFr":  "Armes à grosse lunette",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1115,
+                         "key":  "ARAM_ScopiestWeapons",
+                         "nameEn":  "Scopiest Weapons",
+                         "nameFr":  "Armes à très grosse lunette",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1072,
+                         "key":  "ARAM_SearingDawn",
+                         "nameEn":  "Searing Dawn",
+                         "nameFr":  "Aube ardente",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1073,
+                         "key":  "ARAM_ShadowRunner",
+                         "nameEn":  "Shadow Runner",
+                         "nameFr":  "Plus rapide que son ombre",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1074,
+                         "key":  "ARAM_ShrinkRay",
+                         "nameEn":  "Shrink Ray",
+                         "nameFr":  "Attaques affaiblissantes",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1113,
+                         "key":  "ARAM_SkilledSniper",
+                         "nameEn":  "Skilled Sniper",
+                         "nameFr":  "Sniper",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1136,
+                         "key":  "ARAM_SlapAround",
+                         "nameEn":  "Slap Around",
+                         "nameFr":  "Immobilisations en puissance",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2088,
+                         "key":  "ARAM_Snowday",
+                         "nameEn":  "Snowday",
+                         "nameFr":  "Jour de neige",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1076,
+                         "key":  "ARAM_SonicBoom",
+                         "nameEn":  "Sonic Boom",
+                         "nameFr":  "Protections létales",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1077,
+                         "key":  "ARAM_SoulSiphon",
+                         "nameEn":  "Soul Siphon",
+                         "nameFr":  "Siphon d\u0027âme",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2100,
+                         "key":  "ARAM_SpecializedRecursion",
+                         "nameEn":  "Pursuit of Haste",
+                         "nameFr":  "Quête de hâte",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1214,
+                         "key":  "ARAM_SpinToWin",
+                         "nameEn":  "Spin To Win",
+                         "nameFr":  "Tourbilol",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2104,
+                         "key":  "ARAM_SpiritBomb",
+                         "nameEn":  "Spirit Bomb",
+                         "nameFr":  "Genkidama",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1204,
+                         "key":  "ARAM_StackosaurusRex",
+                         "nameEn":  "Stackosaurus Rex",
+                         "nameFr":  "Cumulator",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1404,
+                         "key":  "ARAM_Stats",
+                         "nameEn":  "Stats!",
+                         "nameFr":  "Stats !",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1403,
+                         "key":  "ARAM_StatsOnStats",
+                         "nameEn":  "Stats on Stats!",
+                         "nameFr":  "Stats, stats !",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1402,
+                         "key":  "ARAM_StatsOnStatsOnStats",
+                         "nameEn":  "Stats on Stats on Stats!",
+                         "nameFr":  "Stats, stats, stats !",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1413,
+                         "key":  "ARAM_StuckInHereWithMe",
+                         "nameEn":  "Stuck In Here With Me",
+                         "nameFr":  "Provocation ultime",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2073,
+                         "key":  "ARAM_SustainingStrike",
+                         "nameEn":  "Siphon",
+                         "nameFr":  "Siphon",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1079,
+                         "key":  "ARAM_SymphonyofWar",
+                         "nameEn":  "Symphony of War",
+                         "nameFr":  "Symphonie martiale",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1353,
+                         "key":  "ARAM_TankEngine",
+                         "nameEn":  "Tank Engine",
+                         "nameFr":  "Moteur de tank",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1080,
+                         "key":  "ARAM_TankItOrLeaveIt",
+                         "nameEn":  "Tank It Or Leave It",
+                         "nameFr":  "Défenses critiques",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1081,
+                         "key":  "ARAM_TapDancer",
+                         "nameEn":  "Tap Dancer",
+                         "nameFr":  "Danse effrénée",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2065,
+                         "key":  "ARAM_Terror",
+                         "nameEn":  "Terror",
+                         "nameFr":  "Terreur",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1084,
+                         "key":  "ARAM_ThreadtheNeedle",
+                         "nameEn":  "Thread the Needle",
+                         "nameFr":  "Résistances futiles",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1243,
+                         "key":  "ARAM_TransmuteChaos",
+                         "nameEn":  "Transmute: Chaos",
+                         "nameFr":  "Transmutation : Chaos",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1237,
+                         "key":  "ARAM_TransmuteGold",
+                         "nameEn":  "Transmute: Gold",
+                         "nameFr":  "Transmutation : Or",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1238,
+                         "key":  "ARAM_TransmutePrismatic",
+                         "nameEn":  "Transmute: Prismatic",
+                         "nameFr":  "Transmutation : Prismatique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1087,
+                         "key":  "ARAM_Typhoon",
+                         "nameEn":  "Typhoon",
+                         "nameFr":  "Typhon",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1088,
+                         "key":  "ARAM_UltimateRevolution",
+                         "nameEn":  "Ultimate Revolution",
+                         "nameFr":  "Révolution ultime",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1112,
+                         "key":  "ARAM_UltimateUnstoppable",
+                         "nameEn":  "Ultimate Unstoppable",
+                         "nameFr":  "Ultimement inarrêtable",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1320,
+                         "key":  "ARAM_Upgrade_Collector",
+                         "nameEn":  "Upgrade Collector",
+                         "nameFr":  "Percepteur amélioré",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1336,
+                         "key":  "ARAM_Upgrade_IE",
+                         "nameEn":  "Upgrade Infinity Edge",
+                         "nameFr":  "Lame d\u0027infini améliorée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1319,
+                         "key":  "ARAM_Upgrade_Immolate",
+                         "nameEn":  "Upgrade Immolate",
+                         "nameFr":  "Immolation améliorée",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1996,
+                         "key":  "ARAM_Upgrade_Sheen",
+                         "nameEn":  "Upgrade Sheen",
+                         "nameFr":  "Brillance améliorée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1318,
+                         "key":  "ARAM_Upgrade_ZH",
+                         "nameEn":  "Upgrade Zhonya\u0027s",
+                         "nameFr":  "Zhonya amélioré",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1092,
+                         "key":  "ARAM_Vulnerability",
+                         "nameEn":  "Vulnerability",
+                         "nameFr":  "Vulnérabilité",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1005,
+                         "key":  "ARAM_WeeWooWeeWoo",
+                         "nameEn":  "Wee Woo Wee Woo",
+                         "nameFr":  "Pin pon pin pon",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1095,
+                         "key":  "ARAM_WindspeakersBlessing",
+                         "nameEn":  "Windspeaker\u0027s Blessing",
+                         "nameFr":  "Bénédiction de l\u0027aéromancien",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1097,
+                         "key":  "ARAM_WitchfulThinking",
+                         "nameEn":  "Witchful Thinking",
+                         "nameFr":  "Héritage de Rabadon",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1098,
+                         "key":  "ARAM_WithHaste",
+                         "nameEn":  "With Haste",
+                         "nameFr":  "Pied au plancher",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2009,
+                         "key":  "ARAM_Zealot",
+                         "nameEn":  "Zealot",
+                         "nameFr":  "Zélote",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3118,
+                         "key":  "ArcaneAxiom",
+                         "nameEn":  "Arcane Axiom",
+                         "nameFr":  "Axiome arcanique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3049,
+                         "key":  "ArmoredImpact",
+                         "nameEn":  "Armored Impact",
+                         "nameFr":  "Impact blindé",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3086,
+                         "key":  "BEES",
+                         "nameEn":  "BEES!!!",
+                         "nameFr":  "ABEILLES !!!",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1329,
+                         "key":  "BiggestSnowballEver",
+                         "nameEn":  "Biggest Snowball Ever",
+                         "nameFr":  "Boule de neige géante",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3018,
+                         "key":  "BigShot",
+                         "nameEn":  "Big Shot",
+                         "nameFr":  "Super critique",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3051,
+                         "key":  "BlueBarrier",
+                         "nameEn":  "Blue Barrier",
+                         "nameFr":  "Barrière bleue",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2111,
+                         "key":  "Bonk",
+                         "nameEn":  "BONK!",
+                         "nameFr":  "BONK !",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3048,
+                         "key":  "BouncingBees",
+                         "nameEn":  "Bouncing Bees",
+                         "nameFr":  "Abeilles bondissantes",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3071,
+                         "key":  "BrassBlast",
+                         "nameEn":  "Brass Blast",
+                         "nameFr":  "Atomisation cuivrée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2083,
+                         "key":  "BurstingTeeth",
+                         "nameEn":  "Tooth Fairy",
+                         "nameFr":  "Petite souris",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2078,
+                         "key":  "ChainReaction",
+                         "nameEn":  "Chain Reaction",
+                         "nameFr":  "Réaction en chaîne",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3088,
+                         "key":  "CrimsonCobalt",
+                         "nameEn":  "CRIMSON COBALT",
+                         "nameFr":  "ROUGE COBALT",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1328,
+                         "key":  "CriticalRhythm",
+                         "nameEn":  "Critical Rhythm",
+                         "nameFr":  "Rythme critique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2077,
+                         "key":  "DarkWind",
+                         "nameEn":  "Ravenous Bind",
+                         "nameFr":  "Entrave vorace",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1384,
+                         "key":  "Donation",
+                         "nameEn":  "Donation",
+                         "nameFr":  "Pactole",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2131,
+                         "key":  "DontChangeTheChannel",
+                         "nameEn":  "Don\u0027t Change the Channel",
+                         "nameFr":  "Ne changez pas de chaîne",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2144,
+                         "key":  "DoubleDefense",
+                         "nameEn":  "Bolstered",
+                         "nameFr":  "Rempart",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3036,
+                         "key":  "DoubleTime",
+                         "nameEn":  "Double Time",
+                         "nameFr":  "Explosion de mana",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1331,
+                         "key":  "EmpyreanPromise",
+                         "nameEn":  "Empyrean Promise",
+                         "nameFr":  "Promesse empyréenne",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3163,
+                         "key":  "EnchantingButterflies",
+                         "nameEn":  "Enchanting Butterflies",
+                         "nameFr":  "Papillons enchanteurs",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2091,
+                         "key":  "EndlessDecimation",
+                         "nameEn":  "Endless Decimation",
+                         "nameFr":  "Décimation sans fin",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1333,
+                         "key":  "EscapePlan",
+                         "nameEn":  "Escape Plan",
+                         "nameFr":  "Plan d\u0027évasion",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1344,
+                         "key":  "FinalForm",
+                         "nameEn":  "Final Form",
+                         "nameFr":  "Forme finale",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2032,
+                         "key":  "FishBait",
+                         "nameEn":  "Shark Bait",
+                         "nameFr":  "Appât à requin",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1348,
+                         "key":  "Flash2",
+                         "nameEn":  "Flash 2",
+                         "nameFr":  "Saut éclair 2",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3085,
+                         "key":  "FlowOfSpirit",
+                         "nameEn":  "Flow of Spirit",
+                         "nameFr":  "Flux spirituel",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2127,
+                         "key":  "ForgedByTheMaster",
+                         "nameEn":  "Forged By The Master",
+                         "nameFr":  "Forgés par le maître",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3121,
+                         "key":  "Fruitify",
+                         "nameEn":  "Fruitify",
+                         "nameFr":  "Fructification",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3004,
+                         "key":  "GetJinxed",
+                         "nameEn":  "Get Jinxed",
+                         "nameFr":  "Super roquette de la mort",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3063,
+                         "key":  "GiftoftheDrowned",
+                         "nameEn":  "Gift of the Drowned",
+                         "nameFr":  "Don des noyés",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1325,
+                         "key":  "GlassCannon",
+                         "nameEn":  "Glass Cannon",
+                         "nameFr":  "Canon de verre",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3172,
+                         "key":  "GoH_PentakillAug_E",
+                         "nameEn":  "THRASH",
+                         "nameFr":  "BRUTALITÉ",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3176,
+                         "key":  "GoH_PentakillAug_Generic",
+                         "nameEn":  "   ",
+                         "nameFr":  "   ",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3170,
+                         "key":  "GoH_PentakillAug_Q",
+                         "nameEn":  "HEAVY",
+                         "nameFr":  "LOURD",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3173,
+                         "key":  "GoH_PentakillAug_R",
+                         "nameEn":  "DOOM",
+                         "nameFr":  "FIN",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3171,
+                         "key":  "GoH_PentakillAug_W",
+                         "nameEn":  "POWER",
+                         "nameFr":  "PUISSANCE",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1392,
+                         "key":  "GoldenSnowball",
+                         "nameEn":  "Holy Snowball",
+                         "nameFr":  "Boule de neige divine",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1335,
+                         "key":  "Goldrend",
+                         "nameEn":  "Goldrend",
+                         "nameFr":  "Coûte que coûte",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3149,
+                         "key":  "GroupHug",
+                         "nameEn":  "Group Hug",
+                         "nameFr":  "Câlin collectif",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1401,
+                         "key":  "GrowthSpurt",
+                         "nameEn":  "Growth Spurt",
+                         "nameFr":  "Croissance",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1389,
+                         "key":  "HandOfBaron",
+                         "nameEn":  "Hand of Baron",
+                         "nameFr":  "Main du baron",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3052,
+                         "key":  "HandsOffTheTalent",
+                         "nameEn":  "Hands off the Talent",
+                         "nameFr":  "Pas touche",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3132,
+                         "key":  "HeavyIsTheCrown",
+                         "nameEn":  "Heavy Is The Crown",
+                         "nameFr":  "Lourde est la couronne",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1416,
+                         "key":  "HextechSoul",
+                         "nameEn":  "Hextech Soul",
+                         "nameFr":  "Âme Hextech",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1388,
+                         "key":  "InfiniteRecursion",
+                         "nameEn":  "Infinite Recursion",
+                         "nameFr":  "Récursivité infinie",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2125,
+                         "key":  "ItsGoTime",
+                         "nameEn":  "It\u0027s Go Time",
+                         "nameFr":  "C\u0027est l\u0027heure",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3123,
+                         "key":  "JeweledBracelet",
+                         "nameEn":  "Jeweled Bracelet",
+                         "nameFr":  "Bracelet précieux",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2126,
+                         "key":  "KeepGoing",
+                         "nameEn":  "Reload",
+                         "nameFr":  "Rechargement",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2026,
+                         "key":  "KillSecured",
+                         "nameEn":  "Kill Secured",
+                         "nameFr":  "Élimination réussie",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1337,
+                         "key":  "KingMe",
+                         "nameEn":  "King Me",
+                         "nameFr":  "Jeu de la reine",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3094,
+                         "key":  "LichBrain",
+                         "nameEn":  "Lich Brain",
+                         "nameFr":  "Puissante puissance",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2096,
+                         "key":  "LittleExtraHelp",
+                         "nameEn":  "Lil\u0027 Extra Help",
+                         "nameFr":  "Petit coup de pouce",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3134,
+                         "key":  "LonelyWarrior",
+                         "nameEn":  "Lonely Warrior",
+                         "nameFr":  "Dans la mêlée",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2133,
+                         "key":  "MercysStrike",
+                         "nameEn":  "Mercy\u0027s Strike",
+                         "nameFr":  "Attaques améliorées",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1314,
+                         "key":  "MightyShield",
+                         "nameEn":  "Mighty Shield",
+                         "nameFr":  "Puissant bouclier",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2072,
+                         "key":  "Missile_Split",
+                         "nameEn":  "Spell Split",
+                         "nameFr":  "Division magique",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3053,
+                         "key":  "MoshMonster",
+                         "nameEn":  "Mosh Monster",
+                         "nameFr":  "Monstre de foire",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2043,
+                         "key":  "NatureIsHealing",
+                         "nameEn":  "Nature is Healing",
+                         "nameFr":  "L\u0027appel de la nature",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1326,
+                         "key":  "Nightstalking",
+                         "nameEn":  "Nightstalking",
+                         "nameFr":  "Traque nocturne",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3059,
+                         "key":  "NoManaNoProblem",
+                         "nameEn":  "No Mana, No Problem",
+                         "nameFr":  "Pas de mana, pas de problème",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1332,
+                         "key":  "OminousPact",
+                         "nameEn":  "Ominous Pact",
+                         "nameFr":  "Pacte sinistre",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3060,
+                         "key":  "OneHitWonder",
+                         "nameEn":  "One Hit Wonder",
+                         "nameFr":  "Tube unique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2119,
+                         "key":  "Overextender",
+                         "nameEn":  "Overextender",
+                         "nameFr":  "Surextension",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2135,
+                         "key":  "Overkill",
+                         "nameEn":  "Pin Cushion",
+                         "nameFr":  "Pelote d\u0027épingles",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2123,
+                         "key":  "Overloaded",
+                         "nameEn":  "Overloaded",
+                         "nameFr":  "Réinitialisation",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2137,
+                         "key":  "PatOnTheBack",
+                         "nameEn":  "Pat On The Back",
+                         "nameFr":  "Tape dans le dos",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1358,
+                         "key":  "PinballSnowball",
+                         "nameEn":  "Pinball",
+                         "nameFr":  "Flipper",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2139,
+                         "key":  "PinCushion",
+                         "nameEn":  "Porcupine",
+                         "nameFr":  "Porc-épic",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1347,
+                         "key":  "Poltergeist",
+                         "nameEn":  "Poltergeist",
+                         "nameFr":  "Poltergeist",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2102,
+                         "key":  "PressureCooker",
+                         "nameEn":  "Pressure Cooker",
+                         "nameFr":  "Pression croissante",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1421,
+                         "key":  "PromQueen",
+                         "nameEn":  "Prom Queen",
+                         "nameFr":  "Reine du bal",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1343,
+                         "key":  "Quest_Sneakerhead",
+                         "nameEn":  "Sneakerhead",
+                         "nameFr":  "Amour des chaussures",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2141,
+                         "key":  "Quest_UltraHydra",
+                         "nameEn":  "Ultra Hydra",
+                         "nameFr":  "Hydre ultra",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3075,
+                         "key":  "Recoil",
+                         "nameEn":  "Recoil",
+                         "nameFr":  "Recul",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3159,
+                         "key":  "RISE",
+                         "nameEn":  "RISE",
+                         "nameFr":  "ASCENSION",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3039,
+                         "key":  "Salvation",
+                         "nameEn":  "Salvation",
+                         "nameFr":  "Expiation",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3129,
+                         "key":  "SapMagic",
+                         "nameEn":  "Sap Magic",
+                         "nameFr":  "Sève magique",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2034,
+                         "key":  "SharkTempest",
+                         "nameEn":  "Shark Tempest",
+                         "nameFr":  "Tempête de requins",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1373,
+                         "key":  "ShrinkEngine",
+                         "nameEn":  "Shrink Engine",
+                         "nameFr":  "Machine à rétrécir",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2109,
+                         "key":  "SnapBack",
+                         "nameEn":  "Snap Back",
+                         "nameFr":  "Retour explosif",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2080,
+                         "key":  "Snowbomb",
+                         "nameEn":  "Snowblast",
+                         "nameFr":  "Explosion de neige",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1420,
+                         "key":  "Sonata",
+                         "nameEn":  "Sonata",
+                         "nameFr":  "Sonate",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1375,
+                         "key":  "SoulEater",
+                         "nameEn":  "Soul Eater",
+                         "nameFr":  "Mangeur d\u0027âmes",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3025,
+                         "key":  "Sound_Barrier",
+                         "nameEn":  "Sound Barrier",
+                         "nameFr":  "Mur du son",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2116,
+                         "key":  "SpecializedEmpowerment",
+                         "nameEn":  "Pursuit of Power",
+                         "nameFr":  "Quête de puissance",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2054,
+                         "key":  "SpellVolley",
+                         "nameEn":  "Tripleshot",
+                         "nameFr":  "Triple coup",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2115,
+                         "key":  "SquishySlappyGrab",
+                         "nameEn":  "Squishy Slappy Grab",
+                         "nameFr":  "Claque molle",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3131,
+                         "key":  "StillHere",
+                         "nameEn":  "Still Here",
+                         "nameFr":  "Toujours là",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2134,
+                         "key":  "SurgeField",
+                         "nameEn":  "Surge Field",
+                         "nameFr":  "Champ de surcharge",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1315,
+                         "key":  "SwiftAndSafe",
+                         "nameEn":  "Swift and Safe",
+                         "nameFr":  "Mobilité et sécurité",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3116,
+                         "key":  "TakeemDownDownDown",
+                         "nameEn":  "Take\u0027em Down Down Down",
+                         "nameFr":  "Guerre d\u0027usure",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2129,
+                         "key":  "Terraind",
+                         "nameEn":  "Terrain\u0027d",
+                         "nameFr":  "Terrain",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3078,
+                         "key":  "TheBoomAndTheBass",
+                         "nameEn":  "The Boom and the Bass",
+                         "nameFr":  "Ça va faire boum",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3016,
+                         "key":  "ThirdTimesTheHarm",
+                         "nameEn":  "Third Times the Harm",
+                         "nameFr":  "Et de trois",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3058,
+                         "key":  "TickleMonster",
+                         "nameEn":  "Tickle Monster",
+                         "nameFr":  "Monstre à chatouilles",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2076,
+                         "key":  "TitansPulse",
+                         "nameEn":  "Stay Resolute",
+                         "nameFr":  "La meilleure défense",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3079,
+                         "key":  "Totentanz",
+                         "nameEn":  "Totentanz",
+                         "nameFr":  "Danse avec la mort",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2136,
+                         "key":  "TrustyWeapon",
+                         "nameEn":  "Trusty Weapon",
+                         "nameFr":  "Compétence préférée",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1415,
+                         "key":  "Twinfire",
+                         "nameEn":  "Twin Fire",
+                         "nameFr":  "Boum boum",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1349,
+                         "key":  "UltimateAwakening",
+                         "nameEn":  "Ultimate Awakening",
+                         "nameFr":  "Éveil ultime",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3055,
+                         "key":  "UltimateRecursion",
+                         "nameEn":  "Ultimate Recursion",
+                         "nameFr":  "Récursivité ultime",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2157,
+                         "key":  "Upgrade_DeathDance",
+                         "nameEn":  "Upgrade Death\u0027s Dance",
+                         "nameFr":  "Danse de la mort améliorée",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2140,
+                         "key":  "Upgrade_Ravenous",
+                         "nameEn":  "Upgrade Ravenous Hydra",
+                         "nameFr":  "Hydre vorace améliorée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3150,
+                         "key":  "Upgrade_Stormsurge",
+                         "nameEn":  "Upgrade Stormsurge",
+                         "nameFr":  "Onde orageuse améliorée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2143,
+                         "key":  "Upgrade_SunderedSky",
+                         "nameEn":  "Upgrade Sundered Sky",
+                         "nameFr":  "Ciel éventré amélioré",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1379,
+                         "key":  "Upgrade_SwordOfBlossom",
+                         "nameEn":  "Upgrade Sword of Blossoming Dawn",
+                         "nameFr":  "Épée de l\u0027aube améliorée",
+                         "rarity":  "prismatic",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1034,
+                         "key":  "VeilOfWarding",
+                         "nameEn":  "Veil of Warding",
+                         "nameFr":  "Protection antisorts",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2138,
+                         "key":  "WardingWeapon",
+                         "nameEn":  "Adaptive Ward",
+                         "nameFr":  "Dégâts adaptatifs",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  2132,
+                         "key":  "WarlockJuicebox",
+                         "nameEn":  "Warlock Juicebox",
+                         "nameFr":  "Expertise en omnivampirisme",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  3081,
+                         "key":  "WeaponOfDestiny",
+                         "nameEn":  "Weapon of Destiny",
+                         "nameFr":  "Arme de la destinée",
+                         "rarity":  "gold",
+                         "icon":  ""
+                     },
+                     {
+                         "id":  1386,
+                         "key":  "YouSpinMeRightRound",
+                         "nameEn":  "Spin Me Right Round",
+                         "nameFr":  "Envolée héroïque",
+                         "rarity":  "silver",
+                         "icon":  ""
+                     }
+                 ]
+}

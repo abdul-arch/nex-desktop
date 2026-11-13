@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "overlay-window",
+  "description": "Fenetre d'overlay : lecture de l'instantane de partie, du catalogue et des builds, disposition de ses propres widgets. Aucun import vers le client, aucun acces joueur/backend hors builds.",
+  "windows": ["overlay"],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-settings-get",
+    "allow-static-data-version",
+    "allow-static-catalog",
+    "allow-stats-build",
+    "allow-live-snapshot",
+    "allow-overlay-set-mode",
+    "allow-overlay-mode",
+    "allow-overlay-layout-get",
+    "allow-overlay-layout-set",
+    "allow-mayhem-state"
+  ]
+}

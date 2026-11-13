@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mayhem-demo"
+description = "Enables the mayhem_demo command without any pre-configured scope."
+commands.allow = ["mayhem_demo"]
+
+[[permission]]
+identifier = "deny-mayhem-demo"
+description = "Denies the mayhem_demo command without any pre-configured scope."
+commands.deny = ["mayhem_demo"]

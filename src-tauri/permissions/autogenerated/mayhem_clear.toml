@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mayhem-clear"
+description = "Enables the mayhem_clear command without any pre-configured scope."
+commands.allow = ["mayhem_clear"]
+
+[[permission]]
+identifier = "deny-mayhem-clear"
+description = "Denies the mayhem_clear command without any pre-configured scope."
+commands.deny = ["mayhem_clear"]

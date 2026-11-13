@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-stats-matchups"
+description = "Enables the stats_matchups command without any pre-configured scope."
+commands.allow = ["stats_matchups"]
+
+[[permission]]
+identifier = "deny-stats-matchups"
+description = "Denies the stats_matchups command without any pre-configured scope."
+commands.deny = ["stats_matchups"]

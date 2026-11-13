@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-favorites-remove"
+description = "Enables the favorites_remove command without any pre-configured scope."
+commands.allow = ["favorites_remove"]
+
+[[permission]]
+identifier = "deny-favorites-remove"
+description = "Denies the favorites_remove command without any pre-configured scope."
+commands.deny = ["favorites_remove"]

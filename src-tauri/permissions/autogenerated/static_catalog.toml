@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-static-catalog"
+description = "Enables the static_catalog command without any pre-configured scope."
+commands.allow = ["static_catalog"]
+
+[[permission]]
+identifier = "deny-static-catalog"
+description = "Denies the static_catalog command without any pre-configured scope."
+commands.deny = ["static_catalog"]

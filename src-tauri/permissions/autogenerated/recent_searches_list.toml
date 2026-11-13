@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-recent-searches-list"
+description = "Enables the recent_searches_list command without any pre-configured scope."
+commands.allow = ["recent_searches_list"]
+
+[[permission]]
+identifier = "deny-recent-searches-list"
+description = "Denies the recent_searches_list command without any pre-configured scope."
+commands.deny = ["recent_searches_list"]

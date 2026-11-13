@@ -1,0 +1,524 @@
+.profile {
+  display: grid;
+  gap: 14px;
+}
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  flex-wrap: wrap;
+}
+.profile-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+@container content (max-width: 980px) {
+  .profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.profile-side {
+  display: grid;
+  gap: 10px;
+}
+.sample-note {
+  font-size: var(--fs-xs);
+  margin: 4px 0 8px;
+}
+.champ-table {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.champ-table li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+.champ-table li > span {
+  display: grid;
+  line-height: 1.2;
+}
+.champ-table .muted {
+  font-size: var(--fs-xs);
+}
+.saved-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+  max-width: 760px;
+}
+
+.history {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: hist;
+}
+.history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+/* ---------- Ligne d'historique ---------- */
+.hist {
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.hist[data-result="win"] {
+  border-left-color: var(--blue);
+}
+.hist[data-result="win"] > .hist-main {
+  background: var(--win-row);
+}
+.hist[data-result="loss"] {
+  border-left-color: var(--red);
+}
+.hist[data-result="loss"] > .hist-main {
+  background: var(--loss-row);
+}
+.hist[data-result="remake"] {
+  border-left-color: var(--dim);
+}
+.hist-main {
+  display: grid;
+  grid-template-columns: 96px auto 92px 150px auto minmax(150px, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 8px 8px 10px;
+  cursor: pointer;
+  background: var(--panel);
+}
+@container hist (max-width: 960px) {
+  .hist-main {
+    grid-template-columns: 90px auto 88px 140px auto auto auto;
+  }
+  .hist-teams {
+    display: none !important;
+  }
+}
+@container hist (max-width: 700px) {
+  .hist-main {
+    grid-template-columns: 84px auto 1fr auto auto;
+  }
+  .hist-stats,
+  .hist-items {
+    display: none !important;
+  }
+}
+.hist-meta {
+  display: grid;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: 1.3;
+}
+.hist-meta b {
+  font-size: var(--fs-sm);
+}
+.lp-delta {
+  margin-left: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+/* Historique des LP : ce que NEX a releve, jamais une reconstitution. */
+.lp-card {
+  display: grid;
+  gap: 8px;
+}
+.lp-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+}
+.lp-now {
+  font-weight: 700;
+}
+.lp-note {
+  margin: 0;
+  font-size: var(--fs-xs);
+}
+.hist-champ {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.hist-champ-icon {
+  position: relative;
+}
+.hist-champ-icon .lvl {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  background: #0b0c10;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 0 3px;
+}
+.hist-spells {
+  display: grid;
+  gap: 3px;
+}
+.hist-kda {
+  display: grid;
+  line-height: 1.3;
+}
+.hist-kda b {
+  font-size: var(--fs-md);
+}
+.hist-kda span,
+.hist-stats {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.hist-stats {
+  display: grid;
+  gap: 1px;
+}
+.item-row {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+/* Objets, puis les distinctions de la partie sous eux. */
+.hist-items {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-width: 0;
+}
+.hist-teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 10.5px;
+  min-width: 0;
+}
+.hist-teams > div {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.hist-teams > div > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.hist-teams .me .pname {
+  color: var(--text);
+  font-weight: 700;
+}
+.pname {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  max-width: 100%;
+}
+button.pname:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+.hist-toggle svg {
+  transition: transform 0.15s;
+}
+.hist-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.game-icon {
+  display: inline-block;
+  flex: none;
+  overflow: hidden;
+  background: var(--panel-3);
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+.game-icon img,
+.game-icon .img-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  font-size: 8px;
+}
+.game-icon.rune {
+  background: #0b0c10;
+}
+.slot-empty {
+  display: inline-block;
+  flex: none;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ---------- Detail ---------- */
+.hist-detail {
+  overflow-x: auto;
+  min-width: 0;
+  padding: 12px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+}
+.teams {
+  display: grid;
+  gap: 10px;
+}
+.team-block header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  margin-bottom: 4px;
+}
+.objectives {
+  display: flex;
+  gap: 10px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.objectives b {
+  color: var(--text);
+}
+.objectives span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.roles > div,
+.roles > .tip > div {
+  justify-items: center;
+}
+.bans {
+  display: flex;
+  gap: 3px;
+}
+.ban {
+  filter: grayscale(1);
+  opacity: 0.75;
+}
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-xs);
+}
+.team-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--dim);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.team-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  vertical-align: middle;
+}
+.team-table tr.me td {
+  background: var(--accent-soft);
+}
+.team-table .muted {
+  font-size: 10px;
+}
+.who {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.who-spells {
+  display: grid;
+  gap: 1px;
+}
+.who-name {
+  display: grid;
+  min-width: 0;
+  max-width: 150px;
+  margin-left: 4px;
+}
+.dmg-bar {
+  height: 3px;
+  width: 64px;
+  background: var(--panel-3);
+  border-radius: 2px;
+  margin-top: 2px;
+}
+.dmg-bar i {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  border-radius: inherit;
+}
+
+.panel-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.runes-panel,
+.build-panel,
+.curves-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin-bottom: 12px;
+}
+.rune-list {
+  display: grid;
+  gap: 6px;
+}
+.rune-list > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.shards {
+  margin: 0;
+  padding-left: 16px;
+  font-size: var(--fs-sm);
+  display: grid;
+  gap: 4px;
+}
+.purchase-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.purchase-groups li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-xs);
+}
+.purchase-groups .muted {
+  width: 38px;
+  text-align: right;
+}
+.sold {
+  position: relative;
+  opacity: 0.5;
+}
+.sold::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 50%;
+  height: 2px;
+  background: var(--red);
+  transform: rotate(-35deg);
+}
+.skill-grid {
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-size: 10px;
+}
+.skill-grid th {
+  width: 18px;
+  color: var(--text-2);
+}
+.skill-grid td {
+  width: 18px;
+  height: 18px;
+  text-align: center;
+  background: var(--panel-2);
+  border-radius: 3px;
+  color: transparent;
+}
+.skill-grid td.on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+.linechart {
+  margin: 0;
+}
+.linechart .legend {
+  display: flex;
+  gap: 12px;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  margin-top: 4px;
+}
+.linechart .legend i {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.key-events ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 170px;
+  overflow: auto;
+  font-size: var(--fs-xs);
+  display: grid;
+  gap: 3px;
+}
+
+.error-panel {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--red-soft);
+  border: 1px solid rgba(240, 89, 107, 0.35);
+}
+.error-panel.compact {
+  padding: 10px 12px;
+}
+.error-panel p {
+  margin: 0;
+  font-size: var(--fs-sm);
+}
+.error-panel code {
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

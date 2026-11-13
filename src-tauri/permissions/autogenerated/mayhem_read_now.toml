@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mayhem-read-now"
+description = "Enables the mayhem_read_now command without any pre-configured scope."
+commands.allow = ["mayhem_read_now"]
+
+[[permission]]
+identifier = "deny-mayhem-read-now"
+description = "Denies the mayhem_read_now command without any pre-configured scope."
+commands.deny = ["mayhem_read_now"]

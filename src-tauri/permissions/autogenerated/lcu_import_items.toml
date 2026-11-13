@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-lcu-import-items"
+description = "Enables the lcu_import_items command without any pre-configured scope."
+commands.allow = ["lcu_import_items"]
+
+[[permission]]
+identifier = "deny-lcu-import-items"
+description = "Denies the lcu_import_items command without any pre-configured scope."
+commands.deny = ["lcu_import_items"]

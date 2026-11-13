@@ -1,0 +1,112 @@
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 14px;
+  max-width: 1200px;
+  align-items: start;
+}
+.settings-h {
+  margin: 0 0 6px;
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.settings-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.settings-row:first-of-type {
+  border-top: 0;
+}
+.settings-label {
+  font-weight: 600;
+}
+.settings-hint {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  margin-top: 2px;
+  max-width: 420px;
+}
+.settings-legal {
+  font-size: var(--fs-xs);
+  color: var(--dim);
+  line-height: 1.5;
+  margin: 12px 0 6px;
+}
+/* Engagements de conformite, lisibles sans etre criards. */
+.settings-h3 {
+  margin: 16px 0 6px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+.settings-rules {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.settings-rules strong {
+  color: var(--text);
+}
+.select {
+  height: 28px;
+  border-radius: 7px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  padding: 0 8px;
+  font-size: var(--fs-sm);
+}
+.input {
+  height: 28px;
+  width: 210px;
+  border-radius: 7px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  padding: 0 8px;
+  font-size: var(--fs-sm);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--accent);
+}
+.pending-card .over {
+  position: relative;
+  height: 100%;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(90% 80% at 80% 100%, rgba(130, 121, 244, 0.08), transparent 70%);
+}
+.switch {
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  border: 1px solid var(--border-strong);
+  position: relative;
+  transition: background 0.15s;
+}
+.switch span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s var(--ease), background 0.15s;
+}
+.switch[aria-checked="true"] {
+  background: var(--accent);
+  border-color: transparent;
+}
+.switch[aria-checked="true"] span {
+  transform: translateX(16px);
+  background: #fff;
+}

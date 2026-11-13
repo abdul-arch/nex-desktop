@@ -1,0 +1,429 @@
+/* ---------- Surfaces ---------- */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.card-pad {
+  padding: 14px 16px;
+}
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs);
+  font-weight: 600;
+  color: var(--text);
+}
+.card-title svg {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+}
+.card-link {
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s;
+  text-align: left;
+  width: 100%;
+}
+.card-link:hover {
+  border-color: var(--border-strong);
+}
+
+.img-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--panel-3);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 11px;
+}
+.champ-icon {
+  display: inline-block;
+  flex: none;
+  overflow: hidden;
+  background: var(--panel-3);
+}
+.champ-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.08);
+}
+
+.avatar {
+  position: relative;
+  flex: none;
+  border-radius: 10px;
+  overflow: visible;
+  background: var(--panel-3);
+}
+.avatar > img,
+.avatar > .img-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+.avatar-level {
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #0b0c10;
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
+}
+.rank-txt {
+  color: var(--gold);
+}
+
+/* ---------- Variation / badges ---------- */
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.delta-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 7px;
+}
+.delta-pos .delta-dot {
+  background: var(--green);
+  color: #08140e;
+}
+.delta-neg .delta-dot {
+  background: var(--red);
+  color: #1a0609;
+}
+.delta-flat .delta-dot {
+  background: var(--panel-3);
+}
+.delta-none {
+  color: var(--dim);
+}
+
+.demo-tag {
+  display: inline-flex;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  border: 1px solid rgba(232, 182, 90, 0.35);
+  background: var(--gold-soft);
+  border-radius: 5px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.chip-accent {
+  background: var(--accent-soft);
+  border-color: rgba(130, 121, 244, 0.4);
+  color: #c9c5ff;
+}
+
+/* ---------- Controles ---------- */
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  border-radius: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+.segmented button {
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.segmented-md button {
+  height: 28px;
+  padding: 0 12px;
+  font-size: var(--fs-sm);
+}
+.segmented button:hover:not(:disabled) {
+  color: var(--text);
+}
+.segmented button[aria-checked="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--panel-3);
+}
+.btn svg {
+  width: 14px;
+  height: 14px;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+.btn-sm {
+  height: 24px;
+  padding: 0 8px;
+  font-size: var(--fs-xs);
+}
+
+.rank-emblem {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  /* L'image est zoomee (marges transparentes de la source) : rien ne depasse de la case. */
+  overflow: hidden;
+}
+.rank-emblem img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.5));
+}
+.position-icon {
+  display: inline-block;
+  flex: none;
+  opacity: 0.9;
+  vertical-align: middle;
+}
+
+.score-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+.score-ring svg {
+  position: absolute;
+  inset: 0;
+}
+.score-ring > .num {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Anneau de score avec sa legende de rang (MVP, ACE, « 9e »). */
+.score-cell {
+  display: inline-grid;
+  justify-items: center;
+  gap: 3px;
+  flex: none;
+}
+.score-rank {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--dim);
+}
+.score-rank.top {
+  color: var(--gold);
+}
+
+/* Distinctions d'une partie : « Lane gagnée », « Le plus de dégâts »... */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+.badges > span {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--panel-3);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--blue));
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 28px 20px;
+  color: var(--muted);
+}
+.empty strong {
+  color: var(--text);
+  font-size: var(--fs-md);
+}
+.empty p {
+  margin: 0;
+  max-width: 460px;
+  font-size: var(--fs-sm);
+}
+.empty-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.empty-icon svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-strong);
+}
+
+/* ---------- Notifications ---------- */
+.toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  gap: 8px;
+  z-index: 60;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 240px;
+  max-width: 380px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  font-size: var(--fs-sm);
+  animation: pop-in 0.14s var(--ease);
+}
+.toast[data-kind="success"] {
+  border-left: 3px solid var(--green);
+}
+.toast[data-kind="error"] {
+  border-left: 3px solid var(--red);
+}
+.toast button {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+/* ---------- Pages generiques ---------- */
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.page-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--text-2);
+}
+.page-sub {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  max-width: 340px;
+  line-height: 1.35;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+.spacer {
+  flex: 1;
+}
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  font-size: var(--fs-sm);
+}
+.kv dt {
+  color: var(--muted);
+}
+.kv dd {
+  margin: 0;
+}

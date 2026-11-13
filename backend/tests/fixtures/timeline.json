@@ -1,0 +1,41 @@
+{
+  "metadata": { "matchId": "EUW1_7000000001" },
+  "info": {
+    "frameInterval": 60000,
+    "frames": [
+      {
+        "timestamp": 0,
+        "participantFrames": {
+          "1": { "participantId": 1, "totalGold": 500, "minionsKilled": 0, "jungleMinionsKilled": 0, "xp": 0, "level": 1 },
+          "2": { "participantId": 2, "totalGold": 500, "minionsKilled": 0, "jungleMinionsKilled": 0, "xp": 0, "level": 1 }
+        },
+        "events": [
+          { "type": "ITEM_PURCHASED", "timestamp": 1500, "participantId": 1, "itemId": 1055 },
+          { "type": "ITEM_UNDO", "timestamp": 2500, "participantId": 1, "beforeId": 1055, "afterId": 0, "goldGain": 450 },
+          { "type": "WARD_PLACED", "timestamp": 3000, "creatorId": 1, "wardType": "YELLOW_TRINKET" }
+        ]
+      },
+      {
+        "timestamp": 60000,
+        "participantFrames": {
+          "2": { "participantId": 2, "totalGold": 700, "minionsKilled": 2, "jungleMinionsKilled": 0, "xp": 280, "level": 1 },
+          "1": { "participantId": 1, "totalGold": 720, "minionsKilled": 3, "jungleMinionsKilled": 1, "xp": 300, "level": 2 }
+        },
+        "events": [
+          { "type": "SKILL_LEVEL_UP", "timestamp": 61000, "participantId": 1, "skillSlot": 1, "levelUpType": "NORMAL" },
+          { "type": "SKILL_LEVEL_UP", "timestamp": 62000, "participantId": 2, "skillSlot": 2, "levelUpType": "EVOLVE" },
+          { "type": "CHAMPION_KILL", "timestamp": 90000, "killerId": 1, "victimId": 2, "assistingParticipantIds": [2] },
+          { "type": "ELITE_MONSTER_KILL", "timestamp": 95000, "killerId": 1, "killerTeamId": 100, "monsterType": "DRAGON", "monsterSubType": "FIRE_DRAGON" }
+        ]
+      },
+      {
+        "timestamp": 900350,
+        "participantFrames": {
+          "1": { "participantId": 1, "totalGold": 6200, "minionsKilled": 120, "jungleMinionsKilled": 4, "xp": 7000, "level": 11 },
+          "2": { "participantId": 2, "totalGold": 5400, "minionsKilled": 110, "jungleMinionsKilled": 0, "xp": 6500, "level": 10 }
+        },
+        "events": []
+      }
+    ]
+  }
+}

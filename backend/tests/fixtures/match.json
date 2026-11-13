@@ -1,0 +1,100 @@
+{
+  "metadata": { "dataVersion": "2", "matchId": "EUW1_7000000001", "participants": ["P1", "P2"] },
+  "info": {
+    "gameCreation": 1762498100000,
+    "gameStartTimestamp": 1762498200000,
+    "gameEndTimestamp": 1762500000000,
+    "gameDuration": 1800,
+    "gameMode": "CLASSIC",
+    "gameVersion": "15.22.715.1234",
+    "platformId": "EUW1",
+    "queueId": 420,
+    "participants": [
+      {
+        "participantId": 1,
+        "puuid": "PUUID_FIXTURE_ONE_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "riotIdGameName": "Fixture One",
+        "riotIdTagline": "TEST",
+        "championName": "Ahri",
+        "championId": 103,
+        "champLevel": 16,
+        "teamId": 100,
+        "teamPosition": "MIDDLE",
+        "win": true,
+        "kills": 8,
+        "deaths": 2,
+        "assists": 9,
+        "totalMinionsKilled": 200,
+        "neutralMinionsKilled": 10,
+        "goldEarned": 12500,
+        "totalDamageDealtToChampions": 28000,
+        "totalDamageTaken": 15000,
+        "visionScore": 24,
+        "wardsPlaced": 9,
+        "wardsKilled": 3,
+        "visionWardsBoughtInGame": 2,
+        "item0": 3089, "item1": 3020, "item2": 0, "item3": 0, "item4": 0, "item5": 0, "item6": 3340,
+        "summoner1Id": 4,
+        "summoner2Id": 14,
+        "largestMultiKill": 2,
+        "gameEndedInEarlySurrender": false,
+        "challenges": { "soloKills": 2, "killParticipation": 0.62 },
+        "perks": {
+          "statPerks": { "defense": 5011, "flex": 5008, "offense": 5008 },
+          "styles": [
+            { "description": "primaryStyle", "style": 8100, "selections": [{ "perk": 8112 }, { "perk": 8139 }, { "perk": 8138 }, { "perk": 8135 }] },
+            { "description": "subStyle", "style": 8200, "selections": [{ "perk": 8226 }, { "perk": 8210 }] }
+          ]
+        }
+      },
+      {
+        "participantId": 2,
+        "puuid": "PUUID_FIXTURE_TWO_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "riotIdGameName": "Fixture Two",
+        "riotIdTagline": "TEST",
+        "championName": "Zed",
+        "championId": 238,
+        "champLevel": 15,
+        "teamId": 200,
+        "teamPosition": "",
+        "win": false,
+        "kills": 3,
+        "deaths": 6,
+        "assists": 2,
+        "totalMinionsKilled": 180,
+        "neutralMinionsKilled": 0,
+        "goldEarned": 10100,
+        "totalDamageDealtToChampions": 17000,
+        "totalDamageTaken": 21000,
+        "visionScore": 12,
+        "item0": 3142, "item1": 0, "item2": 0, "item3": 0, "item4": 0, "item5": 0, "item6": 3340,
+        "summoner1Id": 4,
+        "summoner2Id": 12,
+        "gameEndedInEarlySurrender": false,
+        "perks": { "statPerks": {}, "styles": [] }
+      }
+    ],
+    "teams": [
+      {
+        "teamId": 100,
+        "win": true,
+        "bans": [{ "championId": 238, "pickTurn": 1 }, { "championId": -1, "pickTurn": 2 }],
+        "objectives": {
+          "baron": { "first": true, "kills": 1 },
+          "champion": { "first": true, "kills": 25 },
+          "dragon": { "first": true, "kills": 3 },
+          "riftHerald": { "first": false, "kills": 0 },
+          "horde": { "first": true, "kills": 4 },
+          "inhibitor": { "first": true, "kills": 1 },
+          "tower": { "first": true, "kills": 8 }
+        }
+      },
+      {
+        "teamId": 200,
+        "win": false,
+        "bans": [],
+        "objectives": { "champion": { "first": false, "kills": 14 } }
+      }
+    ]
+  }
+}

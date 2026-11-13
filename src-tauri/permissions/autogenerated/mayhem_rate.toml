@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mayhem-rate"
+description = "Enables the mayhem_rate command without any pre-configured scope."
+commands.allow = ["mayhem_rate"]
+
+[[permission]]
+identifier = "deny-mayhem-rate"
+description = "Denies the mayhem_rate command without any pre-configured scope."
+commands.deny = ["mayhem_rate"]

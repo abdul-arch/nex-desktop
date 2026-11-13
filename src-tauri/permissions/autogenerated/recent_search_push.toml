@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-recent-search-push"
+description = "Enables the recent_search_push command without any pre-configured scope."
+commands.allow = ["recent_search_push"]
+
+[[permission]]
+identifier = "deny-recent-search-push"
+description = "Denies the recent_search_push command without any pre-configured scope."
+commands.deny = ["recent_search_push"]

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-recent-searches-clear"
+description = "Enables the recent_searches_clear command without any pre-configured scope."
+commands.allow = ["recent_searches_clear"]
+
+[[permission]]
+identifier = "deny-recent-searches-clear"
+description = "Denies the recent_searches_clear command without any pre-configured scope."
+commands.deny = ["recent_searches_clear"]

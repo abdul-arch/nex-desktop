@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-recordings-storage"
+description = "Enables the recordings_storage command without any pre-configured scope."
+commands.allow = ["recordings_storage"]
+
+[[permission]]
+identifier = "deny-recordings-storage"
+description = "Denies the recordings_storage command without any pre-configured scope."
+commands.deny = ["recordings_storage"]

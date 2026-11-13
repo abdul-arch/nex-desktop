@@ -1,0 +1,45 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Secrets : jamais versionnés. La clé Riot et les identifiants Leaguepedia vivent
+# dans backend/.env, qui ne doit sortir de cette machine sous aucune forme.
+.env
+.env.*
+*.env
+backend/.env
+*.key
+*.pfx
+*.pem
+*.bak
+.claude/settings.local.json
+
+# Cache local du backend et base de l'application
+backend/*.sqlite3*
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+target
+
+# Fichiers engendrés par Tauri au build
+src-tauri/gen/
+
+# Mesures locales brutes
+docs/perf/*.csv
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

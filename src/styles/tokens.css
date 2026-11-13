@@ -1,0 +1,64 @@
+/* Jetons de design NEX. Palette de depart ajustable (cf. docs/DESIGN.md). */
+:root {
+  color-scheme: dark;
+
+  --bg: #0b0c10;
+  --bg-sidebar: #0e0f14;
+  --panel: #14151d;
+  --panel-2: #1c1d28;
+  --panel-3: #232533;
+  --border: #292b38;
+  --border-strong: #363949;
+
+  --text: #eceef6;
+  --text-2: #b4b7c7;
+  --muted: #8b8fa3;
+  --dim: #5d6075;
+
+  --accent: #8279f4;
+  --accent-soft: rgba(130, 121, 244, 0.16);
+  --accent-strong: #9a93ff;
+  --blue: #5795ff;
+  --blue-soft: rgba(87, 149, 255, 0.14);
+  --green: #3fcf8e;
+  --green-soft: rgba(63, 207, 142, 0.14);
+  --red: #f0596b;
+  --red-soft: rgba(240, 89, 107, 0.14);
+  --gold: #e8b65a;
+  --gold-soft: rgba(232, 182, 90, 0.14);
+
+  /* Fonds des lignes de match : victoire bleue, defaite rouge (toujours avec libelle). */
+  --win-row: linear-gradient(90deg, rgba(87, 149, 255, 0.2), rgba(87, 149, 255, 0.06));
+  --loss-row: linear-gradient(90deg, rgba(240, 89, 107, 0.2), rgba(240, 89, 107, 0.06));
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --sidebar-w: 212px;
+  --sidebar-w-collapsed: 64px;
+  --topbar-h: 48px;
+
+  --font: "Inter Variable", "Segoe UI", system-ui, sans-serif;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease: linear;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

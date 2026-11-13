@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-leaderboard-get"
+description = "Enables the leaderboard_get command without any pre-configured scope."
+commands.allow = ["leaderboard_get"]
+
+[[permission]]
+identifier = "deny-leaderboard-get"
+description = "Denies the leaderboard_get command without any pre-configured scope."
+commands.deny = ["leaderboard_get"]

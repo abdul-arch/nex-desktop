@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-lcu-match-history"
+description = "Enables the lcu_match_history command without any pre-configured scope."
+commands.allow = ["lcu_match_history"]
+
+[[permission]]
+identifier = "deny-lcu-match-history"
+description = "Denies the lcu_match_history command without any pre-configured scope."
+commands.deny = ["lcu_match_history"]

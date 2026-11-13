@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-lcu-observable-friends"
+description = "Enables the lcu_observable_friends command without any pre-configured scope."
+commands.allow = ["lcu_observable_friends"]
+
+[[permission]]
+identifier = "deny-lcu-observable-friends"
+description = "Denies the lcu_observable_friends command without any pre-configured scope."
+commands.deny = ["lcu_observable_friends"]

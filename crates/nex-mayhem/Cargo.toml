@@ -1,0 +1,9 @@
+[package]
+name = "nex-mayhem"
+version = "0.1.0"
+edition = "2024"
+description = "Assistant ARAM Mayhem : catalogue d'augments, regles versionnees, moteur de notation deterministe, identification des cartes et cycle de vie des observations."
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

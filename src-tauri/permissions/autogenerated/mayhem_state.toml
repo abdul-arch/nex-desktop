@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-mayhem-state"
+description = "Enables the mayhem_state command without any pre-configured scope."
+commands.allow = ["mayhem_state"]
+
+[[permission]]
+identifier = "deny-mayhem-state"
+description = "Denies the mayhem_state command without any pre-configured scope."
+commands.deny = ["mayhem_state"]

@@ -1,0 +1,275 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>NEX</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+  /* Colonne unique, bandes pleine largeur ; identité reprise de l'app (violet + or sur ardoise). */
+  :root {
+    --bg: #f7f7fa;
+    --panel: #ffffff;
+    --panel-2: #eceef4;
+    --border: #d9dbe4;
+    --fg: #1a1b24;
+    --fg-2: #4d5163;
+    --dim: #747890;
+    --accent: #6d4aff;
+    --accent-soft: #ece7ff;
+    --gold: #a9741a;
+    --ok: #2b7a5e;
+    --no: #b23a48;
+    --display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+    --body: "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101119;
+      --panel: #1a1c27;
+      --panel-2: #232533;
+      --border: #2d3040;
+      --fg: #e9eaf2;
+      --fg-2: #b4b7c7;
+      --dim: #7e8299;
+      --accent: #9b84ff;
+      --accent-soft: #241f3d;
+      --gold: #e8b65a;
+      --ok: #6ddba8;
+      --no: #ff8d99;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101119;
+    --panel: #1a1c27;
+    --panel-2: #232533;
+    --border: #2d3040;
+    --fg: #e9eaf2;
+    --fg-2: #b4b7c7;
+    --dim: #7e8299;
+    --accent: #9b84ff;
+    --accent-soft: #241f3d;
+    --gold: #e8b65a;
+    --ok: #6ddba8;
+    --no: #ff8d99;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .band { width: 100%; }
+  .band.tinted { background: var(--panel); border-block: 1px solid var(--border); }
+  .wrap {
+    max-width: 920px;
+    margin-inline: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 48px;
+  }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(40px, 9vw, 68px); letter-spacing: -0.03em; line-height: 1; }
+  h2 { font-size: clamp(22px, 4vw, 28px); letter-spacing: -0.015em; margin-bottom: 20px; }
+  h3 { font-size: 17px; margin-bottom: 4px; }
+  p { margin: 0 0 14px; max-width: 68ch; color: var(--fg-2); }
+  p.lead { font-size: 19px; color: var(--fg); max-width: 60ch; }
+  strong { color: var(--fg); font-weight: 600; }
+
+  .eyebrow {
+    font-family: var(--display);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+  .chip {
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    font-size: 13px;
+    color: var(--fg-2);
+  }
+
+  figure { margin: 28px 0 0; }
+  figure img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  figcaption { margin-top: 8px; font-size: 13px; color: var(--dim); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .grid > div { min-width: 0; }
+  .grid p { margin: 0; font-size: 15px; }
+
+  ul.marks { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  ul.marks li { padding-left: 30px; position: relative; color: var(--fg-2); max-width: 68ch; }
+  ul.marks li::before {
+    content: "✕";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--no);
+    font-weight: 700;
+  }
+  ul.marks.yes li::before { content: "✓"; color: var(--ok); }
+
+  dl.api { display: grid; gap: 14px; margin: 0; }
+  dl.api > div {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 4px 20px;
+  }
+  dl.api dt { font-weight: 600; color: var(--fg); }
+  dl.api dd { margin: 0; color: var(--fg-2); }
+  code {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 5px;
+  }
+  @media (max-width: 640px) {
+    dl.api > div { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  footer p { font-size: 13px; color: var(--dim); max-width: 78ch; }
+  footer .rule { height: 1px; background: var(--border); margin-bottom: 28px; }
+</style>
+
+<div class="band">
+  <div class="wrap">
+    <div class="eyebrow">Application compagnon · League of Legends</div>
+    <h1>NEX</h1>
+    <p class="lead" style="margin-top: 20px">
+      Historique de parties, détail de chaque partie, statistiques descriptives et overlays en jeu, à partir de l'API Riot officielle.
+    </p>
+    <p>Projet personnel, utilisé sur une seule machine. NEX n'est ni publié, ni distribué, ni vendu.</p>
+    <div class="hero-meta">
+      <span class="chip">Windows</span>
+      <span class="chip">Tauri 2 · Rust · React</span>
+      <span class="chip">Gratuit, sans publicité</span>
+      <span class="chip">Aucune donnée transmise à un tiers</span>
+    </div>
+    <figure>
+      <img src="captures/dashboard.jpg" alt="Le tableau de bord de NEX : métriques récentes, rang et dernières parties avec leurs distinctions.">
+      <figcaption>Tableau de bord. Le pseudo affiché a été remplacé sur les captures.</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="band tinted">
+  <div class="wrap">
+    <h2>Ce que fait NEX</h2>
+    <div class="grid">
+      <div>
+        <h3>Profil et historique</h3>
+        <p>L'historique du compte lié et de n'importe quel joueur cherché par Riot ID, avec résultat, KDA, objets, écart d'or à 15 minutes et les distinctions de la partie, calculées à partir de ses dix participants.</p>
+      </div>
+      <div>
+        <h3>Détail d'une partie</h3>
+        <p>Tableau des équipes, objectifs et bannissements, page de runes, ordre d'achat reconstitué depuis la timeline, courbes d'or et de CS, événements clés.</p>
+      </div>
+      <div>
+        <h3>Historique des LP</h3>
+        <p>L'API ne renvoie que le rang courant. NEX relève le rang à chaque lecture de profil et trace la courbe à partir de ses propres relevés. L'historique commence au premier relevé ; rien n'est reconstitué avant.</p>
+      </div>
+      <div>
+        <h3>Data Studio</h3>
+        <p>Vingt-sept mesures — CS par minute, participation, part des dégâts, temps mort, contrôle de foule, vision. Pour chacune : la valeur du joueur, en victoire et en défaite, le classement de ses champions, et la médiane des parties collectées.</p>
+      </div>
+      <div>
+        <h3>Champions et matchups</h3>
+        <p>Builds, runes, tier list et matchups, calculés sur les parties que NEX collecte lui-même. Aucun chiffre n'est importé d'un autre site.</p>
+      </div>
+      <div>
+        <h3>Overlays en jeu</h3>
+        <p>Chronomètre, timers d'objectifs, prochain objet et rappel de compétence, construits à partir de la Live Client Data API et d'événements que la partie annonce aux dix joueurs.</p>
+      </div>
+    </div>
+    <figure>
+      <img src="captures/data-studio.jpg" alt="Le Data Studio : catalogue de mesures à gauche, et le classement des champions du joueur sur la mesure choisie.">
+      <figcaption>Data Studio, sur la mesure « CS par minute ».</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="band">
+  <div class="wrap">
+    <h2>Ce que NEX ne fait pas</h2>
+    <ul class="marks">
+      <li><strong>Aucun classement parallèle.</strong> Le « Score NEX » note une partie jouée, à partir du KDA, de la participation, des CS par minute, de la part des dégâts et de la vision. Ce n'est pas une estimation de niveau, de MMR ou de rang caché : NEX n'en calcule aucune.</li>
+      <li><strong>Aucune écriture non sollicitée dans le client League.</strong> NEX lit l'historique local pour les parties qu'une API publique ne fournit pas. Il n'écrit dans le client que sur une action explicite du joueur : importer une page de runes, importer un set d'objets, lancer le mode spectateur.</li>
+      <li><strong>Aucun avantage déloyal.</strong> Pas de lecture de la mémoire du jeu, pas d'information cachée au joueur, pas d'action automatisée à sa place.</li>
+      <li><strong>Aucune monétisation.</strong> Pas de paiement, pas de publicité, pas de pari, pas de cryptomonnaie.</li>
+    </ul>
+    <figure>
+      <img src="captures/profil.jpg" alt="La page Profil et historique : rang, historique des LP, et les parties avec leurs distinctions.">
+      <figcaption>Profil et historique, avec les distinctions de chaque partie.</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="band tinted">
+  <div class="wrap">
+    <h2>Comment NEX utilise l'API Riot</h2>
+    <dl class="api">
+      <div>
+        <dt>Clé API</dt>
+        <dd>Détenue par un backend local, dans un fichier d'environnement côté serveur. Jamais dans le code de l'interface, jamais dans un binaire distribué.</dd>
+      </div>
+      <div>
+        <dt>Transport</dt>
+        <dd>HTTPS uniquement.</dd>
+      </div>
+      <div>
+        <dt>Endpoints</dt>
+        <dd><code>account-v1</code>, <code>summoner-v4</code>, <code>league-v4</code>, <code>match-v5</code> (parties et timelines), <code>spectator-v5</code>.</dd>
+      </div>
+      <div>
+        <dt>Limites</dt>
+        <dd>Un limiteur applicatif applique 20 requêtes par seconde et 100 par deux minutes <strong>avant</strong> chaque appel. Les réponses 429 et leur en-tête <code>Retry-After</code> sont respectées : NEX attend, il ne réessaie pas immédiatement.</dd>
+      </div>
+      <div>
+        <dt>Cache</dt>
+        <dd>Base SQLite locale. Les parties et les timelines sont immuables et conservées ; le reste a une durée de vie courte. NEX relit son cache plutôt que l'API.</dd>
+      </div>
+      <div>
+        <dt>Partage</dt>
+        <dd>Aucune donnée n'est transmise à un tiers. Tout reste sur la machine du joueur.</dd>
+      </div>
+    </dl>
+  </div>
+</div>
+
+<footer class="band">
+  <div class="wrap">
+    <div class="rule"></div>
+    <p>
+      NEX n'est ni approuvé ni sponsorisé par Riot Games et ne reflète pas les opinions de Riot Games ou de toute personne officiellement impliquée dans
+      la production ou la gestion des propriétés de Riot Games. Riot Games et toutes les propriétés associées sont des marques commerciales ou déposées
+      de Riot Games, Inc.
+    </p>
+    <p>
+      Ressources graphiques : Data Dragon (Riot Games) pour les champions, objets, sorts et runes ; CommunityDragon pour les emblèmes de rang et les
+      icônes de poste et d'objectifs.
+    </p>
+  </div>
+</footer>

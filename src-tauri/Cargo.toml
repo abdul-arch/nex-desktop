@@ -1,0 +1,55 @@
+[package]
+name = "nex"
+version = "0.1.0"
+description = "NEX - application desktop League of Legends"
+authors = ["NEX"]
+edition = "2024"
+
+[lib]
+# Suffixe _lib : evite le conflit de nom entre lib et bin sous Windows (cargo#8519).
+name = "nex_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
+# Utilise uniquement cote Rust (commande open_external filtree) : aucune permission frontend.
+tauri-plugin-opener = "2"
+nex-domain = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# SQLite embarque : preferences, favoris, recherches, caches, index de clips.
+rusqlite = { workspace = true }
+thiserror = { workspace = true }
+# TLS natif Windows (schannel) : pas de toolchain C supplementaire.
+reqwest = { workspace = true }
+tokio = { version = "1.54.1", features = ["sync", "time", "macros"] }
+# Raccourcis globaux de l'overlay, enregistres cote Rust (aucune permission frontend).
+tauri-plugin-global-shortcut = "2"
+# Detection du processus du client League (chemin d'installation -> lockfile).
+sysinfo = { version = "0.40.1", default-features = false, features = ["disk", "system"] }
+windows-capture = "2.0.1"
+mp4 = "0.14"
+trash = "5"
+windows = { version = "0.62.2", features = [
+    "Win32_Media_MediaFoundation",
+    "Win32_System_Com",
+    "Win32_Foundation",
+    # Assistant ARAM Mayhem : copie GDI de la fenetre du jeu et OCR integre a Windows.
+    "Win32_Graphics_Gdi",
+    "Win32_UI_WindowsAndMessaging",
+    "Foundation",
+    "Foundation_Collections",
+    "Globalization",
+    "Graphics_Imaging",
+    "Media_Ocr",
+    "Security_Cryptography",
+    "Storage_Streams",
+] }
+# Assistant ARAM Mayhem : catalogue, regles, moteur de notation, identification des cartes.
+nex-mayhem = { workspace = true }
+
+[dev-dependencies]
+bytes = "1"

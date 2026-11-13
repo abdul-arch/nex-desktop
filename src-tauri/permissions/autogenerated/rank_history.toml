@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-rank-history"
+description = "Enables the rank_history command without any pre-configured scope."
+commands.allow = ["rank_history"]
+
+[[permission]]
+identifier = "deny-rank-history"
+description = "Denies the rank_history command without any pre-configured scope."
+commands.deny = ["rank_history"]
