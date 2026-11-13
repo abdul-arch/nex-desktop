@@ -141,11 +141,11 @@ function load(): WebStore {
 }
 
 const defaultOverlayLayout = (): WidgetLayout[] => [
-  { id: "clock", x: 0.01, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false },
-  { id: "objectives", x: 0.44, y: 0.015, scale: 1, opacity: 0.92, visible: true, locked: false },
-  { id: "build", x: 0.8, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false },
-  { id: "skills", x: 0.01, y: 0.62, scale: 1, opacity: 0.92, visible: true, locked: false },
-  { id: "trinket", x: 0.8, y: 0.55, scale: 1, opacity: 0.92, visible: false, locked: false },
+  { id: "clock", x: 0.01, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "objectives", x: 0.44, y: 0.015, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "build", x: 0.8, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "skills", x: 0.01, y: 0.62, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "trinket", x: 0.8, y: 0.55, scale: 1, opacity: 0.92, visible: false, locked: false, mode: "always" as const },
 ];
 let overlayLayout = defaultOverlayLayout();
 const desktopOnly = { code: "unavailable", message: "L'assistant ARAM Mayhem nécessite l'application desktop (moteur et lecture locaux)." };

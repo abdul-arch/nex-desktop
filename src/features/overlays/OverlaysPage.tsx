@@ -104,7 +104,19 @@ export function OverlaysPage() {
                       <span>Opacité {Math.round(w.opacity * 100)} %</span>
                       <input type="range" min={0.2} max={1} step={0.05} value={w.opacity} onChange={(e) => update({ ...w, opacity: Number(e.target.value) })} />
                     </label>
+                    <label className="field">
+                      <span>Affichage</span>
+                      <select className="select" value={w.mode} onChange={(e) => update({ ...w, mode: e.target.value as WidgetLayout["mode"] })}>
+                        <option value="always">Toujours</option>
+                        <option value="hold">Sur une touche</option>
+                      </select>
+                    </label>
                   </div>
+                  {w.mode === "hold" && (
+                    <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "4px 0 0" }}>
+                      Visible uniquement tant que <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Espace</kbd> est maintenue.
+                    </p>
+                  )}
                   <dl className="kv widget-kv">
                     <dt>Source</dt>
                     <dd>{info.source}</dd>

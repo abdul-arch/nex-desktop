@@ -79,6 +79,11 @@ const MIGRATIONS: &[&str] = &[
         updated_at  INTEGER NOT NULL
     );
     "#,
+    // v5 : mode d'affichage d'un widget d'overlay. "always" en jeu en permanence,
+    // "hold" seulement tant que la touche de rappel est maintenue.
+    r#"
+    ALTER TABLE overlay_widgets ADD COLUMN mode TEXT NOT NULL DEFAULT 'always';
+    "#,
 ];
 
 pub fn latest_version() -> i64 {

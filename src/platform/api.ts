@@ -380,6 +380,8 @@ export interface WidgetLayout {
   opacity: number;
   visible: boolean;
   locked: boolean;
+  /** « always » : affiché toute la partie. « hold » : seulement touche maintenue. */
+  mode: "always" | "hold";
 }
 
 export interface RunePageInput {

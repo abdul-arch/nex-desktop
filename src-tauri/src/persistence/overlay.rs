@@ -17,10 +17,13 @@ pub struct WidgetLayout {
     pub opacity: f64,
     pub visible: bool,
     pub locked: bool,
+    /// "always" : affiche pendant toute la partie. "hold" : seulement tant que la touche
+    /// de rappel (Ctrl+Alt+Espace) est maintenue.
+    pub mode: String,
 }
 
 pub fn defaults() -> Vec<WidgetLayout> {
-    let w = |id: &str, x: f64, y: f64, visible: bool| WidgetLayout { id: id.into(), x, y, scale: 1.0, opacity: 0.92, visible, locked: false };
+    let w = |id: &str, x: f64, y: f64, visible: bool| WidgetLayout { id: id.into(), x, y, scale: 1.0, opacity: 0.92, visible, locked: false, mode: "always".into() };
     vec![
         w("clock", 0.01, 0.30, true),
         w("objectives", 0.44, 0.015, true),
@@ -38,11 +41,14 @@ pub fn validate(w: &WidgetLayout) -> AppResult<()> {
     if !in01(w.x) || !in01(w.y) || !(0.5..=2.0).contains(&w.scale) || !(0.2..=1.0).contains(&w.opacity) {
         return Err(AppError::InvalidInput("disposition hors limites".into()));
     }
+    if !["always", "hold"].contains(&w.mode.as_str()) {
+        return Err(AppError::InvalidInput("mode d'affichage inconnu".into()));
+    }
     Ok(())
 }
 
 pub fn load(conn: &Connection) -> AppResult<Vec<WidgetLayout>> {
-    let mut stmt = conn.prepare_cached("SELECT id, x, y, scale, opacity, visible, locked FROM overlay_widgets")?;
+    let mut stmt = conn.prepare_cached("SELECT id, x, y, scale, opacity, visible, locked, mode FROM overlay_widgets")?;
     let saved: Vec<WidgetLayout> = stmt
         .query_map([], |r| {
             Ok(WidgetLayout {
@@ -53,6 +59,7 @@ pub fn load(conn: &Connection) -> AppResult<Vec<WidgetLayout>> {
                 opacity: r.get(4)?,
                 visible: r.get::<_, i64>(5)? != 0,
                 locked: r.get::<_, i64>(6)? != 0,
+                mode: r.get(7)?,
             })
         })?
         .collect::<Result<_, _>>()?;
@@ -65,10 +72,10 @@ pub fn load(conn: &Connection) -> AppResult<Vec<WidgetLayout>> {
 pub fn save(conn: &Connection, w: &WidgetLayout) -> AppResult<Vec<WidgetLayout>> {
     validate(w)?;
     conn.execute(
-        "INSERT INTO overlay_widgets (id, x, y, scale, opacity, visible, locked) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+        "INSERT INTO overlay_widgets (id, x, y, scale, opacity, visible, locked, mode) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
          ON CONFLICT(id) DO UPDATE SET x = excluded.x, y = excluded.y, scale = excluded.scale, opacity = excluded.opacity,
-           visible = excluded.visible, locked = excluded.locked",
-        params![w.id, w.x, w.y, w.scale, w.opacity, w.visible as i64, w.locked as i64],
+           visible = excluded.visible, locked = excluded.locked, mode = excluded.mode",
+        params![w.id, w.x, w.y, w.scale, w.opacity, w.visible as i64, w.locked as i64, w.mode],
     )?;
     load(conn)
 }

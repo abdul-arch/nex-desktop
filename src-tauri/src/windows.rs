@@ -74,9 +74,16 @@ pub fn shortcuts_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     // ARAM Mayhem : lecture des cartes (assistance demandee) et panneau de detail.
     let mayhem_read = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyA);
     let mayhem_panel = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyD);
+    // Rappel : revele les widgets regles sur « sur une touche », tant qu'elle est maintenue.
+    let hold = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Space);
     let panel_open = std::sync::atomic::AtomicBool::new(false);
     tauri_plugin_global_shortcut::Builder::new()
         .with_handler(move |app, shortcut, event| {
+            // Le rappel est le seul raccourci qui reagit aussi au relachement.
+            if shortcut == &hold {
+                let _ = tauri::Emitter::emit(app, "overlay://hold", event.state() == ShortcutState::Pressed);
+                return;
+            }
             if event.state() != ShortcutState::Pressed {
                 return;
             }
@@ -117,6 +124,7 @@ pub fn register_shortcuts(app: &AppHandle) {
         Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyR),
         Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyA),
         Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyD),
+        Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Space),
     ] {
         // Un raccourci deja pris par une autre application n'empeche pas NEX de demarrer.
         if let Err(e) = gs.register(s) {

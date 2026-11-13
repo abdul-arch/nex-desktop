@@ -350,3 +350,19 @@ html.overlay-root #root {
   align-items: center;
   font-size: var(--fs-sm);
 }
+
+/* Rappel du mode fenetre : le plein ecran exclusif empeche tout overlay. */
+.ov-config-bar > span {
+  display: grid;
+  gap: 4px;
+  max-width: 54ch;
+}
+.ov-config-bar em {
+  font-style: normal;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: 1.45;
+}
+.ov-config-bar em b {
+  color: var(--gold);
+}

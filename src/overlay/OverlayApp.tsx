@@ -13,6 +13,7 @@ const OBJ_NAMES: Record<string, string> = { dragon: "Dragon", elder: "Dragon anc
 export function OverlayApp() {
   const [layout, setLayout] = useState<WidgetLayout[]>([]);
   const [config, setConfig] = useState(false);
+  const [hold, setHold] = useState(false);
   const [snap, setSnap] = useState<{ s: LiveSnapshot | null; at: number }>({ s: null, at: 0 });
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [version, setVersion] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function OverlayApp() {
       setSnap({ s, at: performance.now() });
       offs.push(await platform.on<WidgetLayout[]>("overlay://layout", setLayout));
       offs.push(await platform.on<boolean>("overlay://mode", setConfig));
+      offs.push(await platform.on<boolean>("overlay://hold", setHold));
       offs.push(await platform.on<LiveSnapshot | null>("live://snapshot", (p) => setSnap({ s: p, at: performance.now() })));
       platform.getSettings().then((st) => alive && setKeys(st.abilityKeys)).catch(() => {});
       platform.staticCatalog().then((c) => alive && setCatalog(c)).catch(() => {});
@@ -132,13 +134,21 @@ export function OverlayApp() {
     <div className={`ov-surface ${config ? "config" : ""}`}>
       {config && (
         <div className="ov-config-bar">
-          <b>Mode configuration</b> : glisse les widgets avec la souris · <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd> pour terminer
+          <span>
+            <b>Mode configuration</b> : glisse les widgets avec la souris · <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd> pour terminer
+            <em>
+              Si rien ne bouge en jeu, mets League en <b>Sans bordure</b> (Options → Vidéo → Mode fenêtre). En plein écran exclusif, Windows interdit à
+              toute application de passer au-dessus du jeu.
+            </em>
+          </span>
           <button onClick={() => platform.overlaySetMode(false)}>Terminer</button>
         </div>
       )}
       <MayhemLayer />
       {layout
-        .filter((w) => w.visible)
+        // « Sur une touche » : masque sauf pendant le rappel. En mode configuration tout
+        // reste visible, sinon on ne pourrait pas placer un widget qu'on ne voit pas.
+        .filter((w) => w.visible && (config || w.mode !== "hold" || hold))
         .map((w) => (
           <Draggable key={w.id} w={w} config={config} onDrop={(nw) => platform.overlayLayoutSet(nw).then(setLayout).catch(() => {})}>
             {content[w.id] ?? (config ? <Widget title={w.id}><span className="ov-wait">Aucune donnée</span></Widget> : null)}
