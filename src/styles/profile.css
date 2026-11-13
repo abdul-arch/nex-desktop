@@ -579,3 +579,130 @@ button.pname:hover {
     transform: rotate(360deg);
   }
 }
+
+/* ---------- Onglet Or ---------- */
+.gold-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+.gold-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.gold-players {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+}
+.gold-players > li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-xs);
+  padding: 2px 4px;
+  border-radius: 5px;
+}
+.gold-players > li.me {
+  background: var(--panel-3);
+}
+.gold-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+.gold-bar {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  overflow: hidden;
+}
+.gold-players > li[data-team="100"] .gold-bar > i {
+  background: var(--blue);
+}
+.gold-players > li[data-team="200"] .gold-bar > i {
+  background: var(--red);
+}
+.gold-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* ---------- Onglet Chronologie ---------- */
+.story-panel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+.story-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+.story-list > li {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  font-size: var(--fs-xs);
+}
+.story-list > li.won {
+  border-left-color: var(--blue);
+  background: var(--win-row);
+}
+.story-list > li.lost {
+  border-left-color: var(--red);
+  background: var(--loss-row);
+}
+.story-at {
+  color: var(--dim);
+}
+.story-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.story-count {
+  color: var(--muted);
+}
+.story-kills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.story-kills > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.story-kills i {
+  color: var(--dim);
+  font-style: normal;
+}
+.story-score {
+  display: grid;
+  justify-items: end;
+  line-height: 1.2;
+  color: var(--text-2);
+}
+.story-score small {
+  font-size: 10px;
+}

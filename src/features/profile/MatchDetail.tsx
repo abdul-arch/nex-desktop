@@ -7,12 +7,11 @@ import {
   MAYHEM_QUEUE,
   findParticipant,
   groupPurchases,
-  laneOpponent,
-  perMinuteSeries,
   purchaseOrder,
   skillLabel,
   skillOrder,
 } from "../../domain/fromMatch";
+import { allSeries, story, teamSeries } from "../../domain/fights";
 import { kdaOf } from "../../domain/metrics";
 import { platform } from "../../platform";
 import type { MatchDto, ParticipantDto, TeamDto, TimelineDto } from "../../platform/api";
@@ -25,7 +24,7 @@ import { ItemIcon, RuneIcon, SpellIcon, statShardLabel } from "./GameIcons";
 const mmss = (ms: number) => duration(Math.floor(ms / 1000));
 
 export function MatchDetail({ match, puuid }: { match: MatchDto; puuid: string }) {
-  const [tab, setTab] = useState<"teams" | "timeline" | "build">("teams");
+  const [tab, setTab] = useState<"teams" | "gold" | "story" | "build">("teams");
   // ARAM Mayhem : partie lue dans le client League. Riot n'en fournit pas la timeline, et le
   // mode n'a pas de runes : seule la vue des équipes existe.
   const localOnly = match.queueId === MAYHEM_QUEUE;
@@ -37,8 +36,9 @@ export function MatchDetail({ match, puuid }: { match: MatchDto; puuid: string }
             label="Vue du match"
             options={[
               { value: "teams", label: "Équipes" },
+              { value: "gold", label: "Or" },
+              { value: "story", label: "Chronologie" },
               { value: "build", label: "Build & runes" },
-              { value: "timeline", label: "Timeline" },
             ]}
             value={tab}
             onChange={setTab}
@@ -222,7 +222,7 @@ function TeamTable({
   );
 }
 
-function TimelineViews({ match, puuid, view }: { match: MatchDto; puuid: string; view: "timeline" | "build" }) {
+function TimelineViews({ match, puuid, view }: { match: MatchDto; puuid: string; view: "gold" | "story" | "build" }) {
   const tl = useAsync<TimelineDto>(`timeline:${match.id}`, () => platform.matchTimeline(match.platform, match.id), 10 * 60_000);
   const me = findParticipant(match, puuid);
   if (!me) return null;
@@ -231,7 +231,9 @@ function TimelineViews({ match, puuid, view }: { match: MatchDto; puuid: string;
       {view === "build" && <RunesPanel me={me} />}
       {tl.loading && !tl.data && <div className="muted" style={{ padding: 12 }}>Chargement de la timeline…</div>}
       {tl.error != null && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
-      {tl.data && (view === "build" ? <BuildPanel t={tl.data} me={me} /> : <CurvesPanel t={tl.data} match={match} me={me} />)}
+      {tl.data && view === "build" && <BuildPanel t={tl.data} me={me} />}
+      {tl.data && view === "gold" && <GoldPanel t={tl.data} match={match} me={me} />}
+      {tl.data && view === "story" && <StoryPanel t={tl.data} match={match} me={me} />}
     </>
   );
 }
@@ -335,66 +337,193 @@ function BuildPanel({ t, me }: { t: TimelineDto; me: ParticipantDto }) {
   );
 }
 
-function CurvesPanel({ t, match, me }: { t: TimelineDto; match: MatchDto; me: ParticipantDto }) {
+const MONSTER_FR: Record<string, string> = {
+  DRAGON: "Dragon",
+  BARON_NASHOR: "Baron Nashor",
+  RIFTHERALD: "Héraut de la Faille",
+  HORDE: "Larve du Néant",
+  ATAKHAN: "Atakhan",
+};
+
+/** Or, XP ou CS des deux equipes au fil de la partie, puis le detail par joueur. */
+function GoldPanel({ t, match, me }: { t: TimelineDto; match: MatchDto; me: ParticipantDto }) {
+  const [field, setField] = useState<"gold" | "xp" | "cs">("gold");
   const { catalog } = useAppState();
-  const opp = laneOpponent(match, me);
-  const mine = perMinuteSeries(t, me.participantId);
-  const theirs = opp ? perMinuteSeries(t, opp.participantId) : null;
-  const oppName = opp ? championName(catalog?.champions[String(opp.championId)]?.key ?? opp.champion) : null;
-  const goldDiff = theirs
-    ? mine.map((m, i) => (m.gold !== null && theirs[i]?.gold != null ? m.gold - (theirs[i].gold as number) : null))
-    : null;
-  const keyEvents = t.events.filter(
-    (e) =>
-      (e.kind === "champion_kill" && (e.participantId === me.participantId || e.victimId === me.participantId)) ||
-      e.kind === "elite_monster_kill",
-  );
-  const label = (e: (typeof keyEvents)[number]) => {
-    if (e.kind === "elite_monster_kill") {
-      const names: Record<string, string> = { DRAGON: "Dragon", BARON_NASHOR: "Baron", RIFTHERALD: "Héraut", HORDE: "Larve du Néant", ATAKHAN: "Atakhan" };
-      const killer = match.participants.find((p) => p.participantId === e.participantId);
-      const team = e.teamId ?? killer?.teamId;
-      return `${names[e.monsterType ?? ""] ?? e.monsterType} — ${team === me.teamId ? "ton équipe" : "équipe adverse"}`;
-    }
-    return e.participantId === me.participantId ? "Élimination" : "Mort";
-  };
+  const version = useDDragonVersion();
+  const teams = useMemo(() => teamSeries(match, t, field), [match, t, field]);
+  const perPlayer = useMemo(() => allSeries(t), [t]);
+  if (teams.length < 2) return <div className="muted" style={{ padding: 12 }}>Pas assez de points dans la timeline.</div>;
+
+  const unit = (v: number) => (field === "cs" ? String(Math.round(v)) : `${(v / 1000).toFixed(1)}k`);
+  const lead = teams.map((f) => f.blue - f.red);
+  const sign = me.teamId === 100 ? 1 : -1;
+  const last = teams[teams.length - 1];
+  const label = field === "gold" ? "Or" : field === "xp" ? "XP" : "CS";
+  const players = match.participants
+    .map((p) => {
+      const serie = perPlayer.get(p.participantId) ?? [];
+      return { p, value: serie.length ? serie[serie.length - 1][field] : 0 };
+    })
+    .sort((a, b) => b.value - a.value);
+  const max = Math.max(1, ...players.map((x) => x.value));
+  const finalLead = lead[lead.length - 1] * sign;
+
   return (
-    <div className="curves-panel">
-      <div>
-        <div className="panel-label">{goldDiff ? `Écart d'or vs ${oppName}` : "Or total"}</div>
-        <LineChart
-          ariaLabel="Courbe d'or"
-          zeroLine={!!goldDiff}
-          series={
-            goldDiff
-              ? [{ label: `Écart d'or (toi − ${oppName})`, color: "var(--gold)", values: goldDiff }]
-              : [{ label: "Or total", color: "var(--gold)", values: mine.map((m) => m.gold) }]
-          }
-          xLabel={(i) => `${mine[i]?.minute ?? i}'`}
-          yFormat={(v) => `${v > 0 && goldDiff ? "+" : ""}${(v / 1000).toFixed(1)}k`}
-        />
+    <div className="gold-panel">
+      <Segmented
+        label="Mesure"
+        options={[
+          { value: "gold", label: "Or" },
+          { value: "xp", label: "XP" },
+          { value: "cs", label: "CS" },
+        ]}
+        value={field}
+        onChange={setField}
+      />
+      <div className="gold-totals num">
+        <span className="win">Équipe bleue {unit(last.blue)}</span>
+        <span className="loss">Équipe rouge {unit(last.red)}</span>
+        <span className={finalLead >= 0 ? "pos" : "neg"}>
+          Ton équipe {finalLead >= 0 ? "+" : "−"}
+          {unit(Math.abs(finalLead))}
+        </span>
       </div>
-      <div>
-        <div className="panel-label">CS cumulés</div>
-        <LineChart
-          ariaLabel="Courbe de CS"
-          series={[
-            { label: "Toi", color: "var(--blue)", values: mine.map((m) => m.cs) },
-            ...(theirs && oppName ? [{ label: oppName, color: "var(--red)", values: theirs.map((m) => m.cs), dashed: true }] : []),
-          ]}
-          xLabel={(i) => `${mine[i]?.minute ?? i}'`}
-        />
-      </div>
-      <div className="key-events">
-        <div className="panel-label">Événements clés</div>
-        <ul>
-          {keyEvents.slice(0, 40).map((e, i) => (
-            <li key={i} className={e.kind === "champion_kill" ? (e.participantId === me.participantId ? "pos" : "neg") : ""}>
-              <span className="num muted">{mmss(e.timestamp)}</span> {label(e)}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <LineChart
+        ariaLabel={`${label} cumulé de chaque équipe`}
+        series={[
+          { label: "Équipe bleue", color: "var(--blue)", values: teams.map((f) => f.blue) },
+          { label: "Équipe rouge", color: "var(--red)", values: teams.map((f) => f.red) },
+        ]}
+        xLabel={(i) => `${teams[i]?.minute ?? i} min`}
+        yFormat={unit}
+      />
+      <div className="panel-label">Avance de l'équipe bleue</div>
+      <LineChart
+        ariaLabel="Avance de l'équipe bleue"
+        height={110}
+        zeroLine
+        series={[{ label: "Avance bleue", color: "var(--accent)", values: lead }]}
+        xLabel={(i) => `${teams[i]?.minute ?? i} min`}
+        yFormat={(v) => `${v > 0 ? "+" : ""}${unit(v)}`}
+      />
+      <div className="panel-label">{label} par joueur, en fin de partie</div>
+      <ul className="gold-players">
+        {players.map(({ p, value }) => (
+          <li key={p.participantId} className={p.participantId === me.participantId ? "me" : ""} data-team={p.teamId}>
+            <ChampIcon version={version} champion={catalog?.champions[String(p.championId)]?.key ?? p.champion} size={20} rounded={5} />
+            <span className="gold-name">{p.gameName || championName(p.champion)}</span>
+            <span className="gold-bar">
+              <i style={{ width: `${(value / max) * 100}%` }} />
+            </span>
+            <span className="num">{unit(value)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Deroule de la partie : combats, objectifs et batiments, dans l'ordre. */
+function StoryPanel({ t, match, me }: { t: TimelineDto; match: MatchDto; me: ParticipantDto }) {
+  const [mineOnly, setMineOnly] = useState(false);
+  const { catalog } = useAppState();
+  const version = useDDragonVersion();
+  const entries = useMemo(() => story(match, t), [match, t]);
+  const byId = new Map(match.participants.map((p) => [p.participantId, p]));
+  const champ = (id: number | null | undefined) => {
+    const p = id ? byId.get(id) : undefined;
+    return p ? catalog?.champions[String(p.championId)]?.key ?? p.champion : null;
+  };
+  const involved = (e: (typeof entries)[number]) =>
+    !!e.fight?.kills.some((k) => k.killerId === me.participantId || k.victimId === me.participantId || k.assistingIds.includes(me.participantId));
+  const shown = mineOnly ? entries.filter(involved) : entries;
+  const myTeam = me.teamId;
+  const other = myTeam === 100 ? 200 : 100;
+  const sign = myTeam === 100 ? 1 : -1;
+
+  return (
+    <div className="story-panel">
+      <Segmented
+        label="Filtre"
+        options={[
+          { value: "all", label: "Toute la partie" },
+          { value: "mine", label: "Tes actions" },
+        ]}
+        value={mineOnly ? "mine" : "all"}
+        onChange={(v) => setMineOnly(v === "mine")}
+      />
+      {shown.length === 0 ? (
+        <p className="muted" style={{ margin: "10px 0 0" }}>
+          Aucune action retenue sur ce filtre.
+        </p>
+      ) : (
+        <ol className="story-list">
+          {shown.map((e, i) => {
+            const nous = e.fight?.deathsByTeam.get(other) ?? 0;
+            const eux = e.fight?.deathsByTeam.get(myTeam) ?? 0;
+            return (
+              <li key={i} className={e.fight ? (nous > eux ? "won" : nous < eux ? "lost" : "") : ""}>
+                <span className="num story-at">{mmss(e.at)}</span>
+                <span className="story-body">
+                  <b>
+                    {e.kind === "fight"
+                      ? e.teamfight
+                        ? "Combat d'équipe"
+                        : "Escarmouche"
+                      : e.kind === "monster"
+                        ? MONSTER_FR[e.monsterType ?? ""] ?? e.monsterType ?? "Monstre épique"
+                        : "Bâtiment détruit"}
+                  </b>
+                  {e.fight && (
+                    <span className="num story-count">
+                      {nous} – {eux} · {Math.max(1, Math.round((e.fight.endsAt - e.fight.at) / 1000))} s
+                    </span>
+                  )}
+                  {e.kind !== "fight" && e.teamId !== undefined && (
+                    <span className="muted">
+                      {e.kind === "building"
+                        ? e.teamId === myTeam
+                          ? "à ton équipe"
+                          : "à l'équipe adverse"
+                        : e.teamId === myTeam
+                          ? "pour ton équipe"
+                          : "pour l'équipe adverse"}
+                    </span>
+                  )}
+                  {e.fight && (
+                    <span className="story-kills">
+                      {e.fight.kills.slice(0, 8).map((k, j) => {
+                        const killer = champ(k.killerId);
+                        const victim = champ(k.victimId);
+                        return (
+                          <span key={j} title={`${killer ? championName(killer) : "Exécution"} élimine ${victim ? championName(victim) : "?"}`}>
+                            {killer && <ChampIcon version={version} champion={killer} size={18} rounded={4} />}
+                            <i aria-hidden="true">›</i>
+                            {victim && <ChampIcon version={version} champion={victim} size={18} rounded={4} />}
+                          </span>
+                        );
+                      })}
+                    </span>
+                  )}
+                </span>
+                <span className="num story-score">
+                  {e.score.get(myTeam) ?? 0} – {e.score.get(other) ?? 0}
+                  {e.goldLead !== null && (
+                    <small className={e.goldLead * sign >= 0 ? "pos" : "neg"}>
+                      {e.goldLead * sign >= 0 ? "+" : "−"}
+                      {(Math.abs(e.goldLead) / 1000).toFixed(1)}k
+                    </small>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+      <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "8px 0 0" }}>
+        Les éliminations séparées de moins de 10 secondes sont comptées comme un même affrontement. La timeline de Riot ne donne pas la position des
+        événements : deux escarmouches simultanées aux deux bouts de la carte apparaîtraient comme un seul combat.
+      </p>
     </div>
   );
 }
