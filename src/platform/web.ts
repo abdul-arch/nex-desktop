@@ -273,8 +273,16 @@ export function createWebPlatform(): Platform {
     // Aucun client local depuis un navigateur ; `?roster` montre une composition
     // d'exemple en developpement, pour travailler le panneau de chargement.
     loadingRoster: async () => (devFlag("roster") ? EXAMPLE_ROSTER : null),
-    ranksBulk: async (platform, puuids) =>
-      devFlag("roster") ? EXAMPLE_RANKS : api<PlayerRanksDto[]>(["v1", "ranks", platform], { puuids: puuids.join(",") }),
+    ranksBulk: async (platform, riotIds) => {
+      if (devFlag("roster")) return EXAMPLE_RANKS;
+      const out = await Promise.all(
+        riotIds.map((id) => {
+          const [g, t] = id.split("#");
+          return api<PlayerRanksDto>(["v1", "ranks-by-id", platform, g ?? "", t ?? ""], {}).catch(() => null);
+        }),
+      );
+      return out.filter((r): r is PlayerRanksDto => !!r);
+    },
     // En developpement seulement, `?demo` fournit un instantane fictif pour regarder le
     // rendu des widgets hors partie. Jamais present dans l'application : la version
     // desktop passe par l'adaptateur Tauri, et `import.meta.env.DEV` est faux en build.

@@ -358,18 +358,40 @@ pub async fn loading_roster(window: Window, svc: State<'_, ClientService>) -> Ap
         .ok()
         .and_then(|v| v.get("puuid").and_then(serde_json::Value::as_str).map(str::to_string))
         .unwrap_or_default();
-    Ok(crate::client::model::loading_roster(&session, &me))
+    let Some(mut roster) = crate::client::model::loading_roster(&session, &me) else { return Ok(None) };
+    // Riot ID de chaque joueur : dix lectures du client local, l'une apres l'autre. Ce
+    // sont des requetes vers 127.0.0.1, de quelques millisecondes, et aucune n'atteint
+    // Riot. Un echec laisse le pseudo vide, et la carte le dit plutot que d'inventer.
+    for p in roster.players.iter_mut() {
+        if let Ok(v) = lcu.summoner_by_puuid(&p.puuid).await {
+            p.game_name = v.get("gameName").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
+            p.tag_line = v.get("tagLine").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
+        }
+    }
+    Ok(Some(roster))
 }
 
 /// Rangs des joueurs de la partie en chargement. Un appel Riot par joueur, par le
 /// backend, qui les met en cache deux minutes. Au plus dix a la fois.
 #[tauri::command]
-pub async fn ranks_bulk(window: Window, state: State<'_, AppState>, platform: String, puuids: Vec<String>) -> AppResult<Vec<nex_domain::api::PlayerRanksDto>> {
+pub async fn ranks_bulk(window: Window, state: State<'_, AppState>, platform: String, riot_ids: Vec<String>) -> AppResult<Vec<nex_domain::api::PlayerRanksDto>> {
     require_main_or_overlay(&window)?;
-    if puuids.is_empty() || puuids.len() > 10 {
+    if riot_ids.is_empty() || riot_ids.len() > 10 {
         return Err(AppError::InvalidInput("entre 1 et 10 joueurs attendus".into()));
     }
-    backend::ranks_bulk(&state.http, &backend_url(&state)?, &platform, &puuids).await
+    let base = backend_url(&state)?;
+    let mut out = Vec::new();
+    for id in &riot_ids {
+        // Un joueur illisible n'empeche pas les autres d'etre servis : il sera simplement
+        // absent de la reponse, et l'appelant affichera « rang indisponible ».
+        let Some((game_name, tag_line)) = id.split_once('#') else { continue };
+        if let Ok(mut r) = backend::ranks_by_riot_id(&state.http, &base, &platform, game_name, tag_line).await {
+            // Le Riot ID demande fait foi : la casse peut differer de celle de Riot.
+            r.riot_id = id.clone();
+            out.push(r);
+        }
+    }
+    Ok(out)
 }
 
 fn connected_lcu(svc: &ClientService) -> AppResult<crate::adapters::lcu::Lcu> {

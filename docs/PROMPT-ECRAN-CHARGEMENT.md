@@ -67,11 +67,29 @@ cartes. Les widgets de partie s'effacent tant que le panneau est à l'écran.
 `league-v4/entries/by-puuid/{puuid}`, un par joueur. À 20 requêtes/seconde, c'est une
 demi-seconde de budget.
 
-**Fait le 13/11/2026** : route backend `/v1/ranks/{platform}?puuids=…` (au plus dix, en
-cache deux minutes comme la lecture de profil), commande `ranks_bulk`, affichage sur les
-cartes. Un joueur dont la lecture échoue est absent de la réponse et n'empêche pas les
-autres d'être servis. Le panneau distingue **trois** états, sans jamais en substituer un à
-un autre : « rang en lecture… », « rang indisponible » et « non classé ». Ça donne le tier, la division, les LP, les `wins`/`losses` de la
+**Fait le 13/11/2026**, après une correction importante.
+
+**Le client local n'emploie pas le PUUID de l'API Riot.** Mesuré sur le client réel :
+`current-summoner` renvoie un identifiant de **36 caractères avec tirets**, là où l'API
+Riot attend les **78 caractères** chiffrés de `account-v1`. Les identifiants de la session
+de chargement ne peuvent donc pas être passés à `league-v4` : une première version le
+faisait et n'aurait jamais fonctionné en partie réelle, tout en marchant parfaitement sur
+des données d'exemple.
+
+Le seul lien entre les deux mondes est le **Riot ID**. La chaîne est donc :
+
+1. `/lol-gameflow/v1/session` → identifiants locaux + champions (gratuit) ;
+2. `/lol-summoner/v2/summoners/puuid/{id}` par joueur → `gameName` et `tagLine` (gratuit,
+   local ; la lecture groupée `summoner-names` répond 400 quelle que soit la forme du
+   paramètre, elle a été essayée) ;
+3. `/v1/ranks-by-id/{platform}/{gameName}/{tagLine}` → `account-v1` (cache 24 h) puis
+   `league-v4` (cache 2 min).
+
+Le Riot ID voyage en **segments d'URL**, pas en liste séparée par un caractère : aucun
+séparateur à supposer sûr dans un pseudo. Un joueur dont la lecture échoue est absent de la
+réponse et n'empêche pas les autres d'être servis. Le panneau distingue **trois** états,
+sans jamais en substituer un à un autre : « rang en lecture… », « rang indisponible » et
+« non classé ». Ça donne le tier, la division, les LP, les `wins`/`losses` de la
 saison — donc `117 LP` et `52.9% (245W-218L)`.
 
 Ça donne aussi `hotStreak`, **mais seulement un booléen** : « en série » ou non. Le

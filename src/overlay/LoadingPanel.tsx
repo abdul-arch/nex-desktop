@@ -7,7 +7,7 @@
 // affiches tant qu'ils ne sont pas reellement lus.
 
 import { useEffect, useState } from "react";
-import { championIcon } from "../data/assets";
+import { championLoading } from "../data/assets";
 import { platform } from "../platform";
 import type { Catalog, LoadingRosterDto, PlayerRanksDto, RankDto } from "../platform/api";
 import { TIER_COLOR, tierText } from "../features/leaderboards/shared";
@@ -31,12 +31,10 @@ const rankedQueue = (queueId: number) => (queueId === 440 ? "RANKED_FLEX_SR" : "
 
 export function LoadingPanel({
   catalog,
-  version,
   live,
   onActive,
 }: {
   catalog: Catalog | null;
-  version: string | null;
   live: boolean;
   /** Prevenu quand le panneau occupe l'ecran : les widgets de partie s'effacent alors. */
   onActive: (active: boolean) => void;
@@ -78,7 +76,13 @@ export function LoadingPanel({
     setRanks(null);
     platform
       .getSettings()
-      .then((st) => platform.ranksBulk(st.linkedPlatform || st.defaultPlatform, roster.players.map((p) => p.puuid)))
+      .then((st) =>
+        platform.ranksBulk(
+          st.linkedPlatform || st.defaultPlatform,
+          // Seuls les joueurs dont le Riot ID a pu etre lu sont demandables.
+          roster.players.filter((p) => p.gameName && p.tagLine).map((p) => `${p.gameName}#${p.tagLine}`),
+        ),
+      )
       .then((r) => alive && setRanks(r))
       .catch(() => alive && setRanks([]));
     return () => {
@@ -91,9 +95,9 @@ export function LoadingPanel({
   const queue = rankedQueue(roster.queueId);
   // Trois etats distincts, et aucun ne doit en remplacer un autre : pas encore lu,
   // lecture echouee pour ce joueur, et classe ou non dans la file de la partie.
-  const rankOf = (puuid: string): RankState => {
+  const rankOf = (riotId: string): RankState => {
     if (!ranks) return { state: "loading" };
-    const e = ranks.find((r) => r.puuid === puuid);
+    const e = ranks.find((r) => r.riotId.toLowerCase() === riotId.toLowerCase());
     if (!e) return { state: "unavailable" };
     const entry = e.ranks.find((r) => r.queue === queue);
     return entry ? { state: "ok", entry } : { state: "unranked" };
@@ -111,13 +115,19 @@ export function LoadingPanel({
         <div key={t} className={`ld-row ${t === 1 ? "blue" : "red"}`}>
           {team(t).map((p) => {
             const c = name(p.championId);
-            const src = c ? championIcon(version, c.key) : null;
+            const src = c ? championLoading(c.key) : null;
+            const riotId = p.gameName && p.tagLine ? `${p.gameName}#${p.tagLine}` : "";
             return (
               <div key={p.puuid} className={`ld-card ${p.isMe ? "me" : ""}`}>
-                {src ? <img src={src} alt="" width={44} height={44} /> : <span className="ld-slot" aria-hidden="true" />}
-                <b>{c?.name ?? "Champion non publié"}</b>
-                {p.isMe && <span className="ld-me">toi</span>}
-                <Rank s={rankOf(p.puuid)} />
+                {src && <img className="ld-art" src={src} alt="" loading="lazy" decoding="async" />}
+                <span className="ld-champ">{c?.name ?? "Champion non publié"}</span>
+                <span className="ld-foot">
+                  <b className="ld-name" title={riotId || undefined}>
+                    {p.gameName || "Pseudo non lu"}
+                  </b>
+                  {p.isMe && <span className="ld-me">toi</span>}
+                  <Rank s={riotId ? rankOf(riotId) : { state: "unavailable" }} />
+                </span>
               </div>
             );
           })}

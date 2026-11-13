@@ -268,6 +268,10 @@ pub struct StatsScopeDto {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerRanksDto {
+    /// Riot ID demande, seul lien fiable avec la composition : le client local et l'API
+    /// Riot n'emploient pas le meme identifiant de joueur.
+    #[serde(default)]
+    pub riot_id: String,
     pub puuid: String,
     /// Vide quand le joueur n'est classe dans aucune file.
     pub ranks: Vec<RankDto>,
@@ -286,6 +290,11 @@ pub struct LoadingPlayerDto {
     /// `None` quand la selection du champion n'est pas encore publiee.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub champion_id: Option<i32>,
+    /// Riot ID resolu par le client local. Vide si la lecture a echoue.
+    #[serde(default)]
+    pub game_name: String,
+    #[serde(default)]
+    pub tag_line: String,
     /// Vrai pour le joueur connecte, quand il est reconnaissable.
     pub is_me: bool,
 }

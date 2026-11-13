@@ -137,7 +137,7 @@ export interface Platform {
   clientState(): Promise<ClientState>;
   champSelect(): Promise<ChampSelectState | null>;
   loadingRoster(): Promise<LoadingRosterDto | null>;
-  ranksBulk(platform: string, puuids: string[]): Promise<PlayerRanksDto[]>;
+  ranksBulk(platform: string, riotIds: string[]): Promise<PlayerRanksDto[]>;
   liveSnapshot(): Promise<LiveSnapshot | null>;
   importRunes(input: RunePageInput): Promise<ImportOutcome>;
   importItems(input: ItemSetInput): Promise<ImportOutcome>;

@@ -159,6 +159,10 @@ pub fn loading_roster(session: &Value, my_puuid: &str) -> Option<LoadingRosterDt
                 puuid: puuid.to_string(),
                 team,
                 champion_id: champion_of.get(puuid).copied(),
+                // Le Riot ID n'est pas dans cette reponse : il est resolu ensuite, joueur
+                // par joueur, par une lecture locale (cf. commande `loading_roster`).
+                game_name: String::new(),
+                tag_line: String::new(),
                 is_me: !my_puuid.is_empty() && puuid == my_puuid,
             });
         }

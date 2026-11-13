@@ -132,6 +132,18 @@ impl Lcu {
         self.get_path(path).await
     }
 
+    /// Fiche d'un joueur par son identifiant local : Riot ID, icone, niveau. Aucun appel
+    /// a Riot. La lecture groupee `/lol-summoner/v2/summoner-names` a ete essayee et
+    /// repond 400 quelle que soit la forme du parametre : dix lectures locales la
+    /// remplacent, sans cout reseau.
+    pub async fn summoner_by_puuid(&self, puuid: &str) -> AppResult<Value> {
+        let ok = (30..=100).contains(&puuid.len()) && puuid.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
+        if !ok {
+            return Err(AppError::InvalidInput("identifiant de joueur invalide".into()));
+        }
+        self.get_path(&format!("/lol-summoner/v2/summoners/puuid/{puuid}")).await
+    }
+
     /// Historique des parties du compte connecte (lecture seule) : les `count` plus recentes,
     /// avec seulement le joueur connecte dans chaque partie.
     pub async fn match_history(&self, count: u32) -> AppResult<Value> {

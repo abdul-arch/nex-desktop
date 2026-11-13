@@ -266,6 +266,56 @@ async fn gameflow_probe() {
                 _ => Vec::new(),
             };
             println!("{} types publies", named.len());
+            // Points d'entree qui resolvent un puuid en pseudo, sans passer par Riot.
+            let funcs = help.get("functions").cloned().unwrap_or(Value::Null);
+            let funcs2 = funcs.clone();
+            let names: Vec<String> = match funcs {
+                Value::Object(o) => o.keys().cloned().collect(),
+                Value::Array(a) => a.iter().filter_map(|v| v["name"].as_str().map(str::to_string)).collect(),
+                _ => Vec::new(),
+            };
+            let mut hit: Vec<&String> = names.iter().filter(|n| n.to_lowercase().contains("summoner") && n.to_lowercase().contains("puuid")).collect();
+            hit.sort();
+            println!("resolution par puuid: {hit:?}");
+            let detail = |n: &str| {
+                let f = match &funcs2 {
+                    Value::Object(o) => o.get(n).cloned(),
+                    Value::Array(a) => a.iter().find(|v| v["name"].as_str() == Some(n)).cloned(),
+                    _ => None,
+                };
+                if let Some(f) = f {
+                    println!("  {n}: {} {} -> {}", f["http_method"].as_str().unwrap_or("?"), f["url"].as_str().unwrap_or("?"), f["returns"]["type"].as_str().or(f["returns"]["elementType"].as_str()).unwrap_or("?"));
+                    if let Some(Value::Array(args)) = f.get("arguments") {
+                        for a in args {
+                            println!("     arg {} : {}", a["name"].as_str().unwrap_or("?"), a["type"]["elementType"].as_str().or(a["type"]["type"].as_str()).unwrap_or("?"));
+                        }
+                    }
+                }
+            };
+            for n in ["GetLolSummonerV2SummonerNamesByPuuids", "PostLolSummonerV1SummonerAliasesByPuuids", "GetLolSummonerV2SummonersPuuidByPuuid"] {
+                detail(n);
+            }
+            // Essai reel sur le compte connecte : on verifie la forme, pas le contenu.
+            let me: Value = lcu.get(paths::SUMMONER).await.expect("current summoner");
+            let puuid = me["puuid"].as_str().unwrap_or("").to_string();
+            println!(
+                "puuid local : {} caracteres, tirets: {}, alphanum+-_ : {}",
+                puuid.len(),
+                puuid.contains('-'),
+                puuid.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+            );
+            match lcu.summoner_by_puuid(&puuid).await {
+                Ok(v) => {
+                    let mut k: Vec<String> = v.as_object().map(|o| o.keys().cloned().collect()).unwrap_or_default();
+                    k.sort();
+                    println!("  summoners/puuid -> champs {k:?}");
+                    for f in ["gameName", "tagLine", "displayName", "internalName"] {
+                        println!("     {f} rempli: {}", !v[f].as_str().unwrap_or("").is_empty());
+                    }
+                }
+                Err(e) => println!("  summoners/puuid -> {e}"),
+            }
+            return;
             for (name, t) in named.iter().filter(|(n, _)| n.contains("GameflowGameData") || n.contains("TeamPlayerEntry") || n.contains("PlayerChampionSelection")) {
                 let fields = t.get("fields").cloned().unwrap_or(Value::Null);
                 let mut out: Vec<String> = Vec::new();

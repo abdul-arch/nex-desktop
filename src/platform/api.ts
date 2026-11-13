@@ -410,6 +410,8 @@ export interface WinProbDto {
 
 /** Rangs d'un joueur, pour une lecture groupee (miroir de PlayerRanksDto). */
 export interface PlayerRanksDto {
+  /** Riot ID demandé : le client local et l'API Riot n'ont pas le même identifiant. */
+  riotId: string;
   puuid: string;
   /** Vide quand le joueur n'est classé dans aucune file. */
   ranks: RankDto[];
@@ -422,6 +424,9 @@ export interface LoadingPlayerDto {
   team: number;
   /** Absent tant que le champion n'est pas publie par le client. */
   championId?: number;
+  /** Riot ID résolu par le client local ; vide si la lecture a échoué. */
+  gameName: string;
+  tagLine: string;
   isMe: boolean;
 }
 

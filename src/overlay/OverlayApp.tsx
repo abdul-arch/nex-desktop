@@ -123,7 +123,7 @@ export function OverlayApp() {
         </div>
       )}
       <MayhemLayer />
-      <LoadingPanel catalog={catalog} version={version} live={!!snap.s} onActive={setLoading} />
+      <LoadingPanel catalog={catalog} live={!!snap.s} onActive={setLoading} />
       {(!loading || config) &&
         layout
         // « Sur une touche » : masque sauf pendant le rappel. En mode configuration tout
