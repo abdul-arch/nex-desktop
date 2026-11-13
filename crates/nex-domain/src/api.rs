@@ -155,6 +155,9 @@ pub struct ParticipantDto {
     /// seul joueur. Ce nombre ne compte donc pas des plaques de tourelle.
     #[serde(default)]
     pub turret_plates: Option<u32>,
+    /// Icone d'invocateur portee pendant cette partie.
+    #[serde(default)]
+    pub profile_icon_id: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -271,6 +274,28 @@ pub struct BaselineDto {
     pub median: Option<f64>,
     /// Nombre de lignes qui portaient la donnee.
     pub games: u32,
+}
+
+/// Une icone d'invocateur et le nombre de joueurs collectes qui la portaient.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct IconDto {
+    pub icon_id: u32,
+    pub players: u32,
+    pub wins: u32,
+    /// `None` sous le seuil d'echantillon : un taux sur trois porteurs ne dit rien.
+    pub win_rate: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct IconsDto {
+    pub scope: StatsScopeDto,
+    /// Lignes de joueur derriere ce classement.
+    pub sample: u32,
+    /// Porteurs necessaires pour qu'un taux de victoire soit rendu.
+    pub min_players: u32,
+    pub icons: Vec<IconDto>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

@@ -107,6 +107,22 @@ export interface BaselineDto {
   games: number;
 }
 
+/** Une icône d'invocateur et le nombre de joueurs collectés qui la portaient. */
+export interface IconDto {
+  iconId: number;
+  players: number;
+  wins: number;
+  /** null sous le seuil d'échantillon : un taux sur trois porteurs ne dit rien. */
+  winRate: number | null;
+}
+
+export interface IconsDto {
+  scope: StatsScopeDto;
+  sample: number;
+  minPlayers: number;
+  icons: IconDto[];
+}
+
 export interface BaselinesDto {
   /** Poste du repère, chaîne vide pour tous postes confondus. */
   position: string;

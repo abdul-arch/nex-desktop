@@ -30,6 +30,7 @@ export function createDesktopPlatform(): Platform {
     statsMeta: () => invoke("stats_meta"),
     statsTierList: (params) => invoke("stats_tierlist", { params }),
     statsBaselines: (params) => invoke("stats_baselines", { params }),
+    statsIcons: (params) => invoke("stats_icons", { params }),
     statsBuild: (championId, params) => invoke("stats_build", { championId, params }),
     statsMatchups: (championId, params) => invoke("stats_matchups", { championId, params }),
     championInfo: (key) => invoke("champion_info", { key }),

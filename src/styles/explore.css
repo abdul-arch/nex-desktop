@@ -563,3 +563,36 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Grille des icones d'invocateur collectees. */
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 14px;
+}
+.icon-grid figure {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+.icon-grid img,
+.icon-grid .img-fallback {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  object-fit: cover;
+}
+.icon-grid figcaption {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  text-align: center;
+}
+.icon-grid figcaption b {
+  font-size: var(--fs-sm);
+}
+.icon-grid figcaption span {
+  font-size: var(--fs-xs);
+}

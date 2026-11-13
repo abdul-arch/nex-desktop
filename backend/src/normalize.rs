@@ -12,7 +12,8 @@ use std::collections::HashMap;
 /// v2 : premier sang, controle de foule, degats aux objectifs et aux tours, plus longue
 /// serie, balises de controle posees.
 /// v3 : temps passe mort, plaques de tourelle.
-pub const NORMALIZE_VERSION: u32 = 3;
+/// v4 : icone d'invocateur de chaque participant.
+pub const NORMALIZE_VERSION: u32 = 4;
 
 // ---------- account-v1 / summoner-v4 / league-v4 ----------
 
@@ -156,6 +157,7 @@ struct RParticipant {
     largest_killing_spree: u32,
     detector_wards_placed: u32,
     total_time_spent_dead: u32,
+    profile_icon: u32,
     challenges: Option<Value>,
 }
 
@@ -277,6 +279,7 @@ pub fn match_dto(body: &str) -> BResult<MatchDto> {
                 detector_wards_placed: Some(p.detector_wards_placed),
                 time_dead_sec: Some(p.total_time_spent_dead),
                 turret_plates,
+                profile_icon_id: Some(p.profile_icon),
             }
         })
         .collect();

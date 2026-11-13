@@ -264,6 +264,14 @@ pub async fn stats_baselines(window: Window, state: State<'_, AppState>, params:
     backend::stats_baselines(&state.http, &backend_url(&state)?, &params).await
 }
 
+/// Icones d'invocateur les plus portees dans les parties collectees.
+#[tauri::command]
+pub async fn stats_icons(window: Window, state: State<'_, AppState>, params: backend::StatsParams) -> AppResult<nex_domain::api::IconsDto> {
+    require_main(&window)?;
+    params.validate()?;
+    backend::stats_icons(&state.http, &backend_url(&state)?, &params).await
+}
+
 #[tauri::command]
 pub async fn stats_build(
     window: Window,

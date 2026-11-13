@@ -52,6 +52,7 @@ const COMMANDS: &[&str] = &[
     "live_game_get",
     "rank_history",
     "stats_baselines",
+    "stats_icons",
     "pro_teams",
     "lcu_spectate",
     "lcu_observable_friends",

@@ -39,6 +39,7 @@ pub fn router(state: Shared) -> Router {
         .route("/v1/stats/meta", get(stats_meta))
         .route("/v1/stats/tierlist", get(stats_tierlist))
         .route("/v1/stats/baselines", get(stats_baselines))
+        .route("/v1/stats/icons", get(stats_icons))
         .route("/v1/stats/champion/{champion_id}/build", get(stats_build))
         .route("/v1/stats/champion/{champion_id}/matchups", get(stats_matchups))
         .layer(axum::middleware::from_fn(local_only))
@@ -285,6 +286,14 @@ async fn stats_tierlist(State(s): State<Shared>, Query(q): Query<StatsQuery>) ->
     Ok(Json(s.riot.store().with(|c| {
         let f = q.filter(c)?;
         crate::analytics::tier_list(c, &f, pos)
+    })?))
+}
+
+/// Icones d'invocateur les plus portees dans les parties collectees.
+async fn stats_icons(State(s): State<Shared>, Query(q): Query<StatsQuery>) -> BResult<Json<IconsDto>> {
+    Ok(Json(s.riot.store().with(|c| {
+        let f = q.filter(c)?;
+        crate::analytics::icons(c, &f, 300)
     })?))
 }
 

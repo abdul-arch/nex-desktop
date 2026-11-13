@@ -196,6 +196,7 @@ pub fn run() {
             commands::live_game_get,
             commands::rank_history,
             commands::stats_baselines,
+            commands::stats_icons,
             commands::pro_teams,
             commands::lcu_spectate,
             commands::lcu_observable_friends,

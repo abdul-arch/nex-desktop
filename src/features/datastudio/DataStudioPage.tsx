@@ -9,14 +9,14 @@ import { useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
-import { championName } from "../../data/assets";
+import { championName, profileIcon } from "../../data/assets";
 import { parseRiotId, platformLabel } from "../../domain/riotId";
 import { byChampion, STUDIO_CATEGORIES, STUDIO_STATS, studioStat, toCsv, toStudioRows, type StudioStat } from "../../domain/studio";
 import { errorMessage, platform } from "../../platform";
-import type { BaselinesDto, MatchDto, MatchPageDto, PlayerProfileDto } from "../../platform/api";
+import type { BaselinesDto, IconsDto, MatchDto, MatchPageDto, PlayerProfileDto } from "../../platform/api";
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { pct, QUEUE_LABEL, ROLE_LABEL } from "../../ui/format";
-import { ChampIcon, EmptyState } from "../../ui/primitives";
+import { ChampIcon, EmptyState, RemoteImg } from "../../ui/primitives";
 
 const MAX_GAMES = 100;
 const PAGE = 20;
@@ -140,6 +140,12 @@ function Studio({ riotId, plat }: { riotId: string; plat: string }) {
             </div>
           );
         })}
+        <div>
+          <div className="studio-nav-title">Joueurs</div>
+          <button className={`studio-nav-item ${statKey === ICONS_KEY ? "active" : ""}`} aria-current={statKey === ICONS_KEY} onClick={() => setStatKey(ICONS_KEY)}>
+            Icônes d'invocateur
+          </button>
+        </div>
       </aside>
 
       <section className="studio-main">
@@ -189,22 +195,78 @@ function Studio({ riotId, plat }: { riotId: string; plat: string }) {
           </button>
         </div>
 
-        <StatHeader stat={stat} rows={rows} baseline={baseline} baselineSample={baselines.data?.sample ?? 0} />
-
-        {rows.length === 0 ? (
-          <div className="card">
-            <EmptyState title="Aucune partie retenue">Élargis les filtres ou charge plus de parties.</EmptyState>
-          </div>
+        {statKey === ICONS_KEY ? (
+          <IconsPanel />
         ) : (
-          <ChampionTable stat={stat} rows={rows} />
+          <>
+            <StatHeader stat={stat} rows={rows} baseline={baseline} baselineSample={baselines.data?.sample ?? 0} />
+
+            {rows.length === 0 ? (
+              <div className="card">
+                <EmptyState title="Aucune partie retenue">Élargis les filtres ou charge plus de parties.</EmptyState>
+              </div>
+            ) : (
+              <ChampionTable stat={stat} rows={rows} />
+            )}
+          </>
         )}
 
         <p className="studio-note muted">
-          Tes valeurs viennent des {rows.length} parties retenues ci-dessus (remakes, parties de moins de 5 min et Arena exclus). La médiane vient des parties que
-          NEX collecte lui-même, jamais d'un autre site. Les comparaisons victoire / défaite décrivent des associations sur ton échantillon, pas des causes.
+          {statKey === ICONS_KEY
+            ? "Les icônes viennent des parties que NEX collecte lui-même, pas de ton historique. Une icône n'a aucun effet sur une partie : le taux de victoire n'est affiché que pour les icônes assez portées, et il ne décrit qu'une association."
+            : `Tes valeurs viennent des ${rows.length} parties retenues ci-dessus (remakes, parties de moins de 5 min et Arena exclus). La médiane vient des parties que NEX collecte lui-même, jamais d'un autre site. Les comparaisons victoire / défaite décrivent des associations sur ton échantillon, pas des causes.`}
         </p>
       </section>
     </div>
+  );
+}
+
+/** Clé réservée du catalogue : cette entrée n'est pas une mesure de tes parties. */
+const ICONS_KEY = "profileIcons";
+
+/**
+ * Icônes d'invocateur les plus portées dans les parties collectées par NEX.
+ * Rien à voir avec ton historique : c'est une photographie de ce que portent les joueurs
+ * rencontrés dans l'échantillon collecté.
+ */
+function IconsPanel() {
+  const version = useDDragonVersion();
+  const icons = useAsync<IconsDto>("stats-icons", () => platform.statsIcons({}), 600_000);
+  if (icons.error != null && !icons.data) return <ErrorPanel error={icons.error} onRetry={() => icons.reload()} compact />;
+  if (!icons.data) return <div className="card card-pad muted">Lecture des icônes collectées…</div>;
+  const { icons: list, sample, minPlayers } = icons.data;
+
+  if (list.length === 0) {
+    return (
+      <div className="card">
+        <EmptyState title="Aucune icône collectée">
+          NEX n'a pas encore collecté de partie contenant l'icône des joueurs. Les parties collectées avant aujourd'hui ne la portent pas : la grille se
+          remplira au fil de la collecte.
+        </EmptyState>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <section className="card card-pad studio-head">
+        <div>
+          <h2 className="studio-stat-name">Icônes d'invocateur</h2>
+          <p className="muted studio-help">Les plus portées parmi les {sample.toLocaleString("fr-FR")} joueurs des parties collectées par NEX.</p>
+        </div>
+      </section>
+      <section className="card card-pad icon-grid" aria-label="Icônes d'invocateur les plus portées">
+        {list.map((i) => (
+          <figure key={i.iconId}>
+            <RemoteImg src={profileIcon(version, i.iconId)} alt={`Icône ${i.iconId}`} fallback="" />
+            <figcaption>
+              <b className="num">{i.players.toLocaleString("fr-FR")}</b>
+              <span className="num muted">{i.winRate === null ? `moins de ${minPlayers} porteurs` : `${pct(i.winRate)} de victoires`}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </section>
+    </>
   );
 }
 

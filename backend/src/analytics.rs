@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS a_perf (
     turret_damage INTEGER,
     solo_kills  INTEGER,
     gold_diff15 INTEGER,
+    profile_icon INTEGER,
     PRIMARY KEY (match_id, champion_id, team_id)
 );
 CREATE INDEX IF NOT EXISTS a_perf_champ ON a_perf(champion_id, position);
@@ -88,6 +89,9 @@ pub const MIN_GAMES: u32 = 20;
 
 pub fn init(conn: &Connection) -> BResult<()> {
     conn.execute_batch(SCHEMA)?;
+    // Colonne ajoutee apres coup : une base creee avant ne l'a pas, et CREATE TABLE
+    // IF NOT EXISTS ne la rattrape pas. L'erreur « duplicate column » est attendue.
+    let _ = conn.execute("ALTER TABLE a_perf ADD COLUMN profile_icon INTEGER", []);
     Ok(())
 }
 
@@ -257,8 +261,8 @@ pub fn ingest(conn: &Connection, m: &MatchDto, t: Option<&TimelineDto>, tier: &s
             "INSERT OR IGNORE INTO a_perf
                (match_id, champion_id, team_id, position, win, minutes, kills, deaths, assists, team_kills, cs, gold,
                 damage, team_damage, damage_taken, vision, wards_placed, wards_killed, control_wards,
-                cc_time, time_dead, plates, obj_damage, turret_damage, solo_kills, gold_diff15)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26)",
+                cc_time, time_dead, plates, obj_damage, turret_damage, solo_kills, gold_diff15, profile_icon)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27)",
             params![
                 m.id,
                 p.champion_id,
@@ -286,6 +290,7 @@ pub fn ingest(conn: &Connection, m: &MatchDto, t: Option<&TimelineDto>, tier: &s
                 p.damage_to_turrets,
                 p.solo_kills,
                 gold_diff15,
+                p.profile_icon_id,
             ],
         )?;
     }
@@ -369,6 +374,34 @@ const BASELINE_STATS: [(&str, &str); 16] = [
     ("wardsPlacedPer10", "p.wards_placed * 10.0 / p.minutes"),
     ("goldDiff15", "p.gold_diff15 * 1.0"),
 ];
+
+/// Echantillon minimal pour qu'un taux de victoire par icone veuille dire quelque chose.
+const MIN_ICON_PLAYERS: u32 = 30;
+
+/// Icones d'invocateur portees par les joueurs des parties collectees, de la plus vue a la
+/// moins vue. Le taux de victoire n'est rendu qu'au-dela de `MIN_ICON_PLAYERS` porteurs :
+/// en dessous il ne dirait rien, et une icone n'influence evidemment pas une partie.
+pub fn icons(conn: &Connection, f: &Filter, limit: u32) -> BResult<IconsDto> {
+    let sql = format!(
+        "SELECT p.profile_icon, COUNT(*), SUM(p.win) FROM a_perf p JOIN a_matches m ON m.match_id = p.match_id
+         WHERE {} AND p.profile_icon IS NOT NULL AND p.profile_icon > 0
+         GROUP BY p.profile_icon ORDER BY COUNT(*) DESC LIMIT ?5",
+        Filter::WHERE
+    );
+    let mut st = conn.prepare(&sql)?;
+    let rows = st.query_map(params![f.queue_id, f.patch, f.platform, f.tier, limit], |r| {
+        let (icon, players, wins): (i64, u32, u32) = (r.get(0)?, r.get(1)?, r.get(2)?);
+        Ok(IconDto {
+            icon_id: icon as u32,
+            players,
+            wins,
+            win_rate: if players >= MIN_ICON_PLAYERS { Some(wins as f64 / players as f64) } else { None },
+        })
+    })?;
+    let list = rows.collect::<Result<Vec<_>, _>>()?;
+    let sample = list.iter().map(|i| i.players).sum();
+    Ok(IconsDto { scope: f.scope(conn)?, sample, min_players: MIN_ICON_PLAYERS, icons: list })
+}
 
 /// Mediane de chaque mesure sur les parties collectees, et taille de l'echantillon.
 /// Une mesure dont aucune ligne ne porte la donnee rend `median: None` : la colonne de

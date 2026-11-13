@@ -98,6 +98,7 @@ pub fn match_from_client(g: &Value, champion_key: &dyn Fn(i32) -> Option<String>
                 time_dead_sec: opt_num(st, "totalTimeSpentDead"),
                 // Les plaques ne figurent pas dans le format « v4 » du client.
                 turret_plates: None,
+                profile_icon_id: player.map(|pl| num(pl, "profileIcon")).filter(|v| *v > 0),
             })
         })
         .collect();

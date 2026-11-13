@@ -62,6 +62,7 @@
     "allow-live-game-get",
     "allow-rank-history",
     "allow-stats-baselines",
+    "allow-stats-icons",
     "allow-pro-teams",
     "allow-lcu-spectate",
     "allow-lcu-observable-friends",

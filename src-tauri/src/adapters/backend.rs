@@ -174,6 +174,10 @@ pub async fn stats_baselines(http: &reqwest::Client, base: &str, p: &StatsParams
     get_json(http, base, &["v1", "stats", "baselines"], &p.query(), Duration::from_secs(20)).await
 }
 
+pub async fn stats_icons(http: &reqwest::Client, base: &str, p: &StatsParams) -> AppResult<nex_domain::api::IconsDto> {
+    get_json(http, base, &["v1", "stats", "icons"], &p.query(), Duration::from_secs(20)).await
+}
+
 pub async fn stats_build(http: &reqwest::Client, base: &str, champion: i32, p: &StatsParams) -> AppResult<nex_domain::api::ChampionBuildDto> {
     let id = champion.to_string();
     get_json(http, base, &["v1", "stats", "champion", &id, "build"], &p.query(), Duration::from_secs(15)).await
