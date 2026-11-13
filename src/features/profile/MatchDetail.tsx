@@ -6,19 +6,22 @@ import { championName, objectiveIcon } from "../../data/assets";
 import {
   MAYHEM_QUEUE,
   findParticipant,
+  toSummary,
   groupPurchases,
   purchaseOrder,
   skillLabel,
   skillOrder,
 } from "../../domain/fromMatch";
+import { matchAwards } from "../../domain/badges";
 import { allSeries, story, teamSeries } from "../../domain/fights";
 import { kdaOf } from "../../domain/metrics";
+import { nexScore } from "../../domain/nexScore";
 import { platform } from "../../platform";
 import type { MatchDto, ParticipantDto, TeamDto, TimelineDto } from "../../platform/api";
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { LineChart } from "../../ui/LineChart";
-import { duration, ROLE_LABEL } from "../../ui/format";
-import { ChampIcon, Segmented } from "../../ui/primitives";
+import { duration, pct, ROLE_LABEL } from "../../ui/format";
+import { ChampIcon, ScoreRing, Segmented } from "../../ui/primitives";
 import { ItemIcon, RuneIcon, SpellIcon, statShardLabel } from "./GameIcons";
 
 const mmss = (ms: number) => duration(Math.floor(ms / 1000));
@@ -94,6 +97,9 @@ function TeamTable({
   const win = team?.win ?? players[0]?.win;
   const kills = players.reduce((a, p) => a + p.kills, 0);
   const gold = players.reduce((a, p) => a + p.goldEarned, 0);
+  const teamDamage = players.reduce((a, p) => a + p.damageToChampions, 0);
+  const maxTaken = Math.max(1, ...match.participants.map((p) => p.damageTaken));
+  const awards = matchAwards(match);
   const key = (p: ParticipantDto) => catalog?.champions[String(p.championId)]?.key ?? p.champion;
   const isRift = match.participants.some((p) => p.position);
   const o = team?.objectives;
@@ -150,10 +156,12 @@ function TeamTable({
             {isRift && <th scope="col">Rôle</th>}
             <th scope="col">KDA</th>
             <th scope="col">Dégâts</th>
+            <th scope="col">Subis</th>
             <th scope="col">Or</th>
             <th scope="col">CS</th>
             <th scope="col">Vision</th>
             <th scope="col">Objets</th>
+            <th scope="col">Score</th>
           </tr>
         </thead>
         <tbody>
@@ -191,11 +199,21 @@ function TeamTable({
               </td>
               <td className="num">
                 {p.damageToChampions.toLocaleString("fr-FR")}
-                <div className="dmg-bar">
+                <div className="dmg-bar" title={`${pct(teamDamage > 0 ? p.damageToChampions / teamDamage : null)} des dégâts de l'équipe`}>
                   <i style={{ width: `${(p.damageToChampions / maxDmg) * 100}%` }} />
                 </div>
+                <div className="muted">{pct(teamDamage > 0 ? p.damageToChampions / teamDamage : null)} de l'équipe</div>
               </td>
-              <td className="num">{(p.goldEarned / 1000).toFixed(1)}k</td>
+              <td className="num">
+                {p.damageTaken.toLocaleString("fr-FR")}
+                <div className="dmg-bar taken">
+                  <i style={{ width: `${(p.damageTaken / maxTaken) * 100}%` }} />
+                </div>
+              </td>
+              <td className="num">
+                {(p.goldEarned / 1000).toFixed(1)}k
+                <div className="muted">{match.durationSec > 0 ? Math.round(p.goldEarned / (match.durationSec / 60)) : "—"}/min</div>
+              </td>
               <td className="num">
                 {p.cs}
                 <div className="muted">{match.durationSec > 0 ? (p.cs / (match.durationSec / 60)).toFixed(1) : "—"}/min</div>
@@ -213,6 +231,26 @@ function TeamTable({
                   ))}
                   <ItemIcon id={p.items[6]} size={20} trinket />
                 </span>
+                {awards.get(p.participantId)?.badges.length ? (
+                  <span className="badges" style={{ marginTop: 4 }}>
+                    {awards
+                      .get(p.participantId)!
+                      .badges.slice(0, 2)
+                      .map((b) => (
+                        <span key={b.id} title={b.detail}>
+                          {b.label}
+                        </span>
+                      ))}
+                  </span>
+                ) : null}
+              </td>
+              <td>
+                <ScoreRing
+                  value={scoreOf(match, p)}
+                  label="Score NEX"
+                  size={30}
+                  rank={awards.get(p.participantId)?.rankLabel ?? null}
+                />
               </td>
             </tr>
           ))}
@@ -222,21 +260,107 @@ function TeamTable({
   );
 }
 
+/** Score NEX d'un participant quelconque de la partie, null quand il n'est pas calculable. */
+function scoreOf(match: MatchDto, p: ParticipantDto): number | null {
+  const summary = toSummary(match, p.puuid);
+  return summary ? nexScore(summary).score : null;
+}
+
 function TimelineViews({ match, puuid, view }: { match: MatchDto; puuid: string; view: "gold" | "story" | "build" }) {
   const tl = useAsync<TimelineDto>(`timeline:${match.id}`, () => platform.matchTimeline(match.platform, match.id), 10 * 60_000);
   const me = findParticipant(match, puuid);
+  // Joueur affiche dans l'onglet Build : soi-meme par defaut, n'importe lequel des dix ensuite.
+  const [shownId, setShownId] = useState<number | null>(null);
   if (!me) return null;
+  const shown = match.participants.find((p) => p.participantId === shownId) ?? me;
   return (
     <>
-      {view === "build" && <RunesPanel me={me} />}
+      {view === "build" && <PlayerPicker match={match} shown={shown} onPick={setShownId} />}
+      {view === "build" && <RunesPanel me={shown} />}
       {tl.loading && !tl.data && <div className="muted" style={{ padding: 12 }}>Chargement de la timeline…</div>}
       {tl.error != null && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
-      {tl.data && view === "build" && <BuildPanel t={tl.data} me={me} />}
+      {tl.data && view === "build" && <BuildPanel t={tl.data} me={shown} />}
+      {view === "build" && <PlayerDetails match={match} p={shown} t={tl.data} />}
       {tl.data && view === "gold" && <GoldPanel t={tl.data} match={match} me={me} />}
       {tl.data && view === "story" && <StoryPanel t={tl.data} match={match} me={me} />}
     </>
   );
 }
+
+/** Les dix champions de la partie, pour choisir de qui on regarde le build. */
+function PlayerPicker({ match, shown, onPick }: { match: MatchDto; shown: ParticipantDto; onPick: (id: number) => void }) {
+  const { catalog } = useAppState();
+  const version = useDDragonVersion();
+  const key = (p: ParticipantDto) => catalog?.champions[String(p.championId)]?.key ?? p.champion;
+  return (
+    <div className="player-picker">
+      {match.participants.map((p) => (
+        <button
+          key={p.participantId}
+          className={p.participantId === shown.participantId ? "active" : ""}
+          data-team={p.teamId}
+          onClick={() => onPick(p.participantId)}
+          aria-pressed={p.participantId === shown.participantId}
+          title={`${p.gameName || "Joueur masqué"} — ${championName(key(p))}`}
+        >
+          <ChampIcon version={version} champion={key(p)} size={26} rounded={6} />
+        </button>
+      ))}
+      <span className="muted player-picker-name">
+        {shown.gameName || "Joueur masqué"} · {championName(key(shown))}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Chiffres que le tableau des equipes ne montre pas. Une ligne dont Riot ne fournit pas la
+ * donnee n'est pas affichee, plutot que montree a zero.
+ */
+function PlayerDetails({ match, p, t }: { match: MatchDto; p: ParticipantDto; t: TimelineDto | null }) {
+  const at15 = useMemo(() => {
+    if (!t) return null;
+    const opp = match.participants.find((o) => o.teamId !== p.teamId && o.position === p.position);
+    const frame = t.frames.find((f) => Math.abs(f.timestamp - 900_000) < 30_000);
+    if (!opp || !frame) return null;
+    const mine = frame.players.find((x) => x.participantId === p.participantId);
+    const his = frame.players.find((x) => x.participantId === opp.participantId);
+    return mine && his ? { gold: mine.totalGold - his.totalGold, xp: mine.xp - his.xp, cs: mine.cs - his.cs } : null;
+  }, [match, p, t]);
+
+  const signed = (v: number) => `${v > 0 ? "+" : ""}${v.toLocaleString("fr-FR")}`;
+  const rows: [string, string][] = [];
+  rows.push(["Balises", `${p.wardsPlaced} posées · ${p.wardsKilled} détruites${p.detectorWardsPlaced !== null ? ` · ${p.detectorWardsPlaced} de contrôle` : ""}`]);
+  if (p.ccTimeSec !== null) rows.push(["Contrôle de foule", `${p.ccTimeSec} s`]);
+  if (p.damageToObjectives !== null)
+    rows.push(["Dégâts aux objectifs", `${p.damageToObjectives.toLocaleString("fr-FR")}${p.damageToTurrets !== null ? ` · ${p.damageToTurrets.toLocaleString("fr-FR")} aux tours` : ""}`]);
+  if (p.largestKillingSpree !== null) rows.push(["Plus longue série", String(p.largestKillingSpree)]);
+  if (p.largestMultiKill > 1) rows.push(["Plus grand multi-kill", MULTI_LABEL[p.largestMultiKill] ?? `${p.largestMultiKill} d'affilée`]);
+  if (p.timeDeadSec !== null) rows.push(["Temps passé mort", duration(p.timeDeadSec)]);
+  if (at15) rows.push(["Avance à 15 min", `${signed(at15.gold)} or · ${signed(at15.xp)} XP · ${signed(at15.cs)} CS`]);
+
+  return (
+    <div className="player-details">
+      <div className="panel-label">Détails</div>
+      <dl>
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd className="num">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {!t && <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "6px 0 0" }}>L'avance à 15 minutes demande la timeline, en cours de chargement.</p>}
+    </div>
+  );
+}
+
+const MULTI_LABEL: Record<number, string> = {
+  2: "Double élimination",
+  3: "Triple élimination",
+  4: "Quadruple élimination",
+  5: "Pentakill",
+};
 
 function RunesPanel({ me }: { me: ParticipantDto }) {
   const { catalog } = useAppState();

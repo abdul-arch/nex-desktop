@@ -706,3 +706,66 @@ button.pname:hover {
 .story-score small {
   font-size: 10px;
 }
+
+/* ---------- Selecteur de joueur et details (onglet Build) ---------- */
+.player-picker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding: 10px 12px 0;
+}
+.player-picker > button {
+  padding: 2px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: none;
+  line-height: 0;
+  opacity: 0.55;
+}
+.player-picker > button:hover {
+  opacity: 0.85;
+}
+.player-picker > button.active {
+  opacity: 1;
+}
+.player-picker > button.active[data-team="100"] {
+  border-color: var(--blue);
+}
+.player-picker > button.active[data-team="200"] {
+  border-color: var(--red);
+}
+.player-picker-name {
+  margin-left: 6px;
+  font-size: var(--fs-sm);
+}
+.player-details {
+  padding: 0 12px 12px;
+}
+.player-details dl {
+  margin: 6px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.player-details dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}
+.player-details dl > div:last-child {
+  border-bottom: 0;
+}
+.player-details dt {
+  color: var(--muted);
+}
+.player-details dd {
+  margin: 0;
+  color: var(--text-2);
+}
+.dmg-bar.taken > i {
+  background: var(--muted);
+}

@@ -7,8 +7,8 @@ déjà aujourd'hui, et ce qu'il reste à construire.
 Tu peux le coller en entier, ou ne coller qu'une seule section « Lot » : chaque lot est
 autonome.
 
-> **Fait le 13 novembre 2026 :** lots **A** (historique des LP), **B** (badges et rang de
-> partie), **D** (onglet Or), **E** (Chronologie) et **G** (filtres, jours, session). Voir `src/domain/badges.ts`, `src/domain/lp.ts`,
+> **Fait le 13 novembre 2026 :** lots **A** (LP), **B** (badges), **C** (tableau des scores),
+> **D** (Or), **E** (Chronologie), **F** (build) et **G** (filtres, jours, session). Voir `src/domain/badges.ts`, `src/domain/lp.ts`,
 > `src/features/profile/LpCard.tsx` et la table `rank_snapshots` du backend.
 
 ---
@@ -51,10 +51,10 @@ autonome.
 | Bilan de la dernière session (V/L, ±LP, durée) | **fait** (lot G) |
 | Historique groupé par jour avec bilan du jour | **fait** (lot G) |
 | Badges de partie (MVP, ACE, 3e, Lane gagnée, Meilleure vision…) | **fait** (lot B) |
-| Tableau des scores : % des dégâts d'équipe, dégâts subis, or/min, score par joueur | partiel |
+| Tableau des scores : part des dégâts, dégâts subis, or/min, score par joueur | **fait** (lot C) |
 | Onglet « Or » : courbes Or/XP/CS de chaque joueur, avance d'équipe, curseur | partiel |
 | Onglet « Chronologie » : combats d'équipe détectés, gagné/perdu, score courant | partiel |
-| Onglet « Build » : sélecteur de joueur, page de runes complète, bloc « Détails » | partiel |
+| Onglet « Build » : sélecteur de joueur, bloc « Détails » | **fait** (lot F) ; arbre de runes non, le catalogue ne porte pas sa structure |
 | Filtres d'historique (file + compteur, champion, bande V/D) | **fait** (lot G) |
 | Comparaison des métriques à une **cible de rang** (« Cible 8,4 », « vs Maître · Bas ») | partiel |
 | Multi-comptes avec sélecteur | **absent** |
