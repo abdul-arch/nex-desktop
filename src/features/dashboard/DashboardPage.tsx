@@ -16,6 +16,7 @@ import {
 import { type Award, awardsByMatch } from "../../domain/badges";
 import { mergeLocalMatches, toSummary } from "../../domain/fromMatch";
 import { attributeLp } from "../../domain/lp";
+import { dayLabel, lastSession } from "../../domain/sessions";
 import {
   METRICS,
   championAggregates,
@@ -428,6 +429,7 @@ function DashboardView({
 
         <div className="dash-side">
           <RankCard ranks={player.ranks} />
+          <SessionCard matches={allMatches} />
           <RecentMatches matches={matches.slice(0, 6)} demo={demo} awards={awards} />
           <ChampionPerformance matches={matches} />
           {teammates && plat && <TeammatesCard mates={teammates} plat={plat} sample={teammatesSample} />}
@@ -782,6 +784,55 @@ function RankCard({ ranks }: { ranks: DashPlayer["ranks"] }) {
       {r && <RankCrest tier={r.tier} size={78} />}
     </section>
   );
+}
+
+/**
+ * Derniere session de jeu : les parties enchainees, coupees des qu'il s'ecoule plus de deux
+ * heures. Sur toutes les parties chargees, filtres de la page compris ou non : une session
+ * est un fait, pas une vue.
+ */
+function SessionCard({ matches }: { matches: MatchSummary[] }) {
+  const s = useMemo(() => lastSession(matches), [matches]);
+  if (!s) return null;
+  const when = new Date(s.startedAt);
+  const day = dayLabel(midnightOf(s.startedAt));
+  return (
+    <section className="card card-pad session-card" aria-label="Dernière session">
+      <div className="card-title" style={{ justifyContent: "space-between" }}>
+        <span>Dernière session</span>
+        <span className="muted num" style={{ fontWeight: 400, fontSize: "var(--fs-xs)" }}>
+          {day} · {when.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
+      <div className="session-figures">
+        <span>
+          <b className="num win">{s.wins}</b>
+          <small>victoires</small>
+        </span>
+        <span>
+          <b className="num loss">{s.losses}</b>
+          <small>défaites</small>
+        </span>
+        <span>
+          <b className="num">{s.lpDelta === null ? "—" : `${s.lpDelta > 0 ? "+" : ""}${s.lpDelta}`}</b>
+          <small>LP</small>
+        </span>
+        <span>
+          <b className="num">{duration(s.durationSec)}</b>
+          <small>
+            de jeu · {s.games} partie{s.games > 1 ? "s" : ""}
+          </small>
+        </span>
+      </div>
+    </section>
+  );
+}
+
+/** Minuit local du jour d'un horodatage. */
+function midnightOf(at: number) {
+  const d = new Date(at);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
 }
 
 function RecentMatches({ matches, demo, awards }: { matches: MatchSummary[]; demo: boolean; awards?: Map<string, Award> }) {

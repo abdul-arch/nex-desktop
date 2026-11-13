@@ -74,7 +74,64 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 2px;
+}
+
+/* Bilan de l'echantillon affiche, puis une pastille par partie. */
+.hist-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel-2);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.hist-summary b {
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+.hist-dots {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+.hist-dots > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+.hist-dots > i.win {
+  background: var(--blue);
+}
+.hist-dots > i.loss {
+  background: var(--red);
+}
+
+/* Groupement par journee. */
+.hist-day {
+  display: grid;
+  gap: 8px;
+}
+.hist-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 2px 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.hist-day-head b {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+/* « mercredi 11 novembre » : en francais seule la premiere lettre prend la majuscule. */
+.hist-day-head b::first-letter {
+  text-transform: uppercase;
 }
 
 /* ---------- Ligne d'historique ---------- */

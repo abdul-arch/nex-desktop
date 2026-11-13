@@ -5,7 +5,10 @@ import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
 import { championName, profileIcon } from "../../data/assets";
 import { useClient } from "../../app/ClientContext";
-import { mergeLocalMatches, toSummary } from "../../domain/fromMatch";
+import { findParticipant, mergeLocalMatches, toSummary } from "../../domain/fromMatch";
+import { nexScore } from "../../domain/nexScore";
+import { groupByDay } from "../../domain/sessions";
+import type { MatchSummary } from "../../domain/types";
 import { attributeLp } from "../../domain/lp";
 import { frequentTeammates } from "../../domain/teammates";
 import { championAggregates, isCountable, kdaOf, roleDistribution, winRate } from "../../domain/metrics";
@@ -21,6 +24,15 @@ import { TeammatesCard } from "../dashboard/TeammatesCard";
 
 /** « 2400 » (ARAM Mayhem) : parties lues dans le client League, Riot ne les fournit pas. */
 type QueueFilter = "all" | "420" | "440" | "450" | "400" | "2400";
+const QUEUE_FILTERS: QueueFilter[] = ["420", "440", "400", "450", "2400"];
+const QUEUE_TAB: Record<QueueFilter, string> = {
+  all: "Toutes",
+  "420": "Solo/Duo",
+  "440": "Flex",
+  "400": "Normale",
+  "450": "ARAM",
+  "2400": "ARAM Mayhem",
+};
 const PAGE = 10;
 
 export function ProfilePage({ onSearch }: { onSearch: () => void }) {
@@ -140,6 +152,7 @@ function ProfileLoaded({
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [champ, setChamp] = useState<string>("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
@@ -195,11 +208,26 @@ function ProfileLoaded({
     };
   }, [load, reloadToken]);
 
-  const shown = useMemo(() => {
+  const loaded = useMemo(() => {
     const mayhem = local.data ?? [];
     if (queue === "2400") return mayhem;
     return queue === "all" ? mergeLocalMatches(matches, mayhem, hasMore) : matches;
   }, [queue, matches, hasMore, local.data]);
+  // Compteurs par file, sur l'echantillon charge. Quand une file est selectionnee, Riot ne
+  // sert que celle-la : seul son compteur est connu, les autres restent sans chiffre.
+  const queueCounts = useMemo(() => {
+    const out = new Map<QueueFilter, number>([["all", loaded.length]]);
+    // Sur « Toutes », l'echantillon porte toutes les files : une file absente vaut zero.
+    // Sur une file precise, Riot n'a servi que celle-la : les autres restent sans chiffre.
+    if (queue === "all") for (const k of QUEUE_FILTERS) out.set(k, 0);
+    for (const m of loaded) {
+      const k = String(m.queueId) as QueueFilter;
+      if (QUEUE_FILTERS.includes(k)) out.set(k, (out.get(k) ?? 0) + 1);
+    }
+    return out;
+  }, [loaded, queue]);
+  const champions = useMemo(() => [...new Set(loaded.map((m) => findParticipant(m, profile.puuid)?.champion).filter((c): c is string => !!c))].sort(), [loaded, profile.puuid]);
+  const shown = useMemo(() => (champ === "all" ? loaded : loaded.filter((m) => findParticipant(m, profile.puuid)?.champion === champ)), [loaded, champ, profile.puuid]);
   const summaries = useMemo(
     () => shown.map((m) => toSummary(m, profile.puuid)).filter((s): s is NonNullable<typeof s> => s !== null),
     [shown, profile.puuid],
@@ -328,21 +356,30 @@ function ProfileLoaded({
           <div className="history-head">
             <Segmented
               label="File"
-              options={[
-                { value: "all", label: "Toutes" },
-                { value: "420", label: "Solo/Duo" },
-                { value: "440", label: "Flex" },
-                { value: "400", label: "Normale" },
-                { value: "450", label: "ARAM" },
-                { value: "2400", label: "ARAM Mayhem" },
-              ]}
+              options={(["all", ...QUEUE_FILTERS] as QueueFilter[]).map((v) => {
+                const n = queueCounts.get(v);
+                return { value: v, label: n === undefined ? QUEUE_TAB[v] : `${QUEUE_TAB[v]} ${n}` };
+              })}
               value={queue}
-              onChange={setQueue}
+              onChange={(v) => {
+                setQueue(v);
+                setChamp("all");
+              }}
             />
-            <span className="muted num" style={{ fontSize: "var(--fs-xs)" }}>
-              {shown.length} partie{shown.length > 1 ? "s" : ""} affichée{shown.length > 1 ? "s" : ""}
-            </span>
+            <label className="field">
+              <span className="sr-only">Champion</span>
+              <select className="select" value={champ} onChange={(e) => setChamp(e.target.value)} aria-label="Filtrer par champion">
+                <option value="all">Tous les champions</option>
+                {champions.map((c) => (
+                  <option key={c} value={c}>
+                    {championName(c)}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
+          <HistorySummary summaries={summaries} />
+
           {error != null && <ErrorPanel error={error} onRetry={() => setReloadToken((t) => t + 1)} compact />}
           {!loading && !error && !(queue === "2400" && local.loading) && shown.length === 0 && (
             <div className="card">
@@ -363,15 +400,34 @@ function ProfileLoaded({
               )}
             </div>
           )}
-          {shown.map((m) => (
-            <MatchHistoryRow
-              key={m.id}
-              match={m}
-              puuid={profile.puuid}
-              lpDelta={lp.get(m.id) ?? null}
-              expanded={expanded === m.id}
-              onToggle={() => setExpanded((e) => (e === m.id ? null : m.id))}
-            />
+          {groupByDay(summaries.map((s) => ({ ...s, lpDelta: lp.get(s.id) ?? null }))).map((day) => (
+            <div className="hist-day" key={day.day}>
+              <div className="hist-day-head">
+                <b>{day.label}</b>
+                <span className="num">
+                  {day.wins}V {day.losses}D
+                </span>
+                {day.lpDelta !== null && (
+                  <span className={`num ${day.lpDelta > 0 ? "pos" : day.lpDelta < 0 ? "neg" : "muted"}`}>
+                    {day.lpDelta > 0 ? "+" : ""}
+                    {day.lpDelta} LP
+                  </span>
+                )}
+              </div>
+              {day.matches.map((s) => {
+                const m = shown.find((x) => x.id === s.id)!;
+                return (
+                  <MatchHistoryRow
+                    key={m.id}
+                    match={m}
+                    puuid={profile.puuid}
+                    lpDelta={s.lpDelta}
+                    expanded={expanded === m.id}
+                    onToggle={() => setExpanded((e) => (e === m.id ? null : m.id))}
+                  />
+                );
+              })}
+            </div>
           ))}
           {(loading || (queue === "2400" && local.loading)) && <div className="card card-pad muted">Chargement des parties…</div>}
           {!loading && hasMore && (
@@ -381,6 +437,55 @@ function ProfileLoaded({
           )}
         </section>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Bilan de l'echantillon affiche, suivi d'une bande de points : un par partie, de la plus
+ * ancienne a la plus recente. Les remakes ne comptent pas dans les moyennes, et le Score NEX
+ * n'existe pas en ARAM : il n'apparait que s'il a ete calculable quelque part.
+ */
+function HistorySummary({ summaries }: { summaries: MatchSummary[] }) {
+  const counted = summaries.filter(isCountable);
+  if (counted.length === 0) return null;
+  const wins = counted.filter((m) => m.win).length;
+  const kda = kdaOf(
+    counted.reduce((a, m) => a + m.kills, 0),
+    counted.reduce((a, m) => a + m.deaths, 0),
+    counted.reduce((a, m) => a + m.assists, 0),
+  );
+  const minutes = counted.reduce((a, m) => a + m.durationSec / 60, 0);
+  const csm = minutes > 0 ? counted.reduce((a, m) => a + m.cs, 0) / minutes : null;
+  const scores = counted.map((m) => nexScore(m).score).filter((s): s is number => s !== null);
+
+  return (
+    <div className="hist-summary">
+      <span>
+        <b className="num">{counted.length}</b> parties
+      </span>
+      <span className="num">
+        {wins}V {counted.length - wins}D <b>{pct(wins / counted.length)}</b>
+      </span>
+      <span className="num">
+        <b>{kda.toFixed(2)}</b> KDA
+      </span>
+      {csm !== null && (
+        <span className="num">
+          <b>{csm.toFixed(1)}</b> CS/min
+        </span>
+      )}
+      {scores.length > 0 && (
+        <span className="num">
+          <b>{Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}</b> de score moyen
+        </span>
+      )}
+      <span className="spacer" />
+      <span className="hist-dots" aria-hidden="true">
+        {[...counted].reverse().map((m) => (
+          <i key={m.id} className={m.win ? "win" : "loss"} />
+        ))}
+      </span>
     </div>
   );
 }
