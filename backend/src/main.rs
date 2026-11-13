@@ -67,6 +67,11 @@ async fn main() {
             std::process::exit(2);
         }
     };
+    match store.purge_if_key_changed(config.riot_api_key.as_deref()) {
+        Ok(true) => tracing::info!("cle Riot differente de la precedente : cache vide (les PUUID sont chiffres par cle)"),
+        Ok(false) => {}
+        Err(e) => tracing::warn!("empreinte de cle non verifiee : {e}"),
+    }
     if let Ok(n) = store.purge() {
         tracing::info!("cache : {n} entree(s) expiree(s) purgee(s)");
     }

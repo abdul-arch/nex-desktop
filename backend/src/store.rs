@@ -3,9 +3,14 @@
 use crate::error::BResult;
 use nex_domain::api::RankSnapshotDto;
 use rusqlite::{Connection, OptionalExtension, params};
+use sha2::{Digest, Sha256};
 use std::path::Path;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
+}
 
 pub fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
@@ -140,6 +145,35 @@ impl Store {
         Ok(())
     }
 
+    /// Vide le cache si la cle Riot a change depuis le dernier demarrage.
+    ///
+    /// Riot chiffre les PUUID par cle : un PUUID obtenu avec une cle est refuse (400) avec
+    /// une autre. Tout ce qui est en cache en contient — profils, pages de parties, parties
+    /// elles-memes. Les conserver donnerait une application qui echoue sans raison visible.
+    /// Seule une empreinte SHA-256 de la cle est stockee, jamais la cle.
+    /// Rend true si le cache a ete vide.
+    pub fn purge_if_key_changed(&self, key: Option<&str>) -> BResult<bool> {
+        let Some(key) = key else { return Ok(false) };
+        let fingerprint = sha256_hex(key.as_bytes());
+        let conn = self.conn();
+        let previous: Option<String> = conn
+            .query_row("SELECT body FROM cache WHERE key = 'riot-key-fingerprint'", [], |r| r.get(0))
+            .optional()?;
+        if previous.as_deref() == Some(fingerprint.as_str()) {
+            return Ok(false);
+        }
+        // Sans empreinte precedente, on ignore quelle cle a produit ce qui est en cache :
+        // s'il contient quelque chose, il peut deja etre perime. On le vide une seule fois.
+        let entries: i64 = conn.query_row("SELECT COUNT(*) FROM cache", [], |r| r.get(0))?;
+        let vide = previous.is_some() || entries > 0;
+        conn.execute("DELETE FROM cache", [])?;
+        conn.execute(
+            "INSERT INTO cache (key, body, fetched_at, expires_at) VALUES ('riot-key-fingerprint', ?1, ?2, NULL)",
+            params![fingerprint, now_ms()],
+        )?;
+        Ok(vide)
+    }
+
     /// Supprime les entrees a TTL expirees depuis plus de 24 h.
     pub fn purge(&self) -> BResult<usize> {
         Ok(self.conn().execute(
@@ -163,6 +197,35 @@ mod tests {
         assert!(s.get("b").unwrap().unwrap().fresh);
         assert!(!s.get("c").unwrap().unwrap().fresh);
         assert!(s.get("z").unwrap().is_none());
+    }
+
+    #[test]
+    fn cache_emptied_when_the_key_changes() {
+        let s = Store::memory().unwrap();
+        // Cache vide au premier demarrage : rien a signaler, on pose seulement l'empreinte.
+        assert!(!s.purge_if_key_changed(Some("RGAPI-un")).unwrap());
+        s.put("acct:europe:joueur", "{\"puuid\":\"chiffre-avec-la-cle-un\"}", None).unwrap();
+
+        // Meme cle : le cache est conserve.
+        assert!(!s.purge_if_key_changed(Some("RGAPI-un")).unwrap());
+        assert!(s.get("acct:europe:joueur").unwrap().is_some());
+
+        // Cle differente : les PUUID en cache ne valent plus rien, tout part.
+        assert!(s.purge_if_key_changed(Some("RGAPI-deux")).unwrap());
+        assert!(s.get("acct:europe:joueur").unwrap().is_none());
+        // Et la nouvelle empreinte est retenue.
+        assert!(!s.purge_if_key_changed(Some("RGAPI-deux")).unwrap());
+
+        // Sans cle, on ne touche a rien : le cache sert encore en lecture seule.
+        s.put("acct:europe:joueur", "{}", None).unwrap();
+        assert!(!s.purge_if_key_changed(None).unwrap());
+        assert!(s.get("acct:europe:joueur").unwrap().is_some());
+
+        // Un cache deja peuple sans empreinte connue est vide une fois, par precaution.
+        let neuf = Store::memory().unwrap();
+        neuf.put("acct:europe:joueur", "{}", None).unwrap();
+        assert!(neuf.purge_if_key_changed(Some("RGAPI-un")).unwrap());
+        assert!(neuf.get("acct:europe:joueur").unwrap().is_none());
     }
 
     #[test]
