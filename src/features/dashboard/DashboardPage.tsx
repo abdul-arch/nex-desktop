@@ -16,7 +16,7 @@ import {
 import { type Award, awardsByMatch } from "../../domain/badges";
 import { mergeLocalMatches, toSummary } from "../../domain/fromMatch";
 import { attributeLp } from "../../domain/lp";
-import { dayLabel, lastSession } from "../../domain/sessions";
+import { dayLabel, groupByDay, lastSession } from "../../domain/sessions";
 import {
   METRICS,
   championAggregates,
@@ -32,10 +32,11 @@ import { NEX_SCORE_VERSION, nexScore } from "../../domain/nexScore";
 import type { MatchSummary, Queue } from "../../domain/types";
 import { platformLabel } from "../../domain/riotId";
 import { platform } from "../../platform";
-import type { MatchDto, MatchPageDto, PlayerProfileDto, RankSnapshotDto, Recording, SkinCatalog, SkinInventory } from "../../platform/api";
+import type { BaselinesDto, MatchDto, MatchPageDto, PlayerProfileDto, RankSnapshotDto, Recording, SkinCatalog, SkinInventory } from "../../platform/api";
 import { viewSkins } from "../../domain/skins";
 import { frequentTeammates, type Teammate } from "../../domain/teammates";
 import { TeammatesCard } from "./TeammatesCard";
+import { LpCard } from "../profile/LpCard";
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { duration, pct, QUEUE_LABEL, ROLE_LABEL, TIER_LABEL, timeAgo } from "../../ui/format";
 import {
@@ -70,6 +71,8 @@ const QUEUE_OPTIONS: { value: QueueFilter; label: string }[] = [
 
 /** Vue joueur commune au mode demo et au mode reel. */
 interface DashPlayer {
+  /** Absent en mode demonstration : les cartes qui en dependent ne sont alors pas rendues. */
+  puuid?: string;
   gameName: string;
   tagLine: string;
   platform: string;
@@ -279,6 +282,7 @@ function DashboardView({
     return out;
   }, [allMatches, queue, period]);
 
+  const topRole = useMemo(() => roleDistribution(matches)[0]?.role ?? null, [matches]);
   const window = Math.max(3, Math.floor(Number(period) / 2));
   const summaries = useMemo(() => METRICS.map((d) => summarize(d, matches, window)), [matches, window]);
   const countable = matches.filter(isCountable);
@@ -348,6 +352,21 @@ function DashboardView({
             </div>
           ) : (
             <MediaRow />
+          )}
+
+          {!demo && plat && player.puuid && (
+            <div className="row-media two">
+              <LpCard puuid={player.puuid} plat={plat} />
+              {teammates && <TeammatesCard mates={teammates} plat={plat} sample={teammatesSample} />}
+            </div>
+          )}
+
+          {!demo && (
+            <div className="row-week">
+              <WeekCard matches={allMatches} />
+              <NextStepCard matches={countable} role={topRole} />
+              <HighlightsCard awards={awards} />
+            </div>
           )}
 
           <div className="row-extras">
@@ -432,7 +451,6 @@ function DashboardView({
           <SessionCard matches={allMatches} />
           <RecentMatches matches={matches.slice(0, 6)} demo={demo} awards={awards} />
           <ChampionPerformance matches={matches} />
-          {teammates && plat && <TeammatesCard mates={teammates} plat={plat} sample={teammatesSample} />}
         </div>
       </div>
     </div>
@@ -460,6 +478,25 @@ function MediaRow() {
   const lastFull = sorted.find((r) => r.kind === "full") ?? null;
   const clips = sorted.filter((r) => r.kind === "clip").slice(0, 3);
   const toRecordings = () => navigate("recordings");
+
+  // Rien a montrer : une bande d'une ligne plutot que deux cartes vides en pleine hauteur.
+  // L'information reste, la place revient aux cartes qui ont toujours quelque chose a dire.
+  if (!lastFull && clips.length === 0) {
+    return (
+      <button className="card media-strip" onClick={toRecordings}>
+        <Film aria-hidden="true" />
+        <span>
+          {!desktop
+            ? "Les enregistrements et les clips sont disponibles dans l'application desktop."
+            : recs.data
+              ? "L'enregistrement de parties est désactivé."
+              : "Lecture de tes enregistrements…"}
+        </span>
+        <span className="spacer" />
+        {desktop && recs.data && <span className="chip">Activer</span>}
+      </button>
+    );
+  }
 
   return (
     <div className="row-media two">
@@ -833,6 +870,121 @@ function midnightOf(at: number) {
   const d = new Date(at);
   d.setHours(0, 0, 0, 0);
   return d.getTime();
+}
+
+/** Sept derniers jours : une barre par jour, hauteur selon les parties, couleur selon le bilan. */
+function WeekCard({ matches }: { matches: MatchSummary[] }) {
+  const days = useMemo(() => {
+    const groups = new Map(groupByDay(matches).map((g) => [g.day, g]));
+    const today = midnightOf(Date.now());
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = today - (6 - i) * 86_400_000;
+      const g = groups.get(day);
+      return { day, games: g?.games ?? 0, wins: g?.wins ?? 0, losses: g?.losses ?? 0 };
+    });
+  }, [matches]);
+  const max = Math.max(1, ...days.map((d) => d.games));
+  const total = days.reduce((a, d) => ({ games: a.games + d.games, wins: a.wins + d.wins, losses: a.losses + d.losses }), { games: 0, wins: 0, losses: 0 });
+  const minutes = matches.filter((m) => m.startedAt >= midnightOf(Date.now()) - 6 * 86_400_000).reduce((a, m) => a + m.durationSec, 0);
+  if (total.games === 0) return null;
+
+  return (
+    <section className="card card-pad week-card" aria-label="Ta semaine">
+      <div className="card-title">Ta semaine</div>
+      <div className="week-bars">
+        {days.map((d) => (
+          <span
+            key={d.day}
+            title={d.games === 0 ? `${dayLabel(d.day)} : aucune partie` : `${dayLabel(d.day)} : ${d.games} partie${d.games > 1 ? "s" : ""}, ${d.wins}V ${d.losses}D`}
+            data-issue={d.games === 0 ? "none" : d.wins >= d.losses ? "win" : "loss"}
+            style={{ height: `${d.games === 0 ? 12 : 12 + (d.games / max) * 88}%` }}
+          />
+        ))}
+      </div>
+      <div className="muted num week-total">
+        {total.games} partie{total.games > 1 ? "s" : ""} · {total.wins}V {total.losses}D · {duration(minutes)} de jeu
+      </div>
+    </section>
+  );
+}
+
+/** Mesures du joueur comparables aux medianes collectees, sur les memes cles. */
+const STEP_METRICS: { key: string; label: string; higherIsBetter: boolean; format: (v: number) => string; value: (ms: MatchSummary[]) => number | null }[] = [
+  { key: "csPerMin", label: "CS / min", higherIsBetter: true, format: (v) => v.toFixed(1), value: (ms) => ratioOf(ms, (m) => m.cs, (m) => m.durationSec / 60) },
+  { key: "visionPerMin", label: "Vision / min", higherIsBetter: true, format: (v) => v.toFixed(2), value: (ms) => ratioOf(ms, (m) => m.visionScore, (m) => m.durationSec / 60) },
+  { key: "killParticipation", label: "Participation", higherIsBetter: true, format: (v) => pct(v), value: (ms) => ratioOf(ms, (m) => m.kills + m.assists, (m) => m.teamKills) },
+  { key: "damageShare", label: "Part des dégâts", higherIsBetter: true, format: (v) => pct(v), value: (ms) => ratioOf(ms, (m) => m.damageToChampions, (m) => m.teamDamageToChampions) },
+  { key: "deathsPer10", label: "Morts / 10 min", higherIsBetter: false, format: (v) => v.toFixed(1), value: (ms) => ratioOf(ms, (m) => m.deaths * 10, (m) => m.durationSec / 60) },
+];
+
+function ratioOf(ms: MatchSummary[], num: (m: MatchSummary) => number, den: (m: MatchSummary) => number): number | null {
+  const d = ms.reduce((a, m) => a + den(m), 0);
+  return d > 0 ? ms.reduce((a, m) => a + num(m), 0) / d : null;
+}
+
+/**
+ * La mesure ou l'ecart a la mediane collectee est le plus defavorable. Une seule : le heros
+ * affiche deja huit moyennes, cette carte sert a savoir quoi travailler.
+ */
+function NextStepCard({ matches, role }: { matches: MatchSummary[]; role: string | null }) {
+  const { navigate } = useNav();
+  const base = useAsync<BaselinesDto>(`baselines:${role ?? "all"}`, () => platform.statsBaselines(role ? { position: role } : {}), 600_000);
+  const worst = useMemo(() => {
+    if (!base.data || matches.length === 0) return null;
+    let pick: { label: string; mine: number; median: number; gap: number; format: (v: number) => string } | null = null;
+    for (const m of STEP_METRICS) {
+      const mine = m.value(matches);
+      const median = base.data.stats.find((s) => s.key === m.key)?.median ?? null;
+      if (mine === null || median === null || median === 0) continue;
+      // Ecart relatif, signe pour que « plus grand » soit toujours « pire ».
+      const gap = ((median - mine) / Math.abs(median)) * (m.higherIsBetter ? 1 : -1);
+      if (gap > 0 && (!pick || gap > pick.gap)) pick = { label: m.label, mine, median, gap, format: m.format };
+    }
+    return pick;
+  }, [base.data, matches]);
+
+  if (!worst) return null;
+  return (
+    <button className="card card-pad card-link step-card" onClick={() => navigate("datastudio")}>
+      <div className="card-title">Ta prochaine marche</div>
+      <strong className="step-name">{worst.label}</strong>
+      <div className="step-values num">
+        <span className="neg">{worst.format(worst.mine)}</span>
+        <span className="muted">médiane {worst.format(worst.median)}</span>
+      </div>
+      <div className="muted step-note">
+        Ton plus gros écart sur {matches.length} partie{matches.length > 1 ? "s" : ""}, face aux parties collectées par NEX.
+      </div>
+    </button>
+  );
+}
+
+/** Distinctions accumulees sur les parties chargees : du vecu, pas une moyenne de plus. */
+function HighlightsCard({ awards }: { awards?: Map<string, Award> }) {
+  const lines = useMemo(() => {
+    if (!awards?.size) return [];
+    const counts = new Map<string, number>();
+    const bump = (k: string) => counts.set(k, (counts.get(k) ?? 0) + 1);
+    for (const a of awards.values()) {
+      if (a.rankLabel === "MVP" || a.rankLabel === "ACE") bump(a.rankLabel);
+      for (const b of a.badges) bump(b.label);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
+  }, [awards]);
+  if (lines.length === 0) return null;
+
+  return (
+    <section className="card card-pad highlights-card" aria-label="Faits marquants">
+      <div className="card-title">Faits marquants</div>
+      <ul>
+        {lines.map(([label, n]) => (
+          <li key={label}>
+            <b className="num">{n}×</b> {label}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 function RecentMatches({ matches, demo, awards }: { matches: MatchSummary[]; demo: boolean; awards?: Map<string, Award> }) {

@@ -1,6 +1,8 @@
 # Prompt — remplir les cases vides de l'accueil
 
-Prêt à coller. Constat fait sur une capture de l'accueil au 13 novembre 2026.
+**Construit le 13 novembre 2026** : repli des cartes média, courbe de LP, coéquipiers remontés, Ta semaine, Ta prochaine marche et Faits marquants sont en place.
+
+Constat initial fait sur une capture de l'accueil au 13 novembre 2026.
 
 ---
 
