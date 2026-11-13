@@ -12,11 +12,15 @@ export function OverlaysPage() {
   const { settings, setSetting, notify } = useAppState();
   const client = useClient();
   const [layout, setLayout] = useState<WidgetLayout[]>([]);
+  // Raccourcis qu'une autre application retenait au demarrage : sans cela, la fonction
+  // concernee paraissait simplement cassee.
+  const [failed, setFailed] = useState<string[]>([]);
   const caps = platform.capabilities;
 
   useEffect(() => {
     let off: (() => void) | undefined;
     platform.overlayLayoutGet().then(setLayout).catch(() => {});
+    platform.appInfo().then((i) => setFailed(i.failedShortcuts ?? [])).catch(() => {});
     platform.on<WidgetLayout[]>("overlay://layout", setLayout).then((o) => (off = o));
     return () => off?.();
   }, []);
@@ -38,6 +42,20 @@ export function OverlaysPage() {
           <LayoutGrid aria-hidden="true" /> Overlays
         </h1>
         <p className="page-sub">Petits widgets par-dessus le jeu, déplaçables et masquables. Une seule fenêtre transparente, traversée par les clics.</p>
+      </div>
+
+      <div className="card card-pad" style={{ display: "grid", gap: 6 }}>
+        <b>Pour déplacer les widgets en jeu</b>
+        <p className="muted" style={{ margin: 0, fontSize: "var(--fs-sm)" }}>
+          League doit être en <b>mode fenêtre sans bordure</b> (Options → Vidéo → Mode fenêtre). En plein écran exclusif, Windows interdit à toute
+          application de passer au-dessus du jeu : l'overlay reste invisible et ne reçoit aucun clic. Ensuite, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd>{" "}
+          bascule en mode configuration, et le même raccourci en sort.
+        </p>
+        {failed.length > 0 && (
+          <p className="neg" style={{ margin: 0, fontSize: "var(--fs-sm)" }}>
+            Raccourci indisponible : {failed.join(", ")} — une autre application le détient déjà. Ferme-la, ou cette fonction restera sans effet.
+          </p>
+        )}
       </div>
       <section className="card card-pad" style={{ marginBottom: 14 }}>
         <div className="panel-label">Disposition à l'écran</div>
@@ -114,7 +132,7 @@ export function OverlaysPage() {
                   </div>
                   {w.mode === "hold" && (
                     <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "4px 0 0" }}>
-                      Visible uniquement tant que <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Espace</kbd> est maintenue.
+                      Visible uniquement tant que <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>E</kbd> est maintenue.
                     </p>
                   )}
                   <dl className="kv widget-kv">

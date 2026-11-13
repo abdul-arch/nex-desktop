@@ -75,7 +75,7 @@ pub fn shortcuts_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     let mayhem_read = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyA);
     let mayhem_panel = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyD);
     // Rappel : revele les widgets regles sur « sur une touche », tant qu'elle est maintenue.
-    let hold = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Space);
+    let hold = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyE);
     let panel_open = std::sync::atomic::AtomicBool::new(false);
     tauri_plugin_global_shortcut::Builder::new()
         .with_handler(move |app, shortcut, event| {
@@ -116,6 +116,10 @@ pub fn shortcuts_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         .build()
 }
 
+/// Raccourcis que Windows a refuses, parce qu'une autre application les detient deja.
+/// Sans cette liste, l'echec restait invisible et la fonction paraissait simplement cassee.
+pub static FAILED_SHORTCUTS: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
 pub fn register_shortcuts(app: &AppHandle) {
     let gs = app.global_shortcut();
     for s in [
@@ -124,11 +128,15 @@ pub fn register_shortcuts(app: &AppHandle) {
         Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyR),
         Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyA),
         Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyD),
-        Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Space),
+        Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyE),
     ] {
         // Un raccourci deja pris par une autre application n'empeche pas NEX de demarrer.
-        if let Err(e) = gs.register(s) {
-            eprintln!("raccourci global indisponible : {e}");
+        if gs.register(s).is_err() {
+            let name = format!("Ctrl+Alt+{:?}", s.key).replace("Key", "");
+            eprintln!("raccourci global indisponible : {name}");
+            if let Ok(mut f) = FAILED_SHORTCUTS.lock() {
+                f.push(name);
+            }
         }
     }
 }

@@ -173,7 +173,7 @@ export function createWebPlatform(): Platform {
 
   return {
     capabilities: { kind: "web", windowControls: false, localClient: false, persistentStorage: true },
-    appInfo: async () => ({ name: "NEX", version: "web", schemaVersion: 0, debug: true }),
+    appInfo: async () => ({ name: "NEX", version: "web", schemaVersion: 0, debug: true, failedShortcuts: [] }),
     getSettings: async () => ({ ...store.settings }),
     setSetting: async (key, value) => {
       store.settings = { ...store.settings, [key]: value };

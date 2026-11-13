@@ -18,7 +18,7 @@ pub struct WidgetLayout {
     pub visible: bool,
     pub locked: bool,
     /// "always" : affiche pendant toute la partie. "hold" : seulement tant que la touche
-    /// de rappel (Ctrl+Alt+Espace) est maintenue.
+    /// de rappel (Ctrl+Alt+E) est maintenue.
     pub mode: String,
 }
 

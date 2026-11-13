@@ -35,6 +35,8 @@ export interface AppInfo {
   version: string;
   schemaVersion: number;
   debug: boolean;
+  /** Raccourcis globaux qu'une autre application retenait déjà au démarrage. */
+  failedShortcuts: string[];
 }
 
 export interface Settings {

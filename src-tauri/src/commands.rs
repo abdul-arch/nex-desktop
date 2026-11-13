@@ -42,6 +42,8 @@ pub struct AppInfo {
     pub version: &'static str,
     pub schema_version: i64,
     pub debug: bool,
+    /// Raccourcis globaux qu'une autre application retenait deja au demarrage.
+    pub failed_shortcuts: Vec<String>,
 }
 
 #[tauri::command]
@@ -53,6 +55,7 @@ pub fn app_info(window: Window, state: State<'_, AppState>) -> AppResult<AppInfo
         version: env!("CARGO_PKG_VERSION"),
         schema_version,
         debug: cfg!(debug_assertions),
+        failed_shortcuts: crate::windows::FAILED_SHORTCUTS.lock().map(|f| f.clone()).unwrap_or_default(),
     })
 }
 
