@@ -39,6 +39,7 @@ pub fn router(state: Shared) -> Router {
         .route("/v1/stats/meta", get(stats_meta))
         .route("/v1/stats/tierlist", get(stats_tierlist))
         .route("/v1/stats/baselines", get(stats_baselines))
+        .route("/v1/stats/winprob", get(stats_winprob))
         .route("/v1/stats/icons", get(stats_icons))
         .route("/v1/stats/champion/{champion_id}/build", get(stats_build))
         .route("/v1/stats/champion/{champion_id}/matchups", get(stats_matchups))
@@ -304,6 +305,12 @@ async fn stats_baselines(State(s): State<Shared>, Query(q): Query<StatsQuery>) -
         let f = q.filter(c)?;
         crate::analytics::baselines(c, &f, pos)
     })?))
+}
+
+/// Issue observee par tranche de temps et d'ecart d'or, sur les parties collectees.
+/// Pas de filtre de perimetre : la grille serait trop clairsemee par patch ou par rang.
+async fn stats_winprob(State(s): State<Shared>) -> BResult<Json<WinProbDto>> {
+    Ok(Json(s.riot.store().with(crate::analytics::winprob)?))
 }
 
 async fn stats_build(State(s): State<Shared>, Path(id): Path<String>, Query(q): Query<StatsQuery>) -> BResult<Json<ChampionBuildDto>> {

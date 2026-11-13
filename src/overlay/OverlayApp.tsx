@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { skillLabel } from "../domain/fromMatch";
 import { platform } from "../platform";
-import type { Catalog, ChampionBuildDto, LiveSnapshot, WidgetId, WidgetLayout } from "../platform/api";
+import type { Catalog, ChampionBuildDto, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../platform/api";
 import { championIcon, itemIcon } from "../data/assets";
 import { kdiff, kgold, teamGold } from "../domain/livegold";
+import { winProbability } from "../domain/winprob";
 import { MayhemLayer } from "./MayhemLayer";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -20,6 +21,7 @@ export function OverlayApp() {
   const [version, setVersion] = useState<string | null>(null);
   const [keys, setKeys] = useState<"AZER" | "QWER">("AZER");
   const [build, setBuild] = useState<ChampionBuildDto | null>(null);
+  const [grid, setGrid] = useState<WinProbDto | null>(null);
   const [now, setNow] = useState(performance.now());
   // Widgets fermes a la croix : masques jusqu'a la partie suivante, sans toucher
   // a la disposition enregistree (la page Overlays reste la source de verite).
@@ -42,6 +44,8 @@ export function OverlayApp() {
       platform.getSettings().then((st) => alive && setKeys(st.abilityKeys)).catch(() => {});
       platform.staticCatalog().then((c) => alive && setCatalog(c)).catch(() => {});
       platform.staticDataVersion().then((v) => alive && setVersion(v.version)).catch(() => {});
+      // Grille chargee une fois : elle ne bouge qu'au rythme de la collecte.
+      platform.statsWinprob().then((g) => alive && setGrid(g)).catch(() => alive && setGrid(null));
     })();
     return () => {
       alive = false;
@@ -88,6 +92,7 @@ export function OverlayApp() {
 
   const content: Record<WidgetId, React.ReactNode> = {
     gold: GoldWidget({ snap: snap.s, gameTime, config, onClose: shut("gold") }),
+    winprob: WinProbWidget({ snap: snap.s, gameTime, grid, config, onClose: shut("winprob") }),
     clock: (
       <Widget title="Partie" onClose={shut("clock")}>
         {gameTime === null ? (
@@ -389,5 +394,54 @@ function GoldWidget({
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * Probabilite de victoire. Frequence observee sur les parties collectees par NEX pour la
+ * tranche de temps et l'ecart d'or courants (cf. src/domain/winprob.ts) : ni modele, ni
+ * extrapolation. Deux raisons de n'afficher aucun chiffre, et le widget le dit :
+ * la situation n'est pas assez observee, ou le temps de jeu sort des tranches couvertes.
+ */
+function WinProbWidget({
+  snap,
+  gameTime,
+  grid,
+  config,
+  onClose,
+}: {
+  snap: LiveSnapshot | null;
+  gameTime: number | null;
+  grid: WinProbDto | null;
+  config: boolean;
+  onClose?: () => void;
+}) {
+  const gold = snap && gameTime !== null ? teamGold(snap.players, gameTime) : null;
+  const answer = gold && gameTime !== null ? winProbability(grid, gameTime, gold.diff) : null;
+  if (!answer)
+    return config || gold ? (
+      <Widget title="Probabilité de victoire" onClose={onClose}>
+        <span className="ov-wait">{grid ? "Situation pas encore assez observée" : "En attente de partie"}</span>
+      </Widget>
+    ) : null;
+  const mine = Math.round(answer.p * 100);
+  return (
+    <Widget title="Probabilité de victoire" onClose={onClose}>
+      <div className="ov-wp">
+        <span className="ov-wp-side mine">
+          <b>{mine}</b>%<em>ton équipe</em>
+        </span>
+        <span className="ov-wp-side theirs">
+          <b>{100 - mine}</b>%<em>adverse</em>
+        </span>
+      </div>
+      <div className="ov-wp-bar" aria-hidden="true">
+        <i style={{ width: `${mine}%` }} />
+      </div>
+      <span className="ov-sub">
+        {answer.games.toLocaleString("fr-FR")} situations observées · {answer.minute} min, écart ≈{answer.bucket > 0 ? "+" : ""}
+        {answer.bucket}K
+      </span>
+    </Widget>
   );
 }

@@ -126,6 +126,7 @@ export interface Platform {
    * Une mesure qu'aucune partie collectée ne porte rend `median: null`.
    */
   statsBaselines(params: StatsParams): Promise<BaselinesDto>;
+  statsWinprob(): Promise<WinProbDto>;
   /** Icônes d'invocateur les plus portées dans les parties collectées par NEX. */
   statsIcons(params: StatsParams): Promise<IconsDto>;
   statsBuild(championId: number, params: StatsParams): Promise<ChampionBuildDto>;
@@ -271,5 +272,6 @@ import type {
   StatsParams,
   TierListDto,
   TimelineDto,
+  WinProbDto,
 } from "./api";
 export type * from "./api";

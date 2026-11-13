@@ -342,8 +342,8 @@ Et pour chaque overlay : une description, un aperçu avec bascule « Début / Mi
 le mode d'affichage **Toujours / Sur Tab / Sur une touche** avec la touche à choisir, un
 curseur de taille, et une position déplaçable en jeu.
 
-**Où NEX en est.** Six widgets (`src/features/overlays/widgets.ts`) : or des équipes,
-chronomètre et stats, timers d'objectifs, prochain objet, rappel de compétence, rappel de
+**Où NEX en est.** Sept widgets (`src/features/overlays/widgets.ts`) : or des équipes,
+probabilité de victoire, chronomètre et stats, timers d'objectifs, prochain objet, rappel de compétence, rappel de
 trinket, avec un éditeur de disposition (`LayoutEditor.tsx`). Design repris de la page du site
 (cartes sombres translucides, intitulé discret, croix de fermeture jusqu'à la partie suivante).
 
@@ -353,11 +353,19 @@ passif, farm, éliminations, assistances) et portent un « ≈ » à l'écran ; 
 tourelles et objectifs ne sont pas comptés. L'écart entre les deux équipes est plus fiable que
 les totaux : l'or de départ et l'or passif s'annulent exactement dans la soustraction.
 
-**Probabilité de victoire : pas construite, et pourquoi.** Elle demande l'état des parties
-*minute par minute* (écart d'or, éliminations, objectifs à l'instant T). La base d'analyse ne
-retient que `gold_diff15` ; aucune image par minute n'est stockée, et la collecte de timelines
-est coupée depuis le 13/11/2026 pour doubler le débit (260 parties/heure contre 177). La
-rétablir et stocker une table « minute → issue » est le préalable.
+**Probabilité de victoire : comment elle est obtenue.** Ce n'est pas un modèle entraîné mais un
+comptage. La table `a_winprob` (`backend/src/analytics.rs`) compte, par tranche de 5 minutes et
+par millier d'or d'écart, les situations observées et celles suivies d'une victoire. Chaque
+partie y verse ses deux points de vue, ce qui rend la grille symétrique par construction. Une
+case sous 60 observations n'est pas servie, et rien ne se replie sur une case voisine.
+
+La collecte de timelines, coupée le 13/11/2026 pour le débit, a été rétablie le même jour pour
+alimenter cette table ; `analytics::backfill_winprob` a rattrapé 769 parties depuis les
+timelines encore en cache, sans un seul appel à Riot (il accepte les corps normalisés en
+version antérieure : les champs lus n'ont pas changé).
+
+Deux réserves portées à l'écran : l'écart d'or fourni en jeu est estimé, et les parties
+collectées sont des classées Master et au-dessus.
 
 **À construire, par ordre de valeur.**
 1. **Réglages par widget** : mode d'affichage (toujours / sur une touche), taille, position.

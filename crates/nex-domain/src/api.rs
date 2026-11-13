@@ -264,6 +264,35 @@ pub struct StatsScopeDto {
     pub matches: u32,
 }
 
+/// Une case de la grille « probabilite de victoire » : issue observee pour une tranche
+/// de temps et un ecart d'or donnes.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WinProbCellDto {
+    /// Tranche de temps en minutes (5, 10, 15...).
+    pub minute: i32,
+    /// Ecart d'or en milliers, borne a +-max_bucket, du point de vue de l'equipe observee.
+    pub bucket: i32,
+    /// Nombre d'observations dans la case.
+    pub games: u32,
+    /// Observations suivies d'une victoire.
+    pub wins: u32,
+}
+
+/// Grille complete. Construite par comptage sur les parties collectees : ce n'est pas un
+/// modele entraine, seulement la frequence observee. Les cases sous `min_games` sont
+/// absentes.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct WinProbDto {
+    pub cells: Vec<WinProbCellDto>,
+    /// Nombre de situations observees : une partie compte une fois par tranche de temps
+    /// qu'elle a atteinte, pas une seule fois.
+    pub observations: u32,
+    pub min_games: u32,
+    pub max_bucket: i32,
+}
+
 /// Repere d'une mesure du Data Studio : la mediane observee sur les parties collectees.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]

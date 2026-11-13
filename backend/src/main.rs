@@ -80,6 +80,13 @@ async fn main() {
         tracing::error!("schema analytique : {e}");
         std::process::exit(2);
     }
+    // Rattrapage de la grille « probabilite de victoire » depuis les timelines encore en
+    // cache. Sans appel reseau, et sans effet si tout est deja compte.
+    match store.with(analytics::backfill_winprob) {
+        Ok(0) => {}
+        Ok(n) => tracing::info!("probabilite de victoire : {n} partie(s) rattrapee(s) depuis le cache"),
+        Err(e) => tracing::warn!("rattrapage de la probabilite de victoire : {e}"),
+    }
     let collector_cfg = match config::collector_from_env() {
         Ok(c) => c,
         Err(e) => {

@@ -11,6 +11,15 @@ export const WIDGET_INFO: Record<WidgetId, { name: string; source: string; frequ
     missing:
       "Masqué hors partie et en spectateur. Les totaux portent un « ≈ » ; l'écart central est plus fiable, l'or de départ et l'or passif s'annulant entre les deux équipes.",
   },
+  winprob: {
+    name: "Probabilité de victoire",
+    source: "Grille observée par NEX (backend) + écart d'or estimé de la partie en cours",
+    frequency: "Grille chargée une fois par partie ; case relue à chaque instantané",
+    transform:
+      "Ce n'est pas un modèle : NEX compte, sur les parties qu'il a collectées, la part des situations suivies d'une victoire, par tranche de 5 minutes et par millier d'or d'écart. La case affichée est celle de ta tranche et de ton écart d'or estimé.",
+    missing:
+      "Aucun chiffre si la case compte moins de 60 situations observées, ni avant 2:30 ou après 37:30. Aucun repli sur une case voisine. Deux réserves : l'écart d'or est estimé (cf. Or des équipes), et les parties collectées sont des classées Master et au-dessus.",
+  },
   clock: {
     name: "Chronomètre et stats",
     source: "Live Client Data (gameTime, scores du joueur)",

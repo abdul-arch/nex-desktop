@@ -386,7 +386,29 @@ export interface LiveSnapshot {
   objectives: ObjectiveTimer[];
 }
 
-export type WidgetId = "gold" | "clock" | "objectives" | "build" | "skills" | "trinket";
+/** Une case de la grille « probabilite de victoire » (miroir de WinProbCellDto). */
+export interface WinProbCellDto {
+  minute: number;
+  /** Ecart d'or en milliers, du point de vue de l'equipe observee. */
+  bucket: number;
+  games: number;
+  wins: number;
+}
+
+/**
+ * Frequence observee, pas un modele entraine : NEX compte les issues des parties
+ * collectees par tranche de temps et d'ecart d'or. Les cases trop peu observees sont
+ * absentes de `cells`.
+ */
+export interface WinProbDto {
+  cells: WinProbCellDto[];
+  /** Situations observees : une partie compte une fois par tranche atteinte. */
+  observations: number;
+  minGames: number;
+  maxBucket: number;
+}
+
+export type WidgetId = "gold" | "winprob" | "clock" | "objectives" | "build" | "skills" | "trinket";
 
 export interface WidgetLayout {
   id: WidgetId;

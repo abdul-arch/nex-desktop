@@ -80,6 +80,17 @@ CREATE TABLE IF NOT EXISTS a_bans (
     champion_id INTEGER NOT NULL,
     PRIMARY KEY (match_id, champion_id)
 );
+-- Issue observee par tranche de temps et d'ecart d'or. Table de comptage : une ligne
+-- par case, jamais une ligne par partie. Chaque partie observee y verse ses deux points
+-- de vue (equipe 100 avec l'ecart +d, equipe 200 avec -d), ce qui rend la table
+-- symetrique par construction.
+CREATE TABLE IF NOT EXISTS a_winprob (
+    minute  INTEGER NOT NULL,
+    bucket  INTEGER NOT NULL,
+    games   INTEGER NOT NULL,
+    wins    INTEGER NOT NULL,
+    PRIMARY KEY (minute, bucket)
+);
 "#;
 
 pub const POSITIONS: [&str; 5] = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
@@ -92,7 +103,108 @@ pub fn init(conn: &Connection) -> BResult<()> {
     // Colonne ajoutee apres coup : une base creee avant ne l'a pas, et CREATE TABLE
     // IF NOT EXISTS ne la rattrape pas. L'erreur « duplicate column » est attendue.
     let _ = conn.execute("ALTER TABLE a_perf ADD COLUMN profile_icon INTEGER", []);
+    // Marque les parties deja versees dans a_winprob : sans elle, un rattrapage relance
+    // compterait deux fois les memes parties.
+    let _ = conn.execute("ALTER TABLE a_matches ADD COLUMN winprob INTEGER NOT NULL DEFAULT 0", []);
     Ok(())
+}
+
+// ---------- Probabilite de victoire observee ----------
+
+/// Tranches de temps retenues, en minutes. Une partie n'alimente que les tranches
+/// qu'elle a reellement atteintes.
+pub const WINPROB_MINUTES: [i64; 7] = [5, 10, 15, 20, 25, 30, 35];
+/// Ecart d'or borne a +-10 000, par pas de 1 000 : 21 cases par tranche.
+pub const WINPROB_MAX_BUCKET: i64 = 10;
+/// En dessous de cet effectif, une case n'est pas servie : trop peu observee pour
+/// annoncer un pourcentage.
+pub const WINPROB_MIN_GAMES: u32 = 60;
+
+/// Ecart d'or -> numero de case (milliers, borne).
+pub fn winprob_bucket(gold_diff: i64) -> i64 {
+    let b = (gold_diff as f64 / 1000.0).round() as i64;
+    b.clamp(-WINPROB_MAX_BUCKET, WINPROB_MAX_BUCKET)
+}
+
+/// Compte les points de la partie dans a_winprob. Sans timeline, il n'y a rien a compter.
+fn count_winprob(tx: &Connection, m: &MatchDto, t: Option<&TimelineDto>) -> BResult<()> {
+    let Some(t) = t else { return Ok(()) };
+    let Some(won_100) = m.teams.iter().find(|x| x.team_id == 100).map(|x| x.win) else { return Ok(()) };
+    // participant_id -> equipe, pris du match plutot que suppose depuis l'ordre Riot.
+    let team_of = |pid: u8| m.participants.iter().find(|p| p.participant_id == pid).map(|p| p.team_id);
+    for minute in WINPROB_MINUTES {
+        let target = (minute as u64) * 60_000;
+        // La trame la plus proche de la minute visee, a une demi-minute pres.
+        let Some(frame) = t.frames.iter().find(|f| f.timestamp.abs_diff(target) <= 30_000) else { continue };
+        let mut gold = (0i64, 0i64);
+        let mut seen = 0;
+        for fp in &frame.players {
+            match team_of(fp.participant_id) {
+                Some(100) => {
+                    gold.0 += i64::from(fp.total_gold);
+                    seen += 1;
+                }
+                Some(200) => {
+                    gold.1 += i64::from(fp.total_gold);
+                    seen += 1;
+                }
+                _ => {}
+            }
+        }
+        if seen != 10 {
+            continue;
+        }
+        let bucket = winprob_bucket(gold.0 - gold.1);
+        for (b, win) in [(bucket, won_100), (-bucket, !won_100)] {
+            tx.execute(
+                "INSERT INTO a_winprob (minute, bucket, games, wins) VALUES (?1, ?2, 1, ?3)
+                 ON CONFLICT(minute, bucket) DO UPDATE SET games = games + 1, wins = wins + excluded.wins",
+                params![minute, b, win as i64],
+            )?;
+        }
+    }
+    Ok(())
+}
+
+/// Rattrapage : verse dans a_winprob les parties deja ingerees dont la timeline est
+/// encore en cache. Aucun appel a Riot. Idempotent grace a la colonne a_matches.winprob.
+pub fn backfill_winprob(conn: &Connection) -> BResult<u32> {
+    let ids: Vec<String> = conn
+        .prepare("SELECT match_id FROM a_matches WHERE winprob = 0 AND has_timeline = 1")?
+        .query_map([], |r| r.get(0))?
+        .collect::<Result<_, _>>()?;
+    let mut done = 0;
+    for id in ids {
+        // Les versions de normalisation anterieures sont acceptees : seuls l'horodatage
+        // des trames, l'or par participant et les equipes sont lus ici, et ces champs
+        // n'ont pas change d'une version a l'autre. Un corps illisible est ignore plus bas.
+        let body = |prefix: &str| -> Option<String> {
+            (1..=crate::normalize::NORMALIZE_VERSION).rev().find_map(|v| {
+                conn.query_row("SELECT body FROM cache WHERE key = ?1", params![format!("{prefix}:v{v}:{id}")], |r| r.get(0)).optional().ok().flatten()
+            })
+        };
+        // Les deux corps doivent etre la : sans le match, l'equipe gagnante est inconnue.
+        let (Some(mb), Some(tb)) = (body("m"), body("tl")) else { continue };
+        let (Ok(m), Ok(t)) = (serde_json::from_str::<MatchDto>(&mb), serde_json::from_str::<TimelineDto>(&tb)) else { continue };
+        let tx = conn.unchecked_transaction()?;
+        count_winprob(&tx, &m, Some(&t))?;
+        tx.execute("UPDATE a_matches SET winprob = 1 WHERE match_id = ?1", params![id])?;
+        tx.commit()?;
+        done += 1;
+    }
+    Ok(done)
+}
+
+/// Grille observee, cases trop peu peuplees exclues.
+pub fn winprob(conn: &Connection) -> BResult<WinProbDto> {
+    let mut stmt = conn.prepare("SELECT minute, bucket, games, wins FROM a_winprob WHERE games >= ?1 ORDER BY minute, bucket")?;
+    let cells: Vec<WinProbCellDto> = stmt
+        .query_map(params![WINPROB_MIN_GAMES], |r| {
+            Ok(WinProbCellDto { minute: r.get(0)?, bucket: r.get(1)?, games: r.get(2)?, wins: r.get(3)? })
+        })?
+        .collect::<Result<_, _>>()?;
+    let total: u32 = conn.query_row("SELECT COALESCE(SUM(games), 0) / 2 FROM a_winprob", [], |r| r.get(0))?;
+    Ok(WinProbDto { cells, observations: total, min_games: WINPROB_MIN_GAMES, max_bucket: WINPROB_MAX_BUCKET as i32 })
 }
 
 /// "16.20.715.1234" -> "16.20"
@@ -294,6 +406,8 @@ pub fn ingest(conn: &Connection, m: &MatchDto, t: Option<&TimelineDto>, tier: &s
             ],
         )?;
     }
+    count_winprob(&tx, m, t)?;
+    tx.execute("UPDATE a_matches SET winprob = 1 WHERE match_id = ?1", params![m.id])?;
     tx.commit()?;
     Ok(true)
 }

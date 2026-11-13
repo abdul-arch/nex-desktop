@@ -5,7 +5,7 @@ use crate::error::{AppError, AppResult};
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
-pub const WIDGETS: [&str; 6] = ["gold", "clock", "objectives", "build", "skills", "trinket"];
+pub const WIDGETS: [&str; 7] = ["gold", "winprob", "clock", "objectives", "build", "skills", "trinket"];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -26,7 +26,8 @@ pub fn defaults() -> Vec<WidgetLayout> {
     let w = |id: &str, x: f64, y: f64, visible: bool| WidgetLayout { id: id.into(), x, y, scale: 1.0, opacity: 0.92, visible, locked: false, mode: "always".into() };
     vec![
         w("gold", 0.40, 0.015, true),
-        w("clock", 0.01, 0.30, true),
+        w("winprob", 0.01, 0.18, true),
+        w("clock", 0.01, 0.35, true),
         w("objectives", 0.44, 0.08, true),
         w("build", 0.80, 0.30, true),
         w("skills", 0.01, 0.62, true),

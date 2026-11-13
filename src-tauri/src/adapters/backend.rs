@@ -174,6 +174,11 @@ pub async fn stats_baselines(http: &reqwest::Client, base: &str, p: &StatsParams
     get_json(http, base, &["v1", "stats", "baselines"], &p.query(), Duration::from_secs(20)).await
 }
 
+/// Grille « probabilite de victoire ». Sans parametre : la grille est globale.
+pub async fn stats_winprob(http: &reqwest::Client, base: &str) -> AppResult<nex_domain::api::WinProbDto> {
+    get_json(http, base, &["v1", "stats", "winprob"], &[], Duration::from_secs(20)).await
+}
+
 pub async fn stats_icons(http: &reqwest::Client, base: &str, p: &StatsParams) -> AppResult<nex_domain::api::IconsDto> {
     get_json(http, base, &["v1", "stats", "icons"], &p.query(), Duration::from_secs(20)).await
 }

@@ -26,6 +26,7 @@ import type {
   MayhemRulesInfo,
   LivePlayer,
   LiveSnapshot,
+  WinProbDto,
 } from "./api";
 
 /** Equivalent web de la commande Rust : texte brut, balises retirees via DOMParser (jamais injecte). */
@@ -145,7 +146,8 @@ function load(): WebStore {
 
 const defaultOverlayLayout = (): WidgetLayout[] => [
   { id: "gold", x: 0.4, y: 0.015, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
-  { id: "clock", x: 0.01, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "winprob", x: 0.01, y: 0.18, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "clock", x: 0.01, y: 0.35, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "objectives", x: 0.44, y: 0.08, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "build", x: 0.8, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "skills", x: 0.01, y: 0.62, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
@@ -160,7 +162,7 @@ function demoSnapshot(): LiveSnapshot {
     championKey,
     team,
     position,
-    level: 14,
+    level: 11,
     kills,
     deaths,
     assists,
@@ -172,27 +174,27 @@ function demoSnapshot(): LiveSnapshot {
     ...extra,
   });
   return {
-    gameTime: 1447,
+    gameTime: 900,
     gameMode: "CLASSIC",
-    activeLevel: 14,
-    abilities: [5, 3, 3, 2],
+    activeLevel: 12,
+    abilities: [5, 3, 2, 1],
     unspentPoints: 1,
-    currentGold: 1240,
+    currentGold: 740,
     players: [
-      p("Demo#EUW", "Ahri", "ORDER", "MIDDLE", 7, 2, 9, 198, { isActive: true, items: [3340] }),
-      p("Allie1#EUW", "Jinx", "ORDER", "BOTTOM", 5, 4, 6, 211),
-      p("Allie2#EUW", "Leona", "ORDER", "UTILITY", 1, 3, 14, 24),
-      p("Allie3#EUW", "Jarvan IV", "ORDER", "JUNGLE", 3, 3, 10, 132),
-      p("Allie4#EUW", "Garen", "ORDER", "TOP", 4, 4, 3, 187),
-      p("Rival1#EUW", "Zed", "CHAOS", "MIDDLE", 4, 6, 3, 176, { isDead: true, respawnTimer: 34 }),
-      p("Rival2#EUW", "Caitlyn", "CHAOS", "BOTTOM", 6, 3, 4, 203),
-      p("Rival3#EUW", "Thresh", "CHAOS", "UTILITY", 1, 5, 11, 28, { isDead: true, respawnTimer: 8 }),
-      p("Rival4#EUW", "Lee Sin", "CHAOS", "JUNGLE", 2, 5, 7, 118, { isDead: true, respawnTimer: 19 }),
-      p("Rival5#EUW", "Sett", "CHAOS", "TOP", 3, 4, 5, 165),
+      p("Demo#EUW", "Ahri", "ORDER", "MIDDLE", 4, 1, 3, 128, { isActive: true, items: [3340], level: 12 }),
+      p("Allie1#EUW", "Jinx", "ORDER", "BOTTOM", 3, 2, 2, 140),
+      p("Allie2#EUW", "Leona", "ORDER", "UTILITY", 0, 2, 6, 16),
+      p("Allie3#EUW", "Jarvan IV", "ORDER", "JUNGLE", 2, 2, 5, 88),
+      p("Allie4#EUW", "Garen", "ORDER", "TOP", 2, 2, 1, 118),
+      p("Rival1#EUW", "Zed", "CHAOS", "MIDDLE", 2, 4, 2, 112, { isDead: true, respawnTimer: 21 }),
+      p("Rival2#EUW", "Caitlyn", "CHAOS", "BOTTOM", 4, 2, 2, 131),
+      p("Rival3#EUW", "Thresh", "CHAOS", "UTILITY", 0, 3, 6, 18),
+      p("Rival4#EUW", "Lee Sin", "CHAOS", "JUNGLE", 1, 3, 4, 78),
+      p("Rival5#EUW", "Sett", "CHAOS", "TOP", 2, 2, 3, 104),
     ],
     objectives: [
-      { kind: "dragon", nextSpawn: 1549, source: "event" },
-      { kind: "baron", nextSpawn: 1632, source: "event" },
+      { kind: "dragon", nextSpawn: 1000, source: "event" },
+      { kind: "baron", nextSpawn: 1200, source: "first_spawn" },
     ],
   };
 }
@@ -286,6 +288,7 @@ export function createWebPlatform(): Platform {
     statsMeta: async () => api<StatsMetaDto>(["v1", "stats", "meta"]),
     statsTierList: async (p) => api<TierListDto>(["v1", "stats", "tierlist"], { ...p }),
     statsBaselines: async (p) => api<BaselinesDto>(["v1", "stats", "baselines"], { ...p }),
+    statsWinprob: async () => api<WinProbDto>(["v1", "stats", "winprob"], {}),
     statsIcons: async (p) => api<IconsDto>(["v1", "stats", "icons"], { ...p }),
     statsBuild: async (id, p) => api<ChampionBuildDto>(["v1", "stats", "champion", String(id), "build"], { ...p }),
     statsMatchups: async (id, p) => api<MatchupsDto>(["v1", "stats", "champion", String(id), "matchups"], { ...p }),

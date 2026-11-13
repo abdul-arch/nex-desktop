@@ -10,6 +10,7 @@
     "allow-static-data-version",
     "allow-static-catalog",
     "allow-stats-build",
+    "allow-stats-winprob",
     "allow-live-snapshot",
     "allow-overlay-set-mode",
     "allow-overlay-mode",

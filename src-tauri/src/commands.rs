@@ -264,6 +264,14 @@ pub async fn stats_baselines(window: Window, state: State<'_, AppState>, params:
     backend::stats_baselines(&state.http, &backend_url(&state)?, &params).await
 }
 
+/// Issue observee par tranche de temps et d'ecart d'or. Lisible aussi par l'overlay :
+/// c'est une statistique agregee, sans donnee de joueur.
+#[tauri::command]
+pub async fn stats_winprob(window: Window, state: State<'_, AppState>) -> AppResult<nex_domain::api::WinProbDto> {
+    require_main_or_overlay(&window)?;
+    backend::stats_winprob(&state.http, &backend_url(&state)?).await
+}
+
 /// Icones d'invocateur les plus portees dans les parties collectees.
 #[tauri::command]
 pub async fn stats_icons(window: Window, state: State<'_, AppState>, params: backend::StatsParams) -> AppResult<nex_domain::api::IconsDto> {
