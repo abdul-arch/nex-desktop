@@ -29,18 +29,17 @@ machine, sans site ni distribution.
 ## 1. Ce qu'il te faut avant d'ouvrir le formulaire
 
 1. **Un compte Riot** connecté sur https://developer.riotgames.com.
-2. **Une URL publique du produit.** Elle existe maintenant :
+2. **Une URL publique du produit.** Elle existe, et elle est déjà en ligne :
 
-   **https://claude.ai/artifact/Hcc2couC5fCozjZsWzNoXD**
+   **https://github.com/abdul-arch/nex-desktop**
 
-   C'est la page produit de NEX (ce qu'il fait, ce qu'il ne fait pas, comment il utilise
-   l'API, trois captures, la mention légale). Elle est **privée par défaut** : ouvre-la,
-   menu **Partager**, et mets-la en accès public par lien. Vérifie ensuite dans une fenêtre
-   de navigation privée qu'elle s'ouvre sans compte — c'est la condition de Riot.
+   Dépôt public, avec le README en page produit (ce que fait NEX, ce qu'il ne fait pas,
+   comment il utilise l'API, trois captures anonymisées, la mention légale). Vérifié :
+   `backend/.env` n'y figure pas, et aucune clé Riot réelle n'y apparaît.
 
-   Le dépôt GitHub reste une meilleure maison à terme (le code en plus de la page), mais il
-   demande d'installer `git`, et il n'est pas nécessaire pour envoyer la demande.
-   La marche à suivre est dans [PUBLIER-SUR-GITHUB.md](PUBLIER-SUR-GITHUB.md).
+   Une page seule existe aussi, si tu la préfères au dépôt :
+   https://claude.ai/artifact/Hcc2couC5fCozjZsWzNoXD — mais elle est privée tant que tu ne
+   l'as pas passée en partage par lien, alors que le dépôt est déjà ouvert à tous.
 3. **La mention légale Riot visible dans le produit.** Déjà en place : elle est dans
    `Paramètres` (« NEX n'est ni approuvé ni sponsorisé par Riot Games… »). Reprends-la aussi
    sur la page publique.
@@ -65,9 +64,8 @@ NEX
 
 ### Product URL
 ```
-https://claude.ai/artifact/Hcc2couC5fCozjZsWzNoXD
+https://github.com/abdul-arch/nex-desktop
 ```
-*(une fois la page passée en partage public — voir le point 1.2)*
 
 ### Game
 ```
@@ -180,10 +178,9 @@ pas d'information cachée au joueur), et tu restes dans les clous.
 ## 5. Ce que je ne peux pas faire à ta place
 
 Je ne remplis pas le formulaire et je ne crée pas de compte : soumettre une demande en ton nom
-demande ton action. Il te reste exactement deux gestes :
+demande ton action. Il te reste un seul geste :
 
-1. **Partager la page produit** (menu Partager de l'artifact, accès par lien), puis vérifier
-   en navigation privée qu'elle s'ouvre.
-2. **Coller** le nom, l'URL et la description de la section 2 dans le formulaire du portail.
+**Coller** le nom, l'URL et la description de la section 2 dans le formulaire du portail
+Riot, sur https://developer.riotgames.com.
 
 Quand la clé arrive, colle-la dans le chat : je l'installe dans `backend/.env` sans l'afficher.
