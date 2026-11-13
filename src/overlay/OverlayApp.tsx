@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { platform } from "../platform";
 import type { Catalog, ChampionBuildDto, ChampionSpell, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../platform/api";
 import { MayhemLayer } from "./MayhemLayer";
+import { LoadingPanel } from "./LoadingPanel";
 import { renderWidget } from "./render";
 
 export function OverlayApp() {
@@ -21,6 +22,10 @@ export function OverlayApp() {
   // Widgets fermes a la croix : masques jusqu'a la partie suivante, sans toucher
   // a la disposition enregistree (la page Overlays reste la source de verite).
   const [closed, setClosed] = useState<WidgetId[]>([]);
+  // Pendant l'ecran de chargement, le panneau des dix joueurs occupe l'ecran et les
+  // widgets de partie n'ont rien a montrer : ils s'effacent, sauf en configuration ou
+  // l'on vient justement les placer.
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add("overlay-root");
@@ -118,7 +123,9 @@ export function OverlayApp() {
         </div>
       )}
       <MayhemLayer />
-      {layout
+      <LoadingPanel catalog={catalog} version={version} live={!!snap.s} onActive={setLoading} />
+      {(!loading || config) &&
+        layout
         // « Sur une touche » : masque sauf pendant le rappel. En mode configuration tout
         // reste visible, sinon on ne pourrait pas placer un widget qu'on ne voit pas.
         .filter((w) => w.visible && !closed.includes(w.id) && (config || w.mode !== "hold" || hold))

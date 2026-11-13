@@ -95,6 +95,9 @@ pub mod paths {
     pub const SUMMONER: &str = "/lol-summoner/v1/current-summoner";
     pub const REGION: &str = "/riotclient/region-locale";
     pub const CHAMP_SELECT: &str = "/lol-champ-select/v1/session";
+    /// Session de jeu : pendant le chargement et la partie, `gameData.teamOne`/`teamTwo`
+    /// donnent les dix joueurs (puuid, champion, sorts) sans aucun appel a Riot.
+    pub const GAMEFLOW_SESSION: &str = "/lol-gameflow/v1/session";
     pub const PERK_PAGES: &str = "/lol-perks/v1/pages";
     pub const PERK_INVENTORY: &str = "/lol-perks/v1/inventory";
     pub const PERK_CURRENT: &str = "/lol-perks/v1/currentpage";

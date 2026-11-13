@@ -7,6 +7,7 @@
 //! - `cargo test -p nex --lib -- --ignored friend_spectate_probe --nocapture`
 //!   (avec `$env:NEX_DO_SPECTATE="1"` : ouvre reellement la partie d'un ami en spectateur)
 //! - `cargo test -p nex --lib -- --ignored live_probe --nocapture` (jeu en cours requis)
+//! - `cargo test -p nex --lib -- --ignored gameflow_probe --nocapture`
 
 use crate::adapters::lcu::{Lcu, find_install_dir, paths, pinned_client, read_credentials};
 use serde_json::Value;
@@ -242,4 +243,84 @@ async fn live_probe() {
         snap.players.iter().any(|p| p.is_active),
         snap.objectives.len()
     );
+}
+
+/// Forme de la session de jeu : noms de champs et types seulement. Aucun identifiant de
+/// joueur n'est affiche — ni puuid, ni pseudo, ni identifiant d'invocateur.
+#[tokio::test]
+#[ignore]
+async fn gameflow_probe() {
+    let lcu = connect();
+    // Hors partie, la session n'existe pas (404). On lit alors le schema publie par le
+    // client lui-meme, qui donne les noms de champs sans qu'aucune partie soit en cours.
+    let s: Value = match lcu.get(paths::GAMEFLOW_SESSION).await {
+        Ok(v) => v,
+        Err(e) => {
+            println!("session absente ({e}) ; lecture du schema du client");
+            let help: Value = lcu.get("/help?format=Full").await.expect("help");
+            let types = help.get("types").cloned().unwrap_or(Value::Null);
+            // Le schema peut etre un objet indexe par nom ou une liste : on couvre les deux.
+            let named: Vec<(String, Value)> = match types {
+                Value::Object(o) => o.into_iter().collect(),
+                Value::Array(a) => a.into_iter().map(|v| (v["name"].as_str().unwrap_or("?").to_string(), v)).collect(),
+                _ => Vec::new(),
+            };
+            println!("{} types publies", named.len());
+            for (name, t) in named.iter().filter(|(n, _)| n.contains("GameflowGameData") || n.contains("TeamPlayerEntry") || n.contains("PlayerChampionSelection")) {
+                let fields = t.get("fields").cloned().unwrap_or(Value::Null);
+                let mut out: Vec<String> = Vec::new();
+                match &fields {
+                    Value::Array(a) => {
+                        for f in a {
+                            out.push(format!("{}:{}", f["name"].as_str().unwrap_or("?"), f["type"]["elementType"].as_str().or(f["type"]["type"].as_str()).unwrap_or("?")));
+                        }
+                    }
+                    Value::Object(o) => {
+                        for (n, f) in o {
+                            out.push(format!("{n}:{}", f["type"]["elementType"].as_str().or(f["type"]["type"].as_str()).unwrap_or("?")));
+                        }
+                    }
+                    _ => {}
+                }
+                out.sort();
+                println!("{name}: {out:?}");
+            }
+            return;
+        }
+    };
+    let kind = |v: &Value| match v {
+        Value::Null => "null",
+        Value::Bool(_) => "bool",
+        Value::Number(_) => "number",
+        Value::String(_) => "string",
+        Value::Array(_) => "array",
+        Value::Object(_) => "object",
+    };
+    println!("phase={}", s["phase"].as_str().unwrap_or("?"));
+    if let Value::Object(o) = &s {
+        let mut k: Vec<&String> = o.keys().collect();
+        k.sort();
+        println!("racine: {k:?}");
+    }
+    if let Value::Object(o) = &s["gameData"] {
+        let mut k: Vec<&String> = o.keys().collect();
+        k.sort();
+        println!("gameData: {k:?}");
+    }
+    println!("queue.id={} gameId={}", s["gameData"]["queue"]["id"], s["gameData"]["gameId"]);
+    for team in ["teamOne", "teamTwo"] {
+        let arr = s["gameData"][team].as_array().cloned().unwrap_or_default();
+        println!("{team}: {} joueur(s)", arr.len());
+        if let Some(Value::Object(p)) = arr.first() {
+            let mut k: Vec<String> = p.iter().map(|(n, v)| format!("{n}:{}", kind(v))).collect();
+            k.sort();
+            println!("  champs: {k:?}");
+            // Valeurs non identifiantes seulement.
+            for n in ["championId", "selectedPosition", "spell1Id", "spell2Id", "teamParticipantId"] {
+                if let Some(v) = p.get(n) {
+                    println!("  {n}={v}");
+                }
+            }
+        }
+    }
 }

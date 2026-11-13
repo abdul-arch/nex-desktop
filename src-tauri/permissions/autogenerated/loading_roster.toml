@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-loading-roster"
+description = "Enables the loading_roster command without any pre-configured scope."
+commands.allow = ["loading_roster"]
+
+[[permission]]
+identifier = "deny-loading-roster"
+description = "Denies the loading_roster command without any pre-configured scope."
+commands.deny = ["loading_roster"]

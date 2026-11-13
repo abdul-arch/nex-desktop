@@ -9,7 +9,7 @@
 // « exemple ». Ces valeurs ne doivent jamais atteindre la fenetre d'overlay en partie :
 // OverlayApp ne les importe pas, il ne lit que `platform.liveSnapshot()`.
 
-import type { ChampionBuildDto, LivePlayer, LiveSnapshot, WinProbDto } from "../platform/api";
+import type { ChampionBuildDto, LivePlayer, LiveSnapshot, LoadingRosterDto, WinProbDto } from "../platform/api";
 
 // Les cles de champion sont celles de Data Dragon (« JarvanIV », pas « Jarvan IV ») :
 // c'est ce que le client local fournit, derive de `rawChampionName`, et c'est ce que
@@ -98,4 +98,25 @@ export const EXAMPLE_GRID: WinProbDto = {
   observations: 0,
   minGames: 60,
   maxBucket: 10,
+};
+
+/**
+ * Composition d'exemple, pour regarder le panneau de chargement hors partie. Les
+ * identifiants sont ceux de Data Dragon pour les memes champions que l'instantane.
+ */
+export const EXAMPLE_ROSTER: LoadingRosterDto = {
+  gameId: 0,
+  queueId: 420,
+  players: [
+    { puuid: "x1", team: 1, championId: 103, isMe: true },
+    { puuid: "x2", team: 1, championId: 222, isMe: false },
+    { puuid: "x3", team: 1, championId: 89, isMe: false },
+    { puuid: "x4", team: 1, championId: 59, isMe: false },
+    { puuid: "x5", team: 1, championId: 86, isMe: false },
+    { puuid: "y1", team: 2, championId: 238, isMe: false },
+    { puuid: "y2", team: 2, championId: 51, isMe: false },
+    { puuid: "y3", team: 2, championId: 412, isMe: false },
+    { puuid: "y4", team: 2, championId: 64, isMe: false },
+    { puuid: "y5", team: 2, championId: 875, isMe: false },
+  ],
 };

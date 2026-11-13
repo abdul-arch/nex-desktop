@@ -37,13 +37,30 @@ C'est le cœur du sujet. Trois des colonnes sont faciles, une ne l'est pas du to
 
 ### 1. La liste des dix joueurs — gratuit
 
-Le client local la donne. NEX lit déjà le LCU (`src-tauri/src/adapters/lcu.rs`) et connaît
-l'étape `loading` (`stage_of` dans `src-tauri/src/client/model.rs` traduit déjà la phase
-`InProgress`). Il manque un seul point de lecture : `/lol-gameflow/v1/session`, dont
-`gameData.teamOne` et `teamTwo` donnent, pour chacun, le `puuid`, le `summonerId`, le
-`championId` et les sorts d'invocateur. Aucun appel à Riot, aucune limite de débit.
+Le client local la donne, par `/lol-gameflow/v1/session`. Aucun appel à Riot, aucune limite
+de débit.
+
+**Forme réelle, relevée dans le schéma que le client publie lui-même** (`/help?format=Full`,
+sonde `gameflow_probe` de `src-tauri/src/client/e2e.rs`) — et non d'après la mémoire :
+
+- `LolGameflowGameflowSession` : `gameClient`, `gameData`, `gameDodge`, `map`, `phase`.
+- `gameData` : `gameId`, `queue`, `teamOne`, `teamTwo`, `playerChampionSelections`.
+- Une entrée d'équipe : **`puuid` et `summonerId`, rien d'autre de documenté**.
+- `playerChampionSelections` : `championId`, `puuid`, `selectedSkinIndex`.
+
+**Correction d'une version antérieure de ce document**, qui annonçait les sorts
+d'invocateur et le poste dans cette réponse : **ils n'y sont pas**. Le pseudo non plus —
+seulement le `puuid`. Les noms demanderaient une lecture supplémentaire du client
+(`/lol-summoner/...` par puuid, locale et gratuite), les sorts et le poste viendraient
+d'ailleurs encore.
+
+Hors partie, l'endpoint répond 404 : ce n'est pas une erreur, c'est l'absence de session.
 
 C'est la première chose à faire : sans la liste, rien d'autre n'a de sens.
+
+**Fait le 13/11/2026** : `client::model::loading_roster` lit cette réponse, la commande
+`loading_roster` l'expose à l'overlay, et `src/overlay/LoadingPanel.tsx` affiche les dix
+cartes. Les widgets de partie s'effacent tant que le panneau est à l'écran.
 
 ### 2. Rang, LP, victoires et défaites — 10 appels
 

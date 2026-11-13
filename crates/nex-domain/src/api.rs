@@ -264,6 +264,32 @@ pub struct StatsScopeDto {
     pub matches: u32,
 }
 
+/// Un joueur de la partie en cours de chargement, tel que le client local le publie.
+///
+/// Le client ne donne ici que l'identifiant et le champion : ni pseudo, ni poste, ni sorts
+/// d'invocateur. Tout le reste doit etre demande ailleurs.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct LoadingPlayerDto {
+    pub puuid: String,
+    /// 1 = equipe bleue (teamOne), 2 = equipe rouge (teamTwo).
+    pub team: u8,
+    /// `None` quand la selection du champion n'est pas encore publiee.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub champion_id: Option<i32>,
+    /// Vrai pour le joueur connecte, quand il est reconnaissable.
+    pub is_me: bool,
+}
+
+/// Composition de la partie en chargement, lue dans le client local. Aucun appel a Riot.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct LoadingRosterDto {
+    pub game_id: i64,
+    pub queue_id: u32,
+    pub players: Vec<LoadingPlayerDto>,
+}
+
 /// Une case de la grille « probabilite de victoire » : issue observee pour une tranche
 /// de temps et un ecart d'or donnes.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

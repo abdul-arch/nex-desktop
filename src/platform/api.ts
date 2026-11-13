@@ -408,6 +408,26 @@ export interface WinProbDto {
   maxBucket: number;
 }
 
+/** Un joueur de la partie en chargement (miroir de LoadingPlayerDto). */
+export interface LoadingPlayerDto {
+  puuid: string;
+  /** 1 = equipe bleue, 2 = equipe rouge. */
+  team: number;
+  /** Absent tant que le champion n'est pas publie par le client. */
+  championId?: number;
+  isMe: boolean;
+}
+
+/**
+ * Composition lue dans le client local pendant le chargement. Le client ne donne ni
+ * pseudo, ni poste, ni sorts d'invocateur : seulement l'identifiant et le champion.
+ */
+export interface LoadingRosterDto {
+  gameId: number;
+  queueId: number;
+  players: LoadingPlayerDto[];
+}
+
 export type WidgetId = "gold" | "winprob" | "clock" | "objectives" | "build" | "skills" | "trinket";
 
 export interface WidgetLayout {

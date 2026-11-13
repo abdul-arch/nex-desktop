@@ -13,6 +13,7 @@
     "allow-champion-info",
     "allow-stats-winprob",
     "allow-live-snapshot",
+    "allow-loading-roster",
     "allow-overlay-set-mode",
     "allow-overlay-mode",
     "allow-overlay-layout-get",

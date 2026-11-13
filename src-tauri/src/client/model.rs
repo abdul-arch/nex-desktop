@@ -1,5 +1,6 @@
 //! Modeles normalises du client local et de la partie en direct (fonctions pures, testees).
 
+use nex_domain::api::{LoadingPlayerDto, LoadingRosterDto};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -122,6 +123,55 @@ fn ids(v: Option<&Value>) -> Vec<i32> {
     v.and_then(Value::as_array)
         .map(|a| a.iter().filter_map(Value::as_i64).filter(|x| *x > 0).map(|x| x as i32).collect())
         .unwrap_or_default()
+}
+
+/// Composition de la partie en chargement, depuis `/lol-gameflow/v1/session`.
+///
+/// FORME REELLE, relevee dans le schema publie par le client (`/help?format=Full`) :
+/// - `gameData.teamOne` / `teamTwo` : entrees `{ puuid, summonerId }`. Rien d'autre n'est
+///   documente, et on ne lit donc rien d'autre.
+/// - `gameData.playerChampionSelections` : `{ championId, puuid, selectedSkinIndex }`.
+/// - `gameData.gameId`, `gameData.queue.id`.
+///
+/// Ni pseudo, ni poste, ni sorts d'invocateur : ils ne sont pas dans cette reponse.
+/// `my_puuid` sert a marquer le joueur connecte ; passer une chaine vide si on l'ignore.
+pub fn loading_roster(session: &Value, my_puuid: &str) -> Option<LoadingRosterDto> {
+    let data = session.get("gameData")?;
+    let champion_of: std::collections::HashMap<&str, i32> = data
+        .get("playerChampionSelections")
+        .and_then(Value::as_array)
+        .map(|a| {
+            a.iter()
+                .filter_map(|p| {
+                    let id = p.get("championId").and_then(Value::as_i64)?;
+                    Some((p.get("puuid").and_then(Value::as_str)?, id as i32))
+                })
+                .filter(|(_, id)| *id > 0)
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let mut players = Vec::new();
+    for (team, key) in [(1u8, "teamOne"), (2u8, "teamTwo")] {
+        for p in data.get(key).and_then(Value::as_array).into_iter().flatten() {
+            let Some(puuid) = p.get("puuid").and_then(Value::as_str).filter(|s| !s.is_empty()) else { continue };
+            players.push(LoadingPlayerDto {
+                puuid: puuid.to_string(),
+                team,
+                champion_id: champion_of.get(puuid).copied(),
+                is_me: !my_puuid.is_empty() && puuid == my_puuid,
+            });
+        }
+    }
+    // Sans joueur, il n'y a pas de composition a afficher : mieux vaut rien que du vide.
+    if players.is_empty() {
+        return None;
+    }
+    Some(LoadingRosterDto {
+        game_id: data.get("gameId").and_then(Value::as_i64).unwrap_or(0),
+        queue_id: data.get("queue").and_then(|q| q.get("id")).and_then(Value::as_u64).unwrap_or(0) as u32,
+        players,
+    })
 }
 
 pub fn champ_select(session: &Value) -> ChampSelectState {
@@ -459,5 +509,54 @@ mod tests {
         let game = |map: u64| json!({"allPlayers": [], "events": {"Events": []}, "gameData": {"gameTime": 100.0, "gameMode": "KIWI", "mapNumber": map}});
         assert!(live_snapshot(&game(12)).unwrap().objectives.is_empty(), "Abime hurlant : aucun dragon");
         assert_eq!(live_snapshot(&game(11)).unwrap().objectives[0].kind, "dragon");
+    }
+
+    fn session_fixture() -> Value {
+        json!({
+            "phase": "InProgress",
+            "gameData": {
+                "gameId": 7654321,
+                "queue": { "id": 420 },
+                "teamOne": [{ "puuid": "a", "summonerId": 1 }, { "puuid": "b", "summonerId": 2 }],
+                "teamTwo": [{ "puuid": "c", "summonerId": 3 }, { "puuid": "", "summonerId": 4 }],
+                "playerChampionSelections": [
+                    { "championId": 103, "puuid": "a", "selectedSkinIndex": 0 },
+                    { "championId": 0, "puuid": "b", "selectedSkinIndex": 0 },
+                    { "championId": 238, "puuid": "c", "selectedSkinIndex": 7 }
+                ]
+            }
+        })
+    }
+
+    #[test]
+    fn loading_roster_lit_equipes_et_champions() {
+        let r = loading_roster(&session_fixture(), "c").unwrap();
+        assert_eq!(r.game_id, 7654321);
+        assert_eq!(r.queue_id, 420);
+        // L'entree sans puuid est ignoree.
+        assert_eq!(r.players.len(), 3);
+        assert_eq!(r.players[0].team, 1);
+        assert_eq!(r.players[0].champion_id, Some(103));
+        // championId a 0 : pas encore choisi, donc absent plutot que zero.
+        assert_eq!(r.players[1].champion_id, None);
+        assert_eq!(r.players[2].team, 2);
+        assert!(r.players[2].is_me);
+        assert!(!r.players[0].is_me);
+    }
+
+    #[test]
+    fn loading_roster_sans_joueur_ou_sans_donnees() {
+        assert!(loading_roster(&json!({ "phase": "Lobby" }), "").is_none());
+        assert!(loading_roster(&json!({ "gameData": { "teamOne": [], "teamTwo": [] } }), "").is_none());
+    }
+
+    #[test]
+    fn loading_roster_tolere_les_champs_absents() {
+        let s = json!({ "gameData": { "teamOne": [{ "puuid": "a" }], "teamTwo": [] } });
+        let r = loading_roster(&s, "").unwrap();
+        assert_eq!(r.game_id, 0);
+        assert_eq!(r.queue_id, 0);
+        assert_eq!(r.players[0].champion_id, None);
+        assert!(!r.players[0].is_me);
     }
 }

@@ -170,6 +170,7 @@ pub fn run() {
             commands::champion_info,
             commands::client_state,
             commands::client_champ_select,
+            commands::loading_roster,
             commands::live_snapshot,
             commands::lcu_import_runes,
             commands::lcu_import_items,

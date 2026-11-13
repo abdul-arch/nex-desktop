@@ -38,6 +38,7 @@ export function createDesktopPlatform(): Platform {
     windowLabel: win.label,
     clientState: () => invoke("client_state"),
     champSelect: () => invoke("client_champ_select"),
+    loadingRoster: () => invoke("loading_roster"),
     liveSnapshot: () => invoke("live_snapshot"),
     importRunes: (input) => invoke("lcu_import_runes", { input }),
     importItems: (input) => invoke("lcu_import_items", { input }),

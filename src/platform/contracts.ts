@@ -136,6 +136,7 @@ export interface Platform {
   windowLabel: string;
   clientState(): Promise<ClientState>;
   champSelect(): Promise<ChampSelectState | null>;
+  loadingRoster(): Promise<LoadingRosterDto | null>;
   liveSnapshot(): Promise<LiveSnapshot | null>;
   importRunes(input: RunePageInput): Promise<ImportOutcome>;
   importItems(input: ItemSetInput): Promise<ImportOutcome>;
@@ -273,5 +274,6 @@ import type {
   TierListDto,
   TimelineDto,
   WinProbDto,
+  LoadingRosterDto,
 } from "./api";
 export type * from "./api";

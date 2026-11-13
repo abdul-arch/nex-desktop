@@ -36,6 +36,7 @@
     "allow-champion-info",
     "allow-client-state",
     "allow-client-champ-select",
+    "allow-loading-roster",
     "allow-live-snapshot",
     "allow-lcu-import-runes",
     "allow-lcu-import-items",

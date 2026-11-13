@@ -338,6 +338,29 @@ pub fn live_snapshot(window: Window, svc: State<'_, ClientService>) -> AppResult
     svc.live.lock().map(|s| s.clone()).map_err(|_| AppError::Unavailable("état indisponible".into()))
 }
 
+/// Composition de la partie en chargement, lue dans le client local : equipes, champions,
+/// et le joueur connecte. Aucun appel a Riot, donc aucune limite de debit consommee.
+/// Lisible par l'overlay, qui en est la seule surface d'affichage.
+#[tauri::command]
+pub async fn loading_roster(window: Window, svc: State<'_, ClientService>) -> AppResult<Option<nex_domain::api::LoadingRosterDto>> {
+    require_main_or_overlay(&window)?;
+    let lcu = connected_lcu(&svc)?;
+    let session: serde_json::Value = match lcu.get(crate::adapters::lcu::paths::GAMEFLOW_SESSION).await {
+        Ok(v) => v,
+        // Hors partie, le client ne publie aucune session : ce n'est pas une erreur.
+        Err(AppError::NotFound(_)) => return Ok(None),
+        Err(e) => return Err(e),
+    };
+    // Le puuid du compte connecte sert seulement a marquer sa propre carte.
+    let me: String = lcu
+        .get::<serde_json::Value>(crate::adapters::lcu::paths::SUMMONER)
+        .await
+        .ok()
+        .and_then(|v| v.get("puuid").and_then(serde_json::Value::as_str).map(str::to_string))
+        .unwrap_or_default();
+    Ok(crate::client::model::loading_roster(&session, &me))
+}
+
 fn connected_lcu(svc: &ClientService) -> AppResult<crate::adapters::lcu::Lcu> {
     svc.lcu().ok_or_else(|| AppError::Unavailable("client League non connecté : lance le client puis réessaie".into()))
 }

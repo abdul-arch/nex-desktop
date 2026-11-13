@@ -306,6 +306,72 @@ html.overlay-root #root {
   background: var(--accent-strong);
 }
 
+/* Panneau de l'ecran de chargement : les dix joueurs, deux rangees de cinq. */
+.ld-panel {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(13, 15, 21, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+}
+.ld-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  justify-content: space-between;
+}
+.ld-row {
+  display: flex;
+  gap: 8px;
+}
+.ld-card {
+  width: 92px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 7px 5px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border-top: 2px solid transparent;
+  font-size: 11px;
+  text-align: center;
+}
+.ld-row.blue .ld-card {
+  border-top-color: #7db5f0;
+}
+.ld-row.red .ld-card {
+  border-top-color: #f08f8f;
+}
+.ld-card.me {
+  background: rgba(130, 121, 244, 0.18);
+}
+.ld-card img {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.ld-card b {
+  font-size: 11.5px;
+  line-height: 1.2;
+}
+.ld-slot {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.ld-me {
+  font-size: 10px;
+  color: var(--accent-strong);
+  letter-spacing: 0.06em;
+}
+
 /* Assistant ARAM Mayhem : badges sur les cartes (aucune interaction, clics traverses). */
 .mh-layer {
   position: fixed;
