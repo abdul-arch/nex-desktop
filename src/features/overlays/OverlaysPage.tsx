@@ -5,6 +5,7 @@ import { useClient } from "../../app/ClientContext";
 import { errorMessage, platform } from "../../platform";
 import type { Catalog, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../../platform/api";
 import { EXAMPLE_BUILD, EXAMPLE_GRID, EXAMPLE_SNAPSHOT } from "../../overlay/example";
+import { championLoading, championSplash } from "../../data/assets";
 import { renderWidget, type WidgetInputs } from "../../overlay/render";
 import { EmptyState } from "../../ui/primitives";
 import { LayoutEditor } from "./LayoutEditor";
@@ -40,6 +41,9 @@ export function OverlaysPage() {
 
   // Une partie en cours remplace les valeurs d'exemple par la realite.
   const live = !!snap;
+  // Illustration de fond : le champion joue, sinon celui de l'instantane d'exemple. Un
+  // seul champion pour toutes les cartes, donc une seule image a telecharger.
+  const artKey = (snap ?? EXAMPLE_SNAPSHOT).players.find((p) => p.isActive)?.championKey ?? null;
   const preview: WidgetInputs = {
     snap: snap ?? EXAMPLE_SNAPSHOT,
     gameTime: (snap ?? EXAMPLE_SNAPSHOT).gameTime,
@@ -143,6 +147,7 @@ export function OverlaysPage() {
                       inputs={preview}
                       featured={w.id === "winprob"}
                       live={live}
+                      artKey={artKey}
                       onToggle={(visible) => update({ ...w, visible })}
                       onOpen={() => setPanel(w.id)}
                     />
@@ -236,6 +241,7 @@ function WidgetCard({
   inputs,
   featured,
   live,
+  artKey,
   onToggle,
   onOpen,
 }: {
@@ -243,12 +249,17 @@ function WidgetCard({
   inputs: WidgetInputs;
   featured: boolean;
   live: boolean;
+  artKey: string | null;
   onToggle: (visible: boolean) => void;
   onOpen: () => void;
 }) {
   const info = WIDGET_INFO[w.id];
+  // Splash (1215x717) seulement pour la carte vedette, assez grande pour en profiter ;
+  // l'illustration verticale, bien plus legere, pour les autres.
+  const art = artKey ? (featured ? championSplash(artKey) : championLoading(artKey)) : null;
   return (
     <article className={`ov-card ${featured ? "featured" : ""} ${w.visible ? "" : "off"}`}>
+      <CardArt src={art} />
       <div className="ov-card-preview" aria-hidden="true">
         <div className="ov-card-scale">{renderWidget(w.id, inputs)}</div>
       </div>
@@ -268,6 +279,26 @@ function WidgetCard({
         </label>
       </div>
     </article>
+  );
+}
+
+/**
+ * Illustration de fond d'une carte.
+ *
+ * POURQUOI PAS `RemoteImg` : en cas d'echec, celui-ci affiche les initiales du sujet —
+ * utile pour une vignette, absurde en fond de carte, ou cela ecrirait deux lettres en
+ * grand au milieu. Ici un echec ne laisse rien : la carte retrouve son degrade, qui reste
+ * la couche de base et s'affiche aussi avant le chargement et hors connexion.
+ */
+function CardArt({ src }: { src: string | null }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (!src || failed) return null;
+  return (
+    <>
+      <img className="ov-card-art" src={src} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
+      <div className="ov-card-scrim" aria-hidden="true" />
+    </>
   );
 }
 
