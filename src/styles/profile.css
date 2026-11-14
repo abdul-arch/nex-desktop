@@ -600,49 +600,55 @@ button.pname:hover {
   transform: rotate(-35deg);
 }
 
-/* Carte Runes : les deux arbres cote a cote, fragments sous le secondaire. */
-.rune-trees {
+/* Onglet Runes : les dix joueurs, une colonne chacun, une rangee par equipe. */
+.rune-grid-card {
+  padding: 2px 14px;
+}
+.rune-team {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px 0;
 }
-.rune-branch {
-  display: grid;
-  gap: 6px;
-  align-content: start;
-}
-.rune-branch-head {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.shards-head {
-  margin-top: 8px;
-  padding-top: 8px;
+.rune-team + .rune-team {
   border-top: 1px solid var(--border);
 }
-.rune-line {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: var(--fs-sm);
-  min-width: 0;
+.rune-cell {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
 }
-.rune-line span {
+/* La rune fondamentale deborde sous le portrait, donc le rognage reste sur l'image seule. */
+.rune-portrait {
+  position: relative;
+  margin-bottom: 14px;
+}
+.rune-art {
+  display: block;
+  width: 58px;
+  height: 74px;
+  border-radius: 7px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-/* La rune fondamentale porte le style de jeu : elle est plus grande et respire. */
-.rune-line.keystone {
-  margin-bottom: 4px;
-  font-weight: 600;
+.rune-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* L'art de chargement est cadre large : on remonte pour garder le visage. */
+  object-position: center 18%;
+}
+.rune-keystone {
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  line-height: 0;
+}
+.rune-icons {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  min-height: 18px;
 }
 
 /* Ordre des competences : dix-huit colonnes egales, une couleur par sort. */
@@ -750,12 +756,20 @@ button.pname:hover {
   font-size: 16px;
   line-height: 1.2;
 }
+.ping-icon {
+  display: block;
+  line-height: 0;
+}
+.ping-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 
 /* Fenetre etroite : les cartes passent sur une colonne. */
 @media (max-width: 980px) {
   .dpm-stats,
-  .dpm-bottom,
-  .rune-trees {
+  .dpm-bottom {
     grid-template-columns: minmax(0, 1fr);
   }
 }

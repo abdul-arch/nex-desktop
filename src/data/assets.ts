@@ -76,6 +76,23 @@ export function positionIcon(position: string | null | undefined): string | null
   return p ? `${CD}/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-${p}.png` : null;
 }
 
+/** Pings : ressources du jeu, pas du client, donc une autre racine CommunityDragon.
+ *  Les variantes `_cb` (daltonisme) et `_gray` (ping eteint) existent aussi au meme endroit. */
+const CD_JEU = "https://raw.communitydragon.org/latest/game/assets/ux/minimap/pings";
+const PING_FILES: Record<string, string> = {
+  assistMe: "assist",
+  onMyWay: "on_my_way_new",
+  getBack: "get_back_small",
+  danger: "caution",
+  enemyMissing: "mia_new",
+  allIn: "all_in",
+};
+
+export function pingIcon(kind: string): string | null {
+  const f = PING_FILES[kind];
+  return f ? `${CD_JEU}/${f}.png` : null;
+}
+
 export function objectiveIcon(kind: (typeof OBJECTIVES)[number], team: number): string | null {
   if (!OBJECTIVES.includes(kind)) return null;
   return `${CD}/rcp-fe-lol-match-history/global/default/${kind}-${team === 200 ? 200 : 100}.png`;

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
-import { championName, objectiveIcon, positionIcon } from "../../data/assets";
+import { championLoading, championName, objectiveIcon, positionIcon } from "../../data/assets";
 import {
   MAYHEM_QUEUE,
   findParticipant,
@@ -17,8 +17,8 @@ import type { MatchDto, ParticipantDto, TeamDto, TimelineDto } from "../../platf
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { LineChart } from "../../ui/LineChart";
 import { duration, pct, ROLE_LABEL } from "../../ui/format";
-import { ChampIcon, ScoreRing, Segmented } from "../../ui/primitives";
-import { ItemIcon, RuneIcon, SpellIcon, statShardLabel } from "./GameIcons";
+import { ChampIcon, RemoteImg, ScoreRing, Segmented } from "../../ui/primitives";
+import { ItemIcon, RuneIcon, SpellIcon } from "./GameIcons";
 import { DetailsTab } from "./DetailsTab";
 
 const mmss = (ms: number) => duration(Math.floor(ms / 1000));
@@ -273,19 +273,19 @@ function TimelineViews({ match, puuid, view }: { match: MatchDto; puuid: string;
   const shown = match.participants.find((p) => p.participantId === shownId) ?? me;
   // Les deux vues par joueur partagent la rangee de selection : on garde le joueur
   // choisi en passant de l'une a l'autre.
-  const perPlayer = view === "details" || view === "runes";
+  const perPlayer = view === "details";
   return (
     <>
+      {view === "runes" && <RunesGrid match={match} />}
       {perPlayer && (
         <>
           <PlayerPicker match={match} shown={shown} onPick={setShownId} />
           {view === "details" && <DetailsTab match={match} me={shown} t={tl.data} />}
-          {view === "runes" && <RunesPanel me={shown} />}
           {tl.error != null && view === "details" && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
         </>
       )}
-      {tl.loading && !tl.data && !perPlayer && <div className="muted" style={{ padding: 12 }}>Chargement de la timeline…</div>}
-      {tl.error != null && !perPlayer && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
+      {tl.loading && !tl.data && view !== "runes" && !perPlayer && <div className="muted" style={{ padding: 12 }}>Chargement de la timeline…</div>}
+      {tl.error != null && view !== "runes" && !perPlayer && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
       {tl.data && view === "gold" && <GoldPanel t={tl.data} match={match} me={me} />}
       {tl.data && view === "story" && <StoryPanel t={tl.data} match={match} me={me} />}
     </>
@@ -330,47 +330,55 @@ function PlayerPicker({ match, shown, onPick }: { match: MatchDto; shown: Partic
   );
 }
 
-/** Runes reellement choisies : une seule carte, arbre principal, secondaire et fragments. */
-function RunesPanel({ me }: { me: ParticipantDto }) {
+/** Runes des dix joueurs d'un coup : portrait, rune fondamentale posee dessus, arbre
+ *  principal, arbre secondaire puis fragments. Une colonne par joueur, une rangee par
+ *  equipe, comme la maquette ; il n'y a donc rien a choisir dans cet onglet. */
+function RunesGrid({ match }: { match: MatchDto }) {
   const { catalog } = useAppState();
-  const name = (id: number) => catalog?.runes[String(id)]?.name ?? `Rune ${id}`;
-  const primary = me.perks.slice(0, 4);
-  const secondary = me.perks.slice(4);
+  const key = (p: ParticipantDto) => catalog?.champions[String(p.championId)]?.key ?? p.champion;
+  const runeName = (id: number) => catalog?.runes[String(id)]?.name ?? `Rune ${id}`;
+  const teams = [100, 200].map((tid) => match.participants.filter((p) => p.teamId === tid));
   return (
-    <section className="card card-pad rune-card">
-      <div className="panel-label">Runes</div>
-      <div className="rune-trees">
-        <div className="rune-branch">
-          <div className="rune-branch-head">
-            <RuneIcon id={me.primaryStyle} size={18} /> {catalog?.runes[String(me.primaryStyle)]?.name ?? "Arbre principal"}
-          </div>
-          {primary.map((id, i) => (
-            // La rune fondamentale est mise en avant : c'est elle qui decide du style de jeu.
-            <div key={id} className={`rune-line ${i === 0 ? "keystone" : ""}`}>
-              <RuneIcon id={id} size={i === 0 ? 38 : 24} />
-              <span>{name(id)}</span>
-            </div>
-          ))}
+    <section className="card rune-grid-card">
+      {teams.map((team, i) => (
+        <div key={i} className="rune-team">
+          {team.map((p) => {
+            // perks[0] est la rune fondamentale, puis trois runes principales et deux secondaires.
+            const primary = p.perks.slice(1, 4);
+            const secondary = p.perks.slice(4);
+            const who = `${p.gameName || "Joueur masqué"} — ${championName(key(p))}`;
+            return (
+              <div key={p.participantId} className="rune-cell">
+                <div className="rune-portrait">
+                  <span className="rune-art" title={who}>
+                    <RemoteImg src={championLoading(key(p))} alt={who} />
+                  </span>
+                  {p.keystone !== null && (
+                    <span className="rune-keystone" title={runeName(p.keystone)}>
+                      <RuneIcon id={p.keystone} size={30} />
+                    </span>
+                  )}
+                </div>
+                <div className="rune-icons">
+                  {primary.map((id) => (
+                    <RuneIcon key={id} id={id} size={22} />
+                  ))}
+                </div>
+                <div className="rune-icons">
+                  {secondary.map((id) => (
+                    <RuneIcon key={id} id={id} size={22} />
+                  ))}
+                </div>
+                <div className="rune-icons">
+                  {p.statPerks.map((id, j) => (
+                    <RuneIcon key={j} id={id} size={18} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div className="rune-branch">
-          <div className="rune-branch-head">
-            <RuneIcon id={me.secondaryStyle} size={18} /> {catalog?.runes[String(me.secondaryStyle)]?.name ?? "Arbre secondaire"}
-          </div>
-          {secondary.map((id) => (
-            <div key={id} className="rune-line">
-              <RuneIcon id={id} size={24} />
-              <span>{name(id)}</span>
-            </div>
-          ))}
-          <div className="rune-branch-head shards-head">Fragments</div>
-          {me.statPerks.map((s, i) => (
-            <div key={i} className="rune-line">
-              <RuneIcon id={s} size={20} />
-              <span>{statShardLabel(s)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      ))}
     </section>
   );
 }

@@ -8,12 +8,13 @@
 import { useMemo } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useAsync } from "../../app/useAsync";
-import { spellIcon } from "../../data/assets";
+import { pingIcon, spellIcon } from "../../data/assets";
 import { groupPurchases, purchaseOrder, skillLabel, skillOrder } from "../../domain/fromMatch";
 import { platform } from "../../platform";
 import { PING_KINDS } from "../../platform/api";
 import type { MatchDto, ParticipantDto, TimelineDto } from "../../platform/api";
 import { duration } from "../../ui/format";
+import { RemoteImg } from "../../ui/primitives";
 import { ItemIcon, SpellIcon } from "./GameIcons";
 
 const NA = "—";
@@ -225,28 +226,6 @@ function CastsCard({ me }: { me: ParticipantDto }) {
   );
 }
 
-/** Les pings de League ne sont pas distribués en images réutilisables : ils sont
- *  redessinés ici, pour rester nets à toute taille et sans dépendre du réseau. */
-const PING_ART: Record<string, { color: string; path: string }> = {
-  assistMe: { color: "#4a9eff", path: "M12 19 5 10.5h4V5h6v5.5h4z" },
-  onMyWay: { color: "#35c88a", path: "M12 5l7 8.5h-4V19H9v-5.5H5z" },
-  getBack: { color: "#4fc46a", path: "M5 12l8-7v4h6v6h-6v4z" },
-  danger: { color: "#ef4444", path: "M11 5.5h2v8h-2zm0 10h2v2.5h-2z" },
-  enemyMissing: { color: "#f2c14e", path: "M8.6 9.4a3.4 3.4 0 1 1 4.4 3.1v1.6h-2v-3.2h1.4a1.4 1.4 0 1 0-1.4-1.5zm2.4 7.1h2v2.2h-2z" },
-  allIn: { color: "#43c97f", path: "M7 5h2.6l7.4 7-7.4 7H7l4.8-7z" },
-};
-
-function PingGlyph({ kind }: { kind: string }) {
-  const art = PING_ART[kind];
-  if (!art) return null;
-  return (
-    <svg viewBox="0 0 24 24" width={26} height={26} aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="11" fill={art.color} opacity="0.18" />
-      <path d={art.path} fill={art.color} />
-    </svg>
-  );
-}
-
 function PingsCard({ me }: { me: ParticipantDto }) {
   return (
     <section className="card dpm-card">
@@ -257,7 +236,9 @@ function PingsCard({ me }: { me: ParticipantDto }) {
         <div className="ping-row">
           {PING_KINDS.map((k, i) => (
             <div key={k.key} className="ping" title={k.label}>
-              <PingGlyph kind={k.key} />
+              <span className="ping-icon">
+                <RemoteImg src={pingIcon(k.key)} alt="" fallback="•" />
+              </span>
               <b className="num">{nf(me.pings![i])}</b>
               <span className="sr-only">{k.label}</span>
             </div>
