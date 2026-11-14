@@ -750,6 +750,8 @@
 }
 
 /* Ta semaine, prochaine marche, faits marquants. */
+/* Ces trois cartes vivent maintenant dans src/features/profile/ProgressCards.tsx et
+   s'affichent sur le profil : l'accueil suit la maquette de reference, qui ne les a pas. */
 .row-week {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));

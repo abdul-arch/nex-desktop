@@ -16,7 +16,7 @@ import {
 import { type Award, awardsByMatch } from "../../domain/badges";
 import { mergeLocalMatches, toSummary } from "../../domain/fromMatch";
 import { attributeLp } from "../../domain/lp";
-import { dayLabel, groupByDay, lastSession } from "../../domain/sessions";
+import { dayLabel, lastSession } from "../../domain/sessions";
 import {
   METRICS,
   championAggregates,
@@ -32,11 +32,8 @@ import { NEX_SCORE_VERSION, nexScore } from "../../domain/nexScore";
 import type { MatchSummary, Queue } from "../../domain/types";
 import { platformLabel } from "../../domain/riotId";
 import { platform } from "../../platform";
-import type { BaselinesDto, MatchDto, MatchPageDto, PlayerProfileDto, RankSnapshotDto, Recording, SkinCatalog, SkinInventory } from "../../platform/api";
+import type { MatchDto, MatchPageDto, PlayerProfileDto, RankSnapshotDto, Recording, SkinCatalog, SkinInventory } from "../../platform/api";
 import { viewSkins } from "../../domain/skins";
-import { frequentTeammates, type Teammate } from "../../domain/teammates";
-import { TeammatesCard } from "./TeammatesCard";
-import { LpCard } from "../profile/LpCard";
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { duration, pct, QUEUE_LABEL, ROLE_LABEL, TIER_LABEL, timeAgo } from "../../ui/format";
 import {
@@ -142,14 +139,6 @@ function LiveDashboard({ riotId, plat }: { riotId: string; plat: string }) {
   const client = useClient();
   const clientUp = platform.capabilities.localClient && client.state?.status === "connected";
   const local = useAsync<MatchDto[]>(puuid && clientUp ? `local-mayhem:${puuid}` : null, () => platform.localMayhemMatches(riotId, puuid!, 40), 60_000);
-  // Deuxieme page, uniquement pour la carte « Souvent en même équipe » : elle a besoin d'un
-  // echantillon plus large que les metriques. Chargee apres la premiere, sans timeline
-  // (l'ecart d'or @15 ne sert pas ici), et seulement s'il reste des parties chez Riot.
-  const more = useAsync<MatchDto[]>(
-    puuid && page.data?.hasMore ? `dash-mates:${plat}:${puuid}` : null,
-    async () => (await platform.playerMatches({ platform: plat, puuid: puuid!, start: PAGE_SIZE, count: PAGE_SIZE })).matches,
-    300_000,
-  );
   // Releves de rang deja enregistres : ils donnent le ±LP de chaque partie. Lecture locale
   // du backend, sans requete Riot ; la liste est vide tant que rien n'a ete observe.
   const ranks = useAsync<RankSnapshotDto[]>(puuid ? `ranks:${plat}:${puuid}` : null, () => platform.rankHistory(plat, puuid!), 60_000);
@@ -190,18 +179,11 @@ function LiveDashboard({ riotId, plat }: { riotId: string; plat: string }) {
   const lp = attributeLp(plain, ranks.data ?? []);
   const matches = plain.map((m) => (lp.has(m.id) ? { ...m, lpDelta: lp.get(m.id)! } : m));
   const top = championAggregates(matches)[0]?.champion ?? null;
-  // Coequipiers : deux pages Riot, plus les parties du client sur la meme fenetre de temps.
-  const seen = new Set(remote.map((m) => m.id));
-  const deeper = [...remote, ...(more.data ?? []).filter((m) => !seen.has(m.id))];
-  const mateMatches = mergeLocalMatches(deeper, local.data ?? [], true);
   return (
     <DashboardView
       demo={false}
       player={{ ...p, bannerChampion: top, bannerSkin: 0, updatedAt: p.fetchedAt }}
       matches={matches}
-      teammates={frequentTeammates(mateMatches, p.puuid)}
-      teammatesSample={mateMatches.length}
-      plat={plat}
       awards={awardsByMatch(merged, p.puuid)}
       provenance={`Backend NEX · ${matches.length} parties chargées${fromClient > 0 ? ` (dont ${fromClient} ARAM Mayhem lues dans le client League)` : ""} · actualisé ${timeAgo(p.fetchedAt)}`}
       periods={["10", "20"]}
@@ -243,9 +225,6 @@ function DashboardView({
   demo,
   player,
   matches: allMatches,
-  teammates,
-  teammatesSample = 0,
-  plat,
   awards,
   provenance,
   periods,
@@ -253,10 +232,6 @@ function DashboardView({
   demo: boolean;
   player: DashPlayer;
   matches: MatchSummary[];
-  /** Coequipiers frequents du compte reel ; absent en mode demo. */
-  teammates?: Teammate[];
-  teammatesSample?: number;
-  plat?: string;
   /** Rang du joueur dans chaque partie, par identifiant de partie ; absent en mode demo. */
   awards?: Map<string, Award>;
   provenance: string;
@@ -282,7 +257,6 @@ function DashboardView({
     return out;
   }, [allMatches, queue, period]);
 
-  const topRole = useMemo(() => roleDistribution(matches)[0]?.role ?? null, [matches]);
   const window = Math.max(3, Math.floor(Number(period) / 2));
   const summaries = useMemo(() => METRICS.map((d) => summarize(d, matches, window)), [matches, window]);
   const countable = matches.filter(isCountable);
@@ -427,24 +401,6 @@ function DashboardView({
 
             <LensCard matches={countable} />
           </div>
-
-          {/* Sous la rangee overlays/collection : ces blocs ne figurent pas dans la
-              maquette de reference, qui enchaine heros, medias puis overlays. Ils
-              restent accessibles sans repousser le haut de page. */}
-          {!demo && plat && player.puuid && (
-            <div className="row-media two">
-              <LpCard puuid={player.puuid} plat={plat} />
-              {teammates && <TeammatesCard mates={teammates} plat={plat} sample={teammatesSample} />}
-            </div>
-          )}
-
-          {!demo && (
-            <div className="row-week">
-              <WeekCard matches={allMatches} />
-              <NextStepCard matches={countable} role={topRole} />
-              <HighlightsCard awards={awards} />
-            </div>
-          )}
           <div className="provenance">
             {demo && <DemoTag compact />} {provenance} · Score NEX v{NEX_SCORE_VERSION} · repères provisoires
           </div>
@@ -832,6 +788,13 @@ function RankCard({ ranks }: { ranks: DashPlayer["ranks"] }) {
  * heures. Sur toutes les parties chargees, filtres de la page compris ou non : une session
  * est un fait, pas une vue.
  */
+/** Minuit local du jour d'un horodatage. */
+function midnightOf(at: number) {
+  const d = new Date(at);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
 function SessionCard({ matches }: { matches: MatchSummary[] }) {
   const s = useMemo(() => lastSession(matches), [matches]);
   if (!s) return null;
@@ -869,127 +832,6 @@ function SessionCard({ matches }: { matches: MatchSummary[] }) {
   );
 }
 
-/** Minuit local du jour d'un horodatage. */
-function midnightOf(at: number) {
-  const d = new Date(at);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
-/** Sept derniers jours : une barre par jour, hauteur selon les parties, couleur selon le bilan. */
-function WeekCard({ matches }: { matches: MatchSummary[] }) {
-  const days = useMemo(() => {
-    const groups = new Map(groupByDay(matches).map((g) => [g.day, g]));
-    const today = midnightOf(Date.now());
-    return Array.from({ length: 7 }, (_, i) => {
-      const day = today - (6 - i) * 86_400_000;
-      const g = groups.get(day);
-      return { day, games: g?.games ?? 0, wins: g?.wins ?? 0, losses: g?.losses ?? 0 };
-    });
-  }, [matches]);
-  const max = Math.max(1, ...days.map((d) => d.games));
-  const total = days.reduce((a, d) => ({ games: a.games + d.games, wins: a.wins + d.wins, losses: a.losses + d.losses }), { games: 0, wins: 0, losses: 0 });
-  const minutes = matches.filter((m) => m.startedAt >= midnightOf(Date.now()) - 6 * 86_400_000).reduce((a, m) => a + m.durationSec, 0);
-  if (total.games === 0) return null;
-
-  return (
-    <section className="card card-pad week-card" aria-label="Ta semaine">
-      <div className="card-title">Ta semaine</div>
-      <div className="week-bars">
-        {days.map((d) => (
-          <span
-            key={d.day}
-            title={d.games === 0 ? `${dayLabel(d.day)} : aucune partie` : `${dayLabel(d.day)} : ${d.games} partie${d.games > 1 ? "s" : ""}, ${d.wins}V ${d.losses}D`}
-            data-issue={d.games === 0 ? "none" : d.wins >= d.losses ? "win" : "loss"}
-            style={{ height: `${d.games === 0 ? 12 : 12 + (d.games / max) * 88}%` }}
-          />
-        ))}
-      </div>
-      <div className="muted num week-total">
-        {total.games} partie{total.games > 1 ? "s" : ""} · {total.wins}V {total.losses}D · {duration(minutes)} de jeu
-      </div>
-    </section>
-  );
-}
-
-/** Mesures du joueur comparables aux medianes collectees, sur les memes cles. */
-const STEP_METRICS: { key: string; label: string; higherIsBetter: boolean; format: (v: number) => string; value: (ms: MatchSummary[]) => number | null }[] = [
-  { key: "csPerMin", label: "CS / min", higherIsBetter: true, format: (v) => v.toFixed(1), value: (ms) => ratioOf(ms, (m) => m.cs, (m) => m.durationSec / 60) },
-  { key: "visionPerMin", label: "Vision / min", higherIsBetter: true, format: (v) => v.toFixed(2), value: (ms) => ratioOf(ms, (m) => m.visionScore, (m) => m.durationSec / 60) },
-  { key: "killParticipation", label: "Participation", higherIsBetter: true, format: (v) => pct(v), value: (ms) => ratioOf(ms, (m) => m.kills + m.assists, (m) => m.teamKills) },
-  { key: "damageShare", label: "Part des dégâts", higherIsBetter: true, format: (v) => pct(v), value: (ms) => ratioOf(ms, (m) => m.damageToChampions, (m) => m.teamDamageToChampions) },
-  { key: "deathsPer10", label: "Morts / 10 min", higherIsBetter: false, format: (v) => v.toFixed(1), value: (ms) => ratioOf(ms, (m) => m.deaths * 10, (m) => m.durationSec / 60) },
-];
-
-function ratioOf(ms: MatchSummary[], num: (m: MatchSummary) => number, den: (m: MatchSummary) => number): number | null {
-  const d = ms.reduce((a, m) => a + den(m), 0);
-  return d > 0 ? ms.reduce((a, m) => a + num(m), 0) / d : null;
-}
-
-/**
- * La mesure ou l'ecart a la mediane collectee est le plus defavorable. Une seule : le heros
- * affiche deja huit moyennes, cette carte sert a savoir quoi travailler.
- */
-function NextStepCard({ matches, role }: { matches: MatchSummary[]; role: string | null }) {
-  const { navigate } = useNav();
-  const base = useAsync<BaselinesDto>(`baselines:${role ?? "all"}`, () => platform.statsBaselines(role ? { position: role } : {}), 600_000);
-  const worst = useMemo(() => {
-    if (!base.data || matches.length === 0) return null;
-    let pick: { label: string; mine: number; median: number; gap: number; format: (v: number) => string } | null = null;
-    for (const m of STEP_METRICS) {
-      const mine = m.value(matches);
-      const median = base.data.stats.find((s) => s.key === m.key)?.median ?? null;
-      if (mine === null || median === null || median === 0) continue;
-      // Ecart relatif, signe pour que « plus grand » soit toujours « pire ».
-      const gap = ((median - mine) / Math.abs(median)) * (m.higherIsBetter ? 1 : -1);
-      if (gap > 0 && (!pick || gap > pick.gap)) pick = { label: m.label, mine, median, gap, format: m.format };
-    }
-    return pick;
-  }, [base.data, matches]);
-
-  if (!worst) return null;
-  return (
-    <button className="card card-pad card-link step-card" onClick={() => navigate("datastudio")}>
-      <div className="card-title">Ta prochaine marche</div>
-      <strong className="step-name">{worst.label}</strong>
-      <div className="step-values num">
-        <span className="neg">{worst.format(worst.mine)}</span>
-        <span className="muted">médiane {worst.format(worst.median)}</span>
-      </div>
-      <div className="muted step-note">
-        Ton plus gros écart sur {matches.length} partie{matches.length > 1 ? "s" : ""}, face aux parties collectées par NEX.
-      </div>
-    </button>
-  );
-}
-
-/** Distinctions accumulees sur les parties chargees : du vecu, pas une moyenne de plus. */
-function HighlightsCard({ awards }: { awards?: Map<string, Award> }) {
-  const lines = useMemo(() => {
-    if (!awards?.size) return [];
-    const counts = new Map<string, number>();
-    const bump = (k: string) => counts.set(k, (counts.get(k) ?? 0) + 1);
-    for (const a of awards.values()) {
-      if (a.rankLabel === "MVP" || a.rankLabel === "ACE") bump(a.rankLabel);
-      for (const b of a.badges) bump(b.label);
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
-  }, [awards]);
-  if (lines.length === 0) return null;
-
-  return (
-    <section className="card card-pad highlights-card" aria-label="Faits marquants">
-      <div className="card-title">Faits marquants</div>
-      <ul>
-        {lines.map(([label, n]) => (
-          <li key={label}>
-            <b className="num">{n}×</b> {label}
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
 
 function RecentMatches({ matches, demo, awards }: { matches: MatchSummary[]; demo: boolean; awards?: Map<string, Award> }) {
   const version = useDDragonVersion();

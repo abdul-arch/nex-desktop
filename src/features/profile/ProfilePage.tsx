@@ -18,7 +18,9 @@ import type { MatchDto, PlayerProfileDto, RankDto, RankSnapshotDto } from "../..
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { pct, ROLE_LABEL, TIER_LABEL, timeAgo } from "../../ui/format";
 import { ChampIcon, EmptyState, PositionIcon, RankCrest, RemoteImg, Segmented } from "../../ui/primitives";
+import { awardsByMatch } from "../../domain/badges";
 import { LpCard } from "./LpCard";
+import { HighlightsCard, NextStepCard, WeekCard } from "./ProgressCards";
 import { MatchHistoryRow } from "./MatchHistory";
 import { TeammatesCard } from "../dashboard/TeammatesCard";
 
@@ -235,6 +237,8 @@ function ProfileLoaded({
   const counted = summaries.filter(isCountable);
   const champs = championAggregates(summaries).slice(0, 6);
   const roles = roleDistribution(summaries);
+  // Distinctions par partie, sur le meme echantillon que le reste de la colonne.
+  const awards = useMemo(() => awardsByMatch(shown, profile.puuid), [shown, profile.puuid]);
   // Coequipiers frequents, sur les memes parties que le reste de la colonne (filtre compris).
   const mates = useMemo(() => frequentTeammates(shown, profile.puuid), [shown, profile.puuid]);
   // ±LP par partie, a partir des releves deja enregistres (lecture locale du backend).
@@ -304,6 +308,15 @@ function ProfileLoaded({
           </button>
         </div>
       </section>
+
+      {/* Cartes de progression, arrivees de l'accueil : la maquette de reference de
+          l'accueil ne les contient pas, mais elles disent ce que les moyennes ne disent
+          pas. Pleine largeur, au-dessus des deux colonnes. */}
+      <div className="row-week">
+        <WeekCard matches={summaries} />
+        <NextStepCard matches={counted} role={roles[0]?.role ?? null} />
+        <HighlightsCard awards={awards} />
+      </div>
 
       <div className="profile-grid">
         <aside className="profile-side">
