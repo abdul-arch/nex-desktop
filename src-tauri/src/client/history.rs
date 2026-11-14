@@ -32,6 +32,16 @@ fn opt_num(v: &Value, k: &str) -> Option<u32> {
     v.get(k).and_then(Value::as_u64).map(|x| x.min(u32::MAX as u64) as u32)
 }
 
+/// Lit un groupe de compteurs d'un coup. `None` des qu'un seul manque : un groupe
+/// a moitie rempli afficherait des zeros qui ressemblent a une vraie mesure.
+fn opt_counts<const N: usize>(v: &Value, keys: [&str; N]) -> Option<[u32; N]> {
+    let mut out = [0u32; N];
+    for (i, k) in keys.iter().enumerate() {
+        out[i] = opt_num(v, k)?;
+    }
+    Some(out)
+}
+
 /// Convertit une partie du client (ancien format « v4 » : `participants` + `participantIdentities`)
 /// en `MatchDto`. `champion_key` donne la cle Data Dragon d'un champion (ex. 62 -> "MonkeyKing").
 /// Renvoie `None` si la partie est illisible. Les postes ne sont pas renseignes : les champs
@@ -99,6 +109,10 @@ pub fn match_from_client(g: &Value, champion_key: &dyn Fn(i32) -> Option<String>
                 // Les plaques ne figurent pas dans le format « v4 » du client.
                 turret_plates: None,
                 profile_icon_id: player.map(|pl| num(pl, "profileIcon")).filter(|v| *v > 0),
+                spell_casts: opt_counts(st, ["spell1Casts", "spell2Casts", "spell3Casts", "spell4Casts"]),
+                summoner_casts: opt_counts(st, ["summoner1Casts", "summoner2Casts"]),
+                // Les pings sont posterieurs au format « v4 » du client : il ne les porte pas.
+                pings: None,
             })
         })
         .collect();

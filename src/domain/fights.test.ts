@@ -42,6 +42,9 @@ function p(id: number, team: number): ParticipantDto {
     detectorWardsPlaced: null,
     timeDeadSec: null,
     turretPlates: null,
+    spellCasts: null,
+    summonerCasts: null,
+    pings: null,
   };
 }
 

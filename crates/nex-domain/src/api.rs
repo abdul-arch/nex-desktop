@@ -158,7 +158,20 @@ pub struct ParticipantDto {
     /// Icone d'invocateur portee pendant cette partie.
     #[serde(default)]
     pub profile_icon_id: Option<u32>,
+    /// Lancers de competences, dans l'ordre Q, W, E, R (`spell1Casts`..`spell4Casts`).
+    #[serde(default)]
+    pub spell_casts: Option<[u32; 4]>,
+    /// Lancers des deux sorts d'invocateur, dans l'ordre des emplacements D et F.
+    #[serde(default)]
+    pub summoner_casts: Option<[u32; 2]>,
+    /// Pings emis, dans l'ordre de `PING_KINDS`. Riot en expose treize ; ces six-la
+    /// couvrent ce qu'un joueur relit apres coup, les autres sont du bruit.
+    #[serde(default)]
+    pub pings: Option<[u32; 6]>,
 }
+
+/// Les six pings retenus, dans l'ordre ou ils sont stockes puis affiches.
+pub const PING_KINDS: [&str; 6] = ["assistMe", "onMyWay", "getBack", "danger", "enemyMissing", "allIn"];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]

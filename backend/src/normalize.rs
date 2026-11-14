@@ -13,7 +13,7 @@ use std::collections::HashMap;
 /// serie, balises de controle posees.
 /// v3 : temps passe mort, plaques de tourelle.
 /// v4 : icone d'invocateur de chaque participant.
-pub const NORMALIZE_VERSION: u32 = 4;
+pub const NORMALIZE_VERSION: u32 = 5;
 
 // ---------- account-v1 / summoner-v4 / league-v4 ----------
 
@@ -158,6 +158,18 @@ struct RParticipant {
     detector_wards_placed: u32,
     total_time_spent_dead: u32,
     profile_icon: u32,
+    spell1_casts: u32,
+    spell2_casts: u32,
+    spell3_casts: u32,
+    spell4_casts: u32,
+    summoner1_casts: u32,
+    summoner2_casts: u32,
+    assist_me_pings: u32,
+    on_my_way_pings: u32,
+    get_back_pings: u32,
+    danger_pings: u32,
+    enemy_missing_pings: u32,
+    all_in_pings: u32,
     challenges: Option<Value>,
 }
 
@@ -280,6 +292,17 @@ pub fn match_dto(body: &str) -> BResult<MatchDto> {
                 time_dead_sec: Some(p.total_time_spent_dead),
                 turret_plates,
                 profile_icon_id: Some(p.profile_icon),
+                spell_casts: Some([p.spell1_casts, p.spell2_casts, p.spell3_casts, p.spell4_casts]),
+                summoner_casts: Some([p.summoner1_casts, p.summoner2_casts]),
+                // Meme ordre que PING_KINDS.
+                pings: Some([
+                    p.assist_me_pings,
+                    p.on_my_way_pings,
+                    p.get_back_pings,
+                    p.danger_pings,
+                    p.enemy_missing_pings,
+                    p.all_in_pings,
+                ]),
             }
         })
         .collect();

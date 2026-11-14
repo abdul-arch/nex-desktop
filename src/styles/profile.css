@@ -450,56 +450,154 @@ button.pname:hover {
   margin-bottom: 12px;
 }
 
-/* ---------- Onglet Build & runes ---------- */
-.build-tab {
-  display: grid;
-  gap: 12px;
-}
-/* Runes un peu plus large que les competences, les deux alignees en haut. */
-.build-row {
-  display: grid;
-  grid-template-columns: minmax(0, 57fr) minmax(0, 43fr);
-  gap: 12px;
-  align-items: start;
-}
+/* ---------- Onglet Details : mise en page reprise de la maquette DPM ---------- */
 
-/* Barre de participants : deux blocs de cinq, separes. */
+/* Rangee de selection : cinq portraits, le VS, cinq portraits. Le nom du joueur n'est
+   pas ecrit, comme sur la maquette ; chaque bouton le porte en infobulle et en nom
+   accessible, et un texte vocal annonce le changement. */
 .player-picker {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 6px;
   flex-wrap: wrap;
+  padding: 10px 12px;
 }
 .pp-team {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
-.pp-split {
-  width: 1px;
-  align-self: stretch;
-  background: var(--border-strong);
-  margin: 2px 4px;
+.pp-vs {
+  margin: 0 12px;
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 .player-picker button {
+  position: relative;
   padding: 2px;
-  border-radius: 9px;
+  border-radius: 10px;
   border: 2px solid transparent;
   background: none;
   line-height: 0;
-  cursor: pointer;
+  opacity: 0.5;
 }
 .player-picker button:hover {
-  border-color: var(--border-strong);
+  opacity: 0.85;
 }
 .player-picker button.active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  opacity: 1;
 }
-.pp-who {
+.player-picker button.active[data-team="100"] {
+  border-color: var(--blue);
+}
+.player-picker button.active[data-team="200"] {
+  border-color: var(--red);
+}
+/* Le poste se lit sur le portrait, comme en jeu. */
+.pp-role {
+  position: absolute;
+  left: 1px;
+  bottom: 1px;
+  padding: 1px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dpm-tab {
   display: grid;
-  line-height: 1.25;
-  font-size: var(--fs-sm);
-  margin-left: 4px;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+.dpm-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.dpm-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.dpm-card {
+  padding: 12px 14px;
+}
+.dpm-head {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+/* Les mesures d'une carte occupent toute sa largeur, a egale distance. */
+.dpm-figures {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: center;
+}
+.dpm-figure {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.dpm-figure b {
+  font-size: 17px;
+  line-height: 1.2;
+}
+.dpm-figure .muted {
+  font-size: var(--fs-xs);
+}
+
+/* Parcours d'achat : une seule ligne de temps, qui passe a la ligne sans couper un groupe. */
+.build-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.build-flow li {
+  display: flex;
+  align-items: flex-start;
+}
+.build-sep {
+  color: var(--border-strong);
+  font-size: 18px;
+  padding: 0 7px;
+  margin-top: 8px;
+}
+.build-step {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 2px 3px;
+}
+.build-items {
+  display: flex;
+  gap: 3px;
+}
+.build-step .num {
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.sold {
+  position: relative;
+  opacity: 0.5;
+}
+.sold::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  top: 50%;
+  height: 2px;
+  background: var(--red);
+  transform: rotate(-35deg);
 }
 
 /* Carte Runes : les deux arbres cote a cote, fragments sous le secondaire. */
@@ -547,130 +645,116 @@ button.pname:hover {
   font-weight: 600;
 }
 
-/* Competences : grille large, defilement limite a la carte. */
-.skill-scroll {
-  overflow-x: auto;
-}
+/* Ordre des competences : dix-huit colonnes egales, une couleur par sort. */
 .skill-grid {
+  width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 2px;
-  font-size: 11px;
+  border-spacing: 3px;
   font-variant-numeric: tabular-nums;
 }
-.skill-grid thead th {
-  font-size: 9px;
-  font-weight: 500;
-  color: var(--dim);
-  padding-bottom: 2px;
+.skill-col-head {
+  width: 52px;
 }
+/* Icone au-dessus, touche en dessous : la colonne reste etroite. */
 .skill-grid tbody th {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding-right: 6px;
-  color: var(--text-2);
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+  padding-right: 8px;
+  line-height: 1;
 }
 .skill-spell {
-  border-radius: 4px;
-  border: 1px solid var(--border);
+  border-radius: 5px;
+  vertical-align: middle;
 }
 .skill-key {
-  font-weight: 700;
-}
-.skill-grid td {
-  width: 22px;
-  height: 22px;
-  text-align: center;
-  /* Une case non renseignee est nettement plus sombre qu'une case montee. */
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
-  color: transparent;
-}
-.skill-grid td.on {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
-}
-
-/* Parcours d'achat : l'inventaire final, puis la chronologie en grille. */
-.final-items {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-  font-size: var(--fs-xs);
-}
-.final-items .muted {
-  margin-right: 4px;
-}
-.purchase-grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 8px;
-}
-.purchase-grid li {
-  display: grid;
-  gap: 4px;
-  padding: 7px 8px;
-  border-radius: 8px;
-  background: var(--panel-2);
-  font-size: var(--fs-xs);
-}
-.purchase-grid .num {
-  font-weight: 600;
-}
-.purchase-grid .item-row {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-.sold {
-  position: relative;
-  opacity: 0.5;
-}
-.sold::after {
-  content: "";
-  position: absolute;
-  left: -2px;
-  right: -2px;
-  top: 50%;
-  height: 2px;
-  background: var(--red);
-  transform: rotate(-35deg);
-}
-
-/* Statistiques : six blocs compacts au lieu d'un tableau pleine largeur. */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-.stat-block {
-  display: grid;
-  gap: 2px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--panel-2);
-}
-.stat-title {
+  display: block;
+  margin-top: 3px;
   font-size: var(--fs-xs);
   color: var(--muted);
 }
-.stat-block b {
-  font-size: var(--fs-md);
+.skill-grid td {
+  height: 22px;
+  border-radius: 4px;
+  background: var(--panel-3);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
 }
-.stat-block .muted {
-  font-size: var(--fs-xs);
+.skill-grid td.on {
+  color: #fff;
+}
+.skill-grid tr[data-slot="1"] td.on {
+  background: #3f6fd8;
+}
+.skill-grid tr[data-slot="2"] td.on {
+  background: #c8801f;
+}
+.skill-grid tr[data-slot="3"] td.on {
+  background: #7a53cf;
+}
+.skill-grid tr[data-slot="4"] td.on {
+  background: #c93f3f;
 }
 
-/* Fenetre etroite : les deux cartes s'empilent. */
+/* Sorts lances : les quatre competences, puis les deux sorts d'invocateur. */
+.cast-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cast {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.cast img {
+  border-radius: 6px;
+}
+.cast b {
+  font-size: 16px;
+  line-height: 1.2;
+}
+.cast .muted {
+  font-size: var(--fs-xs);
+}
+.cast-blank {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--panel-3);
+}
+.cast-split {
+  align-self: stretch;
+  width: 1px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.ping-row {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ping {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+.ping b {
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+/* Fenetre etroite : les cartes passent sur une colonne. */
 @media (max-width: 980px) {
-  .build-row,
+  .dpm-stats,
+  .dpm-bottom,
   .rune-trees {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -862,65 +946,6 @@ button.pname:hover {
   font-size: 10px;
 }
 
-/* ---------- Selecteur de joueur et details (onglet Build) ---------- */
-.player-picker {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  padding: 10px 12px 0;
-}
-.player-picker > button {
-  padding: 2px;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  background: none;
-  line-height: 0;
-  opacity: 0.55;
-}
-.player-picker > button:hover {
-  opacity: 0.85;
-}
-.player-picker > button.active {
-  opacity: 1;
-}
-.player-picker > button.active[data-team="100"] {
-  border-color: var(--blue);
-}
-.player-picker > button.active[data-team="200"] {
-  border-color: var(--red);
-}
-.player-picker-name {
-  margin-left: 6px;
-  font-size: var(--fs-sm);
-}
-.player-details {
-  padding: 0 12px 12px;
-}
-.player-details dl {
-  margin: 6px 0 0;
-  display: grid;
-  gap: 4px;
-}
-.player-details dl > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: baseline;
-  padding: 3px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: var(--fs-sm);
-}
-.player-details dl > div:last-child {
-  border-bottom: 0;
-}
-.player-details dt {
-  color: var(--muted);
-}
-.player-details dd {
-  margin: 0;
-  color: var(--text-2);
-}
 .dmg-bar.taken > i {
   background: var(--muted);
 }

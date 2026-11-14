@@ -42,6 +42,9 @@ function p(n: number, team: number, extra: Partial<ParticipantDto> = {}): Partic
     detectorWardsPlaced: null,
     timeDeadSec: null,
     turretPlates: null,
+    spellCasts: null,
+    summonerCasts: null,
+    pings: null,
     ...extra,
   };
 }

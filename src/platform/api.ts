@@ -97,7 +97,23 @@ export interface ParticipantDto {
   /** `challenges.turretPlatesTaken` de Riot. Non affiché : la somme des dix joueurs
    *  dépasse le nombre de plaques existantes, ce champ ne compte pas des plaques. */
   turretPlates: number | null;
+  /** Lancers de compétences, dans l'ordre Q, W, E, R. */
+  spellCasts: number[] | null;
+  /** Lancers des deux sorts d'invocateur, emplacements D puis F. */
+  summonerCasts: number[] | null;
+  /** Pings émis, dans l'ordre de `PING_KINDS`. */
+  pings: number[] | null;
 }
+
+/** Les six pings remontés, dans l'ordre du tableau `pings`. Doit suivre `PING_KINDS` côté Rust. */
+export const PING_KINDS = [
+  { key: "assistMe", label: "À l'aide" },
+  { key: "onMyWay", label: "J'arrive" },
+  { key: "getBack", label: "Repli" },
+  { key: "danger", label: "Attention" },
+  { key: "enemyMissing", label: "Ennemi absent" },
+  { key: "allIn", label: "Tout donner" },
+] as const;
 
 /** Médiane d'une mesure du Data Studio sur les parties collectées par NEX. */
 export interface BaselineDto {

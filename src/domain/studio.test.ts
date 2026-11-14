@@ -42,6 +42,9 @@ function part(id: string, team: number, win: boolean, over: Partial<ParticipantD
     detectorWardsPlaced: null,
     timeDeadSec: null,
     turretPlates: null,
+    spellCasts: null,
+    summonerCasts: null,
+    pings: null,
     ...over,
   };
 }
