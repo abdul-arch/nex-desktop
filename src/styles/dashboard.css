@@ -429,13 +429,34 @@
 
 /* Apercu d'overlay */
 .overlay-card {
+  position: relative;
+  overflow: hidden;
   height: 196px;
   padding: 12px;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(80% 90% at 50% 40%, rgba(87, 149, 255, 0.08), transparent 70%),
-    var(--panel);
+  background: var(--panel);
+}
+.overlay-card img.bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  opacity: 0.35;
+}
+/* Voile sous le contenu. Dosage mesure, pas choisi a l'oeil : le pixel le plus clair de la
+   capture est a 225 de luminance, et la colonne de reference du tableau est en gris sourd
+   (#8b8fa3). Avec une image a 0,5 et un voile a 0,55, ce gris tombait a 3,13:1. A 0,35 et
+   0,72 il remonte a ~4,8:1, au-dessus du seuil de 4,5. */
+.overlay-card .shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(11, 12, 16, 0.94), rgba(11, 12, 16, 0.72) 55%, rgba(11, 12, 16, 0.86));
+}
+.overlay-card > *:not(img.bg):not(.shade) {
+  position: relative;
 }
 .ov-timers {
   display: flex;
@@ -487,8 +508,47 @@
 }
 
 .collection-card {
+  position: relative;
+  overflow: hidden;
   height: 196px;
   padding: 0;
+}
+/* Voile sous le contenu : le compteur et la barre restent lisibles sur l'illustration. */
+.collection-card .shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(11, 12, 16, 0.96) 18%, rgba(11, 12, 16, 0.5) 62%, rgba(11, 12, 16, 0.25));
+}
+.collection-over {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  gap: 8px;
+}
+/* Trois skins reellement possedes, en vignettes verticales. */
+.skin-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.skin-strip li {
+  aspect-ratio: 3 / 4;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  line-height: 0;
+  background: var(--panel-2);
+}
+.skin-strip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 16%;
 }
 .collection-card img.bg,
 .collection-card .img-fallback.bg {
@@ -520,13 +580,27 @@
 
 /* ---------- Colonne droite ---------- */
 .rank-card {
+  position: relative;
+  overflow: hidden;
   padding: 14px 16px;
   display: grid;
-  grid-template-columns: 1fr auto;
   align-items: center;
   background:
     radial-gradient(90% 120% at 100% 50%, rgba(87, 149, 255, 0.16), transparent 60%),
     var(--panel);
+}
+/* L'embleme sort du flux et se fond dans la carte par la droite. Sa taille vient du
+   composant (style en ligne) ; le zoom qui compense les marges transparentes de l'image
+   officielle est deja dans RankCrest, rien a rogner ici. */
+.rank-card .rank-emblem {
+  position: absolute;
+  right: -18px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.8;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to left, #000 42%, transparent 97%);
+  mask-image: linear-gradient(to left, #000 42%, transparent 97%);
 }
 .rank-queue {
   font-size: var(--fs-xs);

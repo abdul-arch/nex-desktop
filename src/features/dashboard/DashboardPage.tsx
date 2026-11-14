@@ -2,6 +2,7 @@ import { ArrowUpRight, ChevronRight, Film, Gem, House, LayoutGrid, Link2, Sparkl
 import { useEffect, useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
+import riftArt from "../../assets/rift.webp";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
 import { championLoading, championName, championSplash, profileIcon } from "../../data/assets";
@@ -202,7 +203,8 @@ function LocalSections() {
     <div className="dash-main" style={{ marginTop: 14 }}>
       <MediaRow />
       <div className="row-extras">
-        <CollectionCard onOpen={() => navigate("collection")} />
+        {/* Vue de repli (backend muet, hors ligne) : aucun champion a mettre en fond. */}
+        <CollectionCard onOpen={() => navigate("collection")} champion={null} />
       </div>
     </div>
   );
@@ -331,6 +333,10 @@ function DashboardView({
 
           <div className="row-extras">
             <button className="card card-link overlay-card" onClick={() => navigate("overlays")}>
+              {/* Meme capture de jeu que l'editeur d'overlays : la carte montre ou les
+                  modules se posent, au lieu d'un aplat sombre. */}
+              <img className="bg" src={riftArt} alt="" />
+              <div className="shade" />
               {demo ? (
                 <>
                   <div className="ov-timers num" aria-hidden="true">
@@ -396,7 +402,7 @@ function DashboardView({
                 </div>
               </button>
             ) : (
-              <CollectionCard onOpen={() => navigate("collection")} />
+              <CollectionCard onOpen={() => navigate("collection")} champion={player.bannerChampion} />
             )}
 
             <LensCard matches={countable} />
@@ -577,45 +583,69 @@ function OverlayPreview({ summaries, sample }: { summaries: MetricSummary[]; sam
 }
 
 /** Collection reelle : inventaire lu dans le client League (ou dernier inventaire connu). */
-function CollectionCard({ onOpen }: { onOpen: () => void }) {
+function CollectionCard({ onOpen, champion }: { onOpen: () => void; champion: string | null }) {
   const { catalog: champCatalog } = useAppState();
   const catalog = useAsync<SkinCatalog>("skin-catalog", () => platform.skinCatalog(), 3_600_000);
   const inventory = useAsync<SkinInventory>("skin-inventory", () => platform.skinInventory(), 300_000);
-  const counts = useMemo(() => {
+  const vue = useMemo(() => {
     if (!catalog.data || !champCatalog || !inventory.data || inventory.data.source === "unknown") return null;
     const views = viewSkins(
       catalog.data.skins.filter((s) => champCatalog.champions[String(s.championId)]),
       inventory.data,
     );
-    return { owned: views.filter((v) => v.state === "owned").length, total: views.length, source: inventory.data.source };
+    const owned = views.filter((v) => v.state === "owned");
+    // En vedette : des skins reellement possedes, jamais l'apparence de base, et un seul
+    // par champion pour ne pas montrer trois fois le meme visage.
+    const vus = new Set<number>();
+    const vedettes = owned
+      .filter((v) => v.num > 0)
+      .filter((v) => (vus.has(v.championId) ? false : (vus.add(v.championId), true)))
+      .slice(0, 3)
+      .map((v) => ({ id: v.id, name: v.name, key: champCatalog.champions[String(v.championId)]!.key, num: v.num }));
+    return { owned: owned.length, total: views.length, source: inventory.data.source, vedettes };
   }, [catalog.data, inventory.data, champCatalog]);
-  if (!counts) {
-    return (
-      <PendingCard
-        icon={<Gem />}
-        title="Collection"
-        text={inventory.data || inventory.error != null ? "Ouvre le client League pour lire tes skins." : "Lecture de ta collection…"}
-        onClick={onOpen}
-      />
-    );
-  }
+
+  // Sans inventaire lu, aucun skin n'est revendique : le fond reste le champion le plus
+  // joue, et la carte dit ce qui manque.
+  const fond = vue?.vedettes[0] ? championSplash(vue.vedettes[0].key, vue.vedettes[0].num) : champion ? championSplash(champion, 0) : null;
+
   return (
     <button className="card card-link collection-card" onClick={onOpen}>
-      <div style={{ position: "absolute", left: 12, right: 12, bottom: 12, display: "grid", gap: 8 }}>
+      {fond && <RemoteImg className="bg" src={fond} alt="" />}
+      <div className="shade" />
+      <div className="collection-over">
         <div className="card-title">
           <Gem aria-hidden="true" /> Collection <ArrowUpRight aria-hidden="true" />
           <span className="spacer" />
-          {counts.source === "cache" && <span className="chip">dernier inventaire</span>}
+          {vue?.source === "cache" && <span className="chip">dernier inventaire</span>}
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--fs-xs)" }}>
-          <span className="muted">Skins possédés</span>
-          <span className="num">
-            <b>{counts.owned}</b> / {counts.total}
-          </span>
-        </div>
-        <div className="progress" role="progressbar" aria-valuenow={counts.owned} aria-valuemax={counts.total} aria-label="Progression de collection">
-          <span style={{ width: `${counts.total ? (counts.owned / counts.total) * 100 : 0}%` }} />
-        </div>
+
+        {vue ? (
+          <>
+            {vue.vedettes.length > 0 && (
+              <ul className="skin-strip">
+                {vue.vedettes.map((v) => (
+                  <li key={v.id} title={v.name}>
+                    <RemoteImg src={championLoading(v.key, v.num)} alt={v.name} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--fs-xs)" }}>
+              <span className="muted">Skins possédés</span>
+              <span className="num">
+                <b>{vue.owned}</b> / {vue.total}
+              </span>
+            </div>
+            <div className="progress" role="progressbar" aria-valuenow={vue.owned} aria-valuemax={vue.total} aria-label="Progression de collection">
+              <span style={{ width: `${vue.total ? (vue.owned / vue.total) * 100 : 0}%` }} />
+            </div>
+          </>
+        ) : (
+          <div className="muted" style={{ fontSize: "var(--fs-xs)", lineHeight: 1.45 }}>
+            {inventory.data || inventory.error != null ? "Ouvre le client League pour lire tes skins." : "Lecture de ta collection…"}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -778,7 +808,7 @@ function RankCard({ ranks }: { ranks: DashPlayer["ranks"] }) {
           </div>
         )}
       </div>
-      {r && <RankCrest tier={r.tier} size={78} />}
+      {r && <RankCrest tier={r.tier} size={132} />}
     </section>
   );
 }
