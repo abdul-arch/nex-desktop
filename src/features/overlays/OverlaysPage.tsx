@@ -35,6 +35,7 @@ interface ModuleDef {
  *  enregistrés restent valides. */
 const MODULES: ModuleDef[] = [
   { id: "objectives", phase: "En jeu", name: WIDGET_INFO.objectives.name, summary: WIDGET_INFO.objectives.summary, icon: Flag },
+  { id: "inhibs", phase: "En jeu", name: WIDGET_INFO.inhibs.name, summary: WIDGET_INFO.inhibs.summary, icon: Flag },
   { id: "clock", phase: "En jeu", name: WIDGET_INFO.clock.name, summary: WIDGET_INFO.clock.summary, icon: Clock3 },
   { id: "build", phase: "En jeu", name: WIDGET_INFO.build.name, summary: WIDGET_INFO.build.summary, icon: Swords },
   { id: "skills", phase: "En jeu", name: WIDGET_INFO.skills.name, summary: WIDGET_INFO.skills.summary, icon: Sparkles },
@@ -76,6 +77,7 @@ const FRAMING: Record<ModuleId, string> = {
   trinket: "78% 76%",
   counters: "62% 18%",
   runes: "20% 45%",
+  inhibs: "70% 30%",
   loading: "50% 30%",
   mayhem: "30% 55%",
 };

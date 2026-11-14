@@ -154,6 +154,19 @@ html.overlay-root #root {
   color: var(--ov-sub, var(--muted));
 }
 
+/* Inhibiteurs : la voie et le cote, puis le minuteur. */
+.ov-inhib-blue {
+  color: #7db5f0;
+}
+.ov-inhib-red {
+  color: #f08f8f;
+}
+.ov-inhib-side {
+  font-style: normal;
+  color: var(--ov-sub, var(--muted));
+  font-size: 10px;
+}
+
 /* Runes et build : une ligne par famille, intitule a gauche, icones a droite. */
 .ov-rb-row {
   display: flex;

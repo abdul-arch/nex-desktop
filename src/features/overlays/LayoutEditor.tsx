@@ -11,6 +11,7 @@ const SIZE: Record<WidgetId, [number, number]> = {
   gold: [200, 30],
   counters: [210, 104],
   runes: [196, 116],
+  inhibs: [190, 60],
   winprob: [180, 74],
   clock: [190, 92],
   objectives: [190, 56],

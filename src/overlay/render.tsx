@@ -16,6 +16,7 @@ import type { Suggestion } from "../features/matchups/draftLogic";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const OBJ_NAMES: Record<string, string> = { dragon: "Dragon", elder: "Dragon ancestral", baron: "Baron Nashor" };
+const LANE_FR: Record<string, string> = { top: "Haut", mid: "Milieu", bot: "Bas" };
 
 export interface WidgetInputs {
   snap: LiveSnapshot | null;
@@ -42,14 +43,19 @@ export interface WidgetInputs {
 
 /** Rendu d'un widget. `null` signifie vraiment « rien a afficher ». */
 /** Modules qui n'ont de sens qu'une fois la partie lancee. */
-const IN_GAME: WidgetId[] = ["gold", "winprob", "clock", "objectives", "build", "skills", "trinket"];
+const IN_GAME: WidgetId[] = ["gold", "winprob", "clock", "objectives", "inhibs", "build", "skills", "trinket"];
+/** Modules qui n'ont de sens que pendant la selection des champions. */
+const DRAFT_ONLY: WidgetId[] = ["counters", "runes"];
 
 export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
   const { snap, gameTime, catalog, version, keys, build, spells, grid, config, counters } = i;
-  // Hors partie et hors configuration, un widget de partie ne s'affiche pas du tout :
-  // « En attente de partie » par-dessus la selection des champions n'apprendrait rien et
-  // encombrerait l'ecran.
-  if (!snap && !config && IN_GAME.includes(id)) return null;
+  // Chaque module est borne a la phase ou il a un sens : un widget de partie ne
+  // s'affiche pas pendant la selection, un module de selection ne s'affiche pas une fois
+  // la partie lancee. « Toujours » veut dire « toute la phase », pas « tout le temps ».
+  if (!config) {
+    if (!snap && IN_GAME.includes(id)) return null;
+    if (snap && DRAFT_ONLY.includes(id)) return null;
+  }
   const me = snap?.players.find((p) => p.isActive) ?? null;
   const shut = i.onClose ? () => i.onClose!(id) : undefined;
   switch (id) {
@@ -102,6 +108,29 @@ export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
       return BuildWidget({ build, owned: me?.items ?? [], catalog, version, live: !!snap, config, onClose: shut });
     case "skills":
       return SkillWidget({ snap, build, keys, config, onClose: shut, championKey: me?.championKey ?? null, version, spells });
+    case "inhibs": {
+      const list = snap?.inhibs ?? [];
+      if (list.length === 0)
+        return config ? (
+          <Widget title="Inhibiteurs" onClose={shut}>
+            <span className="ov-wait">Aucun inhibiteur détruit</span>
+          </Widget>
+        ) : null;
+      return (
+        <Widget title="Inhibiteurs" onClose={shut}>
+          {list.map((x) => (
+            <div key={x.raw} className="ov-row">
+              {/* Voie inconnue : on montre l'identifiant publie plutot qu'une voie fausse. */}
+              <span className={x.team === 1 ? "ov-inhib-blue" : x.team === 2 ? "ov-inhib-red" : ""}>
+                {LANE_FR[x.lane] ?? x.raw}
+                {x.team > 0 && <em className="ov-inhib-side">{x.team === 1 ? " bleu" : " rouge"}</em>}
+              </span>
+              <b className="num">{gameTime === null ? "—" : mmss(Math.max(0, x.nextSpawn - gameTime))}</b>
+            </div>
+          ))}
+        </Widget>
+      );
+    }
     case "runes":
       return RunesWidget({ build, catalog, version, keys, config, onClose: shut });
     case "counters":

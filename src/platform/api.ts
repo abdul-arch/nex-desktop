@@ -375,6 +375,16 @@ export interface ObjectiveTimer {
   source: "event" | "first_spawn";
 }
 
+/** Inhibiteur detruit et sa reapparition (miroir de InhibTimerDto). */
+export interface InhibTimerDto {
+  /** "top" | "mid" | "bot", ou "" si l'identifiant publié n'est pas reconnu. */
+  lane: string;
+  /** 1 = équipe bleue, 2 = rouge, 0 si inconnu. */
+  team: number;
+  nextSpawn: number;
+  raw: string;
+}
+
 export interface LiveSnapshot {
   gameTime: number;
   gameMode: string;
@@ -384,6 +394,7 @@ export interface LiveSnapshot {
   currentGold: number;
   players: LivePlayer[];
   objectives: ObjectiveTimer[];
+  inhibs: InhibTimerDto[];
 }
 
 /** Une case de la grille « probabilite de victoire » (miroir de WinProbCellDto). */
@@ -447,7 +458,7 @@ export interface LoadingRosterDto {
   players: LoadingPlayerDto[];
 }
 
-export type WidgetId = "gold" | "winprob" | "clock" | "objectives" | "build" | "skills" | "trinket" | "counters" | "runes";
+export type WidgetId = "gold" | "winprob" | "clock" | "objectives" | "build" | "skills" | "trinket" | "counters" | "runes" | "inhibs";
 
 export interface WidgetLayout {
   id: WidgetId;

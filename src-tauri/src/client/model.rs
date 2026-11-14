@@ -1,6 +1,6 @@
 //! Modeles normalises du client local et de la partie en direct (fonctions pures, testees).
 
-use nex_domain::api::{LoadingPlayerDto, LoadingRosterDto};
+use nex_domain::api::{InhibTimerDto, LoadingPlayerDto, LoadingRosterDto};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -234,6 +234,8 @@ pub struct LiveSnapshot {
     pub current_gold: f64,
     pub players: Vec<LivePlayer>,
     pub objectives: Vec<ObjectiveTimer>,
+    /// Inhibiteurs detruits, sur la Faille uniquement.
+    pub inhibs: Vec<InhibTimerDto>,
     /// Moments de la partie concernant le joueur (marqueurs et clips automatiques).
     pub highlights: Vec<Highlight>,
 }
@@ -310,6 +312,80 @@ pub const DRAGON_FIRST_SPAWN: f64 = 300.0;
 pub const DRAGON_RESPAWN: f64 = 300.0;
 pub const ELDER_RESPAWN: f64 = 360.0;
 pub const BARON_RESPAWN: f64 = 360.0;
+
+/// Reapparition d'un inhibiteur, en secondes.
+pub const INHIB_RESPAWN: f64 = 300.0;
+
+/// Identifiant d'inhibiteur publie par le jeu, par exemple « Barracks_T1_C1 ».
+///
+/// POURQUOI UNE RECHERCHE TOLERANTE : la forme exacte du message n'a pas pu etre observee
+/// sur une vraie partie au moment d'ecrire ceci. Plutot que de parier sur un nom de champ,
+/// on prend la premiere valeur textuelle de l'evenement qui ressemble a un identifiant de
+/// batiment. Si Riot nomme le champ autrement, la lecture continue de fonctionner.
+fn barracks_id(e: &Value) -> Option<String> {
+    let obj = e.as_object()?;
+    for key in ["InhibKilled", "InhibRespawned", "InhibRespawningSoon"] {
+        if let Some(v) = obj.get(key).and_then(Value::as_str) {
+            if !v.is_empty() {
+                return Some(v.to_string());
+            }
+        }
+    }
+    obj.values().filter_map(Value::as_str).find(|v| v.starts_with("Barracks_")).map(str::to_string)
+}
+
+/// « Barracks_T1_C1 » -> (equipe, voie). Les deux sont rendus vides quand l'identifiant ne
+/// suit pas la forme attendue : mieux vaut afficher l'identifiant brut qu'une voie fausse.
+fn barracks_parts(id: &str) -> (u8, &'static str) {
+    let team = if id.contains("_T1_") {
+        1
+    } else if id.contains("_T2_") {
+        2
+    } else {
+        0
+    };
+    let lane = match id.split('_').nth(2).and_then(|p| p.chars().next()) {
+        Some('L') => "top",
+        Some('C') => "mid",
+        Some('R') => "bot",
+        _ => "",
+    };
+    (team, lane)
+}
+
+/// Inhibiteurs detruits et pas encore reapparus.
+///
+/// Un `InhibRespawned` efface le minuteur : on prefere l'annonce du jeu au calcul, et la
+/// duree de reapparition ne sert que tant qu'elle n'est pas contredite.
+pub fn inhib_timers(events: &[Value], game_time: f64) -> Vec<InhibTimerDto> {
+    let mut down: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+    for e in events {
+        let t = e.get("EventTime").and_then(Value::as_f64).unwrap_or(0.0);
+        let Some(id) = barracks_id(e) else { continue };
+        match e.get("EventName").and_then(Value::as_str) {
+            Some("InhibKilled") => {
+                down.insert(id, t);
+            }
+            Some("InhibRespawned") => {
+                down.remove(&id);
+            }
+            _ => {}
+        }
+    }
+    let mut out: Vec<InhibTimerDto> = down
+        .into_iter()
+        .filter_map(|(id, t)| {
+            let next = t + INHIB_RESPAWN;
+            if next <= game_time {
+                return None;
+            }
+            let (team, lane) = barracks_parts(&id);
+            Some(InhibTimerDto { lane: lane.into(), team, next_spawn: next, raw: id })
+        })
+        .collect();
+    out.sort_by(|a, b| a.next_spawn.partial_cmp(&b.next_spawn).unwrap_or(std::cmp::Ordering::Equal));
+    out
+}
 
 /// Minuteurs uniquement verifiables : premier dragon (5:00) et reapparitions apres un
 /// evenement de mort annonce a tous les joueurs (DragonKill, BaronKill).
@@ -410,6 +486,8 @@ pub fn live_snapshot(all: &Value) -> Option<LiveSnapshot> {
         // Dragons et Baron n'existent que sur la Faille de l'invocateur (carte 11) : pas de
         // minuteur en ARAM / ARAM Mayhem (Abime hurlant, carte 12) ni dans les autres modes.
         objectives: if game.get("mapNumber").and_then(Value::as_u64) == Some(11) { objective_timers(&events, game_time) } else { Vec::new() },
+        // Les inhibiteurs n'existent que sur la Faille, comme les dragons.
+        inhibs: if game.get("mapNumber").and_then(Value::as_u64) == Some(11) { inhib_timers(&events, game_time) } else { Vec::new() },
     })
 }
 
@@ -562,5 +640,44 @@ mod tests {
         assert_eq!(r.queue_id, 0);
         assert_eq!(r.players[0].champion_id, None);
         assert!(!r.players[0].is_me);
+    }
+
+    #[test]
+    fn inhib_forme_documentee() {
+        let ev = vec![json!({"EventName": "InhibKilled", "EventTime": 900.0, "InhibKilled": "Barracks_T2_L1"})];
+        let t = inhib_timers(&ev, 1000.0);
+        assert_eq!(t.len(), 1);
+        assert_eq!(t[0].team, 2);
+        assert_eq!(t[0].lane, "top");
+        assert_eq!(t[0].next_spawn, 1200.0);
+        assert_eq!(t[0].raw, "Barracks_T2_L1");
+    }
+
+    #[test]
+    fn inhib_champ_nomme_autrement() {
+        // Si Riot nomme le champ autrement, l'identifiant reste trouve par sa forme.
+        let ev = vec![json!({"EventName": "InhibKilled", "EventTime": 600.0, "BuildingName": "Barracks_T1_C1"})];
+        let t = inhib_timers(&ev, 700.0);
+        assert_eq!(t.len(), 1);
+        assert_eq!((t[0].team, t[0].lane.as_str()), (1, "mid"));
+    }
+
+    #[test]
+    fn inhib_reapparu_efface_le_minuteur() {
+        let ev = vec![
+            json!({"EventName": "InhibKilled", "EventTime": 600.0, "InhibKilled": "Barracks_T1_R1"}),
+            json!({"EventName": "InhibRespawned", "EventTime": 880.0, "InhibRespawned": "Barracks_T1_R1"}),
+        ];
+        assert!(inhib_timers(&ev, 900.0).is_empty(), "l'annonce du jeu prime sur le calcul");
+    }
+
+    #[test]
+    fn inhib_expire_et_identifiant_inconnu() {
+        let vieux = vec![json!({"EventName": "InhibKilled", "EventTime": 100.0, "InhibKilled": "Barracks_T1_C1"})];
+        assert!(inhib_timers(&vieux, 500.0).is_empty(), "reapparu depuis longtemps");
+        let bizarre = vec![json!({"EventName": "InhibKilled", "EventTime": 600.0, "InhibKilled": "Barracks_X9"})];
+        let t = inhib_timers(&bizarre, 700.0);
+        // Ni equipe ni voie reconnues : l'identifiant brut reste affichable.
+        assert_eq!((t[0].team, t[0].lane.as_str(), t[0].raw.as_str()), (0, "", "Barracks_X9"));
     }
 }

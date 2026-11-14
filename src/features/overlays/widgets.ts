@@ -53,6 +53,16 @@ export const WIDGET_INFO: Record<
     missing:
       "Rien tant que ton champion n'est pas choisi, ou si le champion n'a pas assez de parties collectées à ce poste. L'overlay n'importe rien dans le client : l'import reste dans la page Builds, déclenché par toi.",
   },
+  inhibs: {
+    name: "Timers d'inhibiteurs",
+    summary: "Quand les inhibiteurs détruits réapparaissent.",
+    source: "Live Client Data (événements InhibKilled et InhibRespawned, annoncés à tous)",
+    frequency: "Recalculé à chaque instantané",
+    transform:
+      "Réapparition cinq minutes après la destruction. Une annonce de réapparition par le jeu efface le minuteur : l'annonce prime sur le calcul.",
+    missing:
+      "Rien tant qu'aucun inhibiteur n'est tombé, et hors Faille. Si l'identifiant publié n'est pas reconnu, il est affiché tel quel plutôt que rattaché à une voie incertaine.",
+  },
   clock: {
     name: "Chronomètre et stats",
     summary: "Ton CS et ton KDA sans ouvrir le tableau des scores.",

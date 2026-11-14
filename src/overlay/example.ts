@@ -69,6 +69,8 @@ export const EXAMPLE_SNAPSHOT: LiveSnapshot = {
     { kind: "dragon", nextSpawn: 1000, source: "event" },
     { kind: "baron", nextSpawn: 1200, source: "first_spawn" },
   ],
+  // Un inhibiteur adverse tombe : l'apercu montre le minuteur plutot qu'une case vide.
+  inhibs: [{ lane: "bot", team: 2, nextSpawn: 1120, raw: "Barracks_T2_R1" }],
 };
 
 const scope = { patch: "all", platform: "all", queueId: 420, tier: "all", matches: 0 };

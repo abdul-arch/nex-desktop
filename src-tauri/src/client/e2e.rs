@@ -8,6 +8,7 @@
 //!   (avec `$env:NEX_DO_SPECTATE="1"` : ouvre reellement la partie d'un ami en spectateur)
 //! - `cargo test -p nex --lib -- --ignored live_probe --nocapture` (jeu en cours requis)
 //! - `cargo test -p nex --lib -- --ignored gameflow_probe --nocapture`
+//! - `cargo test -p nex --lib -- --ignored inhib_probe --nocapture` (jeu en cours requis)
 
 use crate::adapters::lcu::{Lcu, find_install_dir, paths, pinned_client, read_credentials};
 use serde_json::Value;
@@ -372,5 +373,42 @@ async fn gameflow_probe() {
                 }
             }
         }
+    }
+}
+
+/// Forme reelle des evenements de batiment, a lancer pendant une partie.
+///
+/// Le parseur d'inhibiteurs a ete ecrit sans avoir pu observer ces messages : il cherche
+/// l'identifiant par plusieurs noms de champ, puis par sa forme. Cette sonde affiche ce
+/// que le jeu publie vraiment, pour confirmer ou corriger ce choix. Aucun pseudo n'est
+/// imprime : seuls les noms de champs et les identifiants de batiment.
+#[tokio::test]
+#[ignore]
+async fn inhib_probe() {
+    let http = pinned_client(Duration::from_secs(4)).unwrap();
+    let all = crate::adapters::lcu::live_all(&http).await.expect("Live Client Data indisponible");
+    let events = all.get("events").and_then(|e| e.get("Events")).and_then(Value::as_array).cloned().unwrap_or_default();
+    println!("{} evenement(s) dans la partie", events.len());
+    let mut vus = 0;
+    for e in &events {
+        let name = e.get("EventName").and_then(Value::as_str).unwrap_or("");
+        if !name.starts_with("Inhib") && name != "TurretKilled" {
+            continue;
+        }
+        vus += 1;
+        let mut champs: Vec<String> = e
+            .as_object()
+            .map(|o| {
+                o.iter()
+                    .filter(|(k, _)| k.as_str() != "Assisters" && k.as_str() != "KillerName" && k.as_str() != "VictimName")
+                    .map(|(k, v)| format!("{k}={}", v.to_string().chars().take(40).collect::<String>()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        champs.sort();
+        println!("  {name} : {champs:?}");
+    }
+    if vus == 0 {
+        println!("aucun evenement de batiment pour l'instant : relance la sonde apres une tourelle ou un inhibiteur");
     }
 }

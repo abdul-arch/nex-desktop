@@ -264,6 +264,21 @@ pub struct StatsScopeDto {
     pub matches: u32,
 }
 
+/// Inhibiteur detruit et sa reapparition. `lane` et `team` sont deduits de l'identifiant
+/// publie par le jeu ; `raw` le conserve tel quel pour qu'une forme inattendue reste
+/// visible plutot que silencieusement mal interpretee.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct InhibTimerDto {
+    /// "top" | "mid" | "bot" | "" si l'identifiant n'est pas reconnu.
+    pub lane: String,
+    /// 1 = equipe bleue, 2 = equipe rouge, 0 si inconnu.
+    pub team: u8,
+    /// Temps de jeu, en secondes, de la reapparition.
+    pub next_spawn: f64,
+    pub raw: String,
+}
+
 /// Un pseudo propose pendant la frappe, vu dans les parties collectees.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]

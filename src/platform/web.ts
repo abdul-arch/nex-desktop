@@ -149,6 +149,7 @@ const defaultOverlayLayout = (): WidgetLayout[] => [
   { id: "gold", x: 0.4, y: 0.015, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "winprob", x: 0.01, y: 0.18, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "clock", x: 0.01, y: 0.35, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "inhibs", x: 0.44, y: 0.2, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "objectives", x: 0.44, y: 0.08, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "build", x: 0.8, y: 0.3, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "skills", x: 0.01, y: 0.62, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
