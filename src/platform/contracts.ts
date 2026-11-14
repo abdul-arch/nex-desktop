@@ -57,6 +57,7 @@ export interface Settings {
   linkedPlatform: string;
   favoriteChampions: number[];
   overlayAuto: boolean;
+  overlayLoading: boolean;
   replaySeconds: number;
   replayMaxMib: number;
   recordFullGames: boolean;
@@ -229,6 +230,7 @@ export const DEFAULT_SETTINGS: Settings = {
   linkedPlatform: "EUW1",
   favoriteChampions: [],
   overlayAuto: true,
+  overlayLoading: true,
   replaySeconds: 120,
   replayMaxMib: 512,
   recordFullGames: false,

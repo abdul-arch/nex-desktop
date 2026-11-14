@@ -636,6 +636,242 @@ html.overlay-root #root {
   font-size: var(--fs-xs);
 }
 
+/* ---------- Page Overlays : en-tete, colonne de modules, panneau ---------- */
+.ovx {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.ovx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+}
+.ovx-head-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ovx-head .page-title {
+  margin: 0;
+}
+/* Etat du client : toujours affiche, meme quand il n'y a pas de partie. */
+.ovx-stage {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.ovx-stage.live {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.ovx-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ovx-help {
+  display: grid;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.ovx-help p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Deux colonnes : modules a gauche, module selectionne a droite. */
+.ovx-body {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.ovx-nav {
+  padding: 8px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.ovx-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 6px 6px;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.ovx-count {
+  text-transform: none;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+/* L'interrupteur et la selection sont deux cibles distinctes : activer un module ne doit
+   pas faire changer de panneau. */
+.ovx-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 6px 2px 4px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+}
+.ovx-row:hover {
+  background: var(--panel-2);
+}
+.ovx-row.selected {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+}
+.ovx-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 4px;
+  background: none;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.ovx-row-main svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--dim);
+}
+.ovx-row.selected .ovx-row-main svg {
+  color: var(--accent-strong);
+}
+.ovx-row-main > span {
+  display: grid;
+  min-width: 0;
+}
+.ovx-row-main b {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ovx-row-main em {
+  font-style: normal;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ovx-main {
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.ovx-main-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ovx-main-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+.ovx-main-head p {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+}
+
+/* Grand apercu : le widget reel, pose sur un fond de jeu assombri. */
+.ovx-preview {
+  position: relative;
+  height: 260px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #11141b;
+  display: grid;
+  place-items: center;
+}
+.ovx-preview-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ovx-preview-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 9, 12, 0.55);
+}
+.ovx-preview-inner {
+  position: relative;
+  pointer-events: none;
+}
+.ovx-preview .ov-card-tag {
+  z-index: 2;
+}
+
+.ovx-settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.ovx-fields {
+  display: grid;
+  gap: 10px;
+}
+.ovx-note {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+.ovx-source {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.ovx-source summary {
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.ov-switch.sm i {
+  width: 30px;
+  height: 17px;
+}
+.ov-switch.sm i::after {
+  width: 11px;
+  height: 11px;
+}
+.ov-switch.sm input:checked + i::after {
+  transform: translateX(13px);
+}
+
+/* Fenetre etroite : une seule colonne, rien d'ecrase ni de defilement horizontal. */
+@media (max-width: 1100px) {
+  .ovx-body,
+  .ovx-settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Action principale : placer les widgets sur le jeu, pas dans la miniature. */
 .ov-place {
   display: flex;
