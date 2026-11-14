@@ -1,4 +1,4 @@
-import { ArrowUpRight, ChevronRight, Film, Gem, House, LayoutGrid, Link2, Sparkles, Star } from "lucide-react";
+import { ArrowUpRight, ChevronRight, Film, Gem, House, LayoutGrid, Link2, Monitor, Sparkles, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
@@ -424,14 +424,69 @@ function DashboardView({
 }
 
 /**
- * Rangee « medias » du compte reel : derniere partie enregistree et clips recents
- * (enregistrements locaux). Aucune donnee d'exemple. Les amis en partie restent sur la
- * page Spectate ; leur carte d'accueil a cede la place au bloc « Streamers en direct ».
+ * Rangee « medias » du compte reel : les amis dont la partie peut etre regardee, la
+ * derniere partie enregistree et les clips recents. Aucune donnee d'exemple.
+ *
+ * La maquette de reference met ici une partie professionnelle en cours. NEX ne peut pas :
+ * son backend tourne sur la machine du joueur avec sa cle, et savoir qu'un pro joue
+ * demande un appel `/v1/live` par compte — le quota est de cent requetes par deux minutes,
+ * partage avec le collecteur. Les amis en partie tiennent le meme role (quelqu'un joue
+ * maintenant, on peut regarder) et ne coutent aucune requete Riot : la liste vient du
+ * client League installe.
  */
+/** Amis dont la partie peut etre regardee, lus dans le client League. Aucune requete Riot :
+ *  meme cle de cache que la page Spectate, donc une seule lecture pour les deux. */
+function LiveFriendsCard({ friends }: { friends: string[] }) {
+  const { navigate } = useNav();
+  const [lance, setLance] = useState<string | null>(null);
+  return (
+    <section className="card card-pad friends-card" aria-label="Amis en partie">
+      <div className="card-title">
+        <Monitor aria-hidden="true" /> Amis en partie
+        <span className="spacer" />
+        <span className="chip num">{friends.length}</span>
+      </div>
+      <ul className="friends-list">
+        {friends.slice(0, 3).map((riotId) => (
+          <li key={riotId}>
+            <span className="friend-name" title={riotId}>
+              {riotId.split("#")[0]}
+            </span>
+            {/* Le client n'est sollicite que sur ce clic : rien n'est lance tout seul. */}
+            <button
+              type="button"
+              className="chip chip-accent"
+              onClick={() => {
+                setLance(riotId);
+                void platform.spectate(riotId).finally(() => setLance(null));
+              }}
+              disabled={lance === riotId}
+            >
+              {lance === riotId ? "Ouverture…" : "Regarder"}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {friends.length > 3 && (
+        <button className="see-all" onClick={() => navigate("spectate")}>
+          Les {friends.length} sur la page Spectate <ChevronRight size={11} style={{ verticalAlign: -1 }} />
+        </button>
+      )}
+    </section>
+  );
+}
+
 function MediaRow() {
   const { navigate } = useNav();
   const version = useDDragonVersion();
   const desktop = platform.capabilities.kind === "desktop";
+  // Amis observables : lecture du client League, aucune requete Riot. Meme cle que la
+  // page Spectate, donc les deux pages partagent la meme lecture.
+  const client = useClient();
+  const clientUp = platform.capabilities.localClient && client.state?.status === "connected";
+  const friendsQ = useAsync<string[]>(clientUp ? "observable-friends" : null, () => platform.observableFriends(), 30_000);
+  const friends = friendsQ.data ?? [];
+  const carteAmis = friends.length > 0 ? <LiveFriendsCard friends={friends} /> : null;
   const recs = useAsync<Recording[]>(desktop ? "recordings-list" : null, () => platform.recordingsList(), 30_000);
   const reloadRecs = recs.reload;
   useEffect(() => {
@@ -449,7 +504,9 @@ function MediaRow() {
   // L'information reste, la place revient aux cartes qui ont toujours quelque chose a dire.
   if (!lastFull && clips.length === 0) {
     return (
-      <button className="card media-strip" onClick={toRecordings}>
+      <>
+        {carteAmis}
+        <button className="card media-strip" onClick={toRecordings}>
         <Film aria-hidden="true" />
         <span>
           {!desktop
@@ -459,13 +516,16 @@ function MediaRow() {
               : "Lecture de tes enregistrements…"}
         </span>
         <span className="spacer" />
-        {desktop && recs.data && <span className="chip">Activer</span>}
-      </button>
+          {desktop && recs.data && <span className="chip">Activer</span>}
+        </button>
+      </>
     );
   }
 
+  // Trois colonnes quand un ami joue, deux sinon : une carte vide ne tient pas sa place.
   return (
-    <div className="row-media two">
+    <div className={carteAmis ? "row-media" : "row-media two"}>
+      {carteAmis}
       {lastFull ? (
         <button className="card card-link media-card full-card" onClick={toRecordings} aria-label={`Ouvrir l'enregistrement ${lastFull.title}`}>
           {lastFull.thumb ? (
