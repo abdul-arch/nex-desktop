@@ -1,4 +1,4 @@
-import { ArrowUpRight, Clock, Search, Star, Swords, User } from "lucide-react";
+import { ArrowUpRight, Clock, Search, Star, Swords, Trophy, User } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "../app/AppState";
 import { useNav } from "../app/navigation";
@@ -10,6 +10,7 @@ import type { NameHitDto } from "../platform/api";
 type Item =
   | { kind: "player"; riotId: string; platform: string; label: string; meta: string; icon: "user" | "recent" | "fav" | "seen" }
   | { kind: "champion"; key: string; label: string; meta: string }
+  | { kind: "team"; name: string; label: string; meta: string }
   | { kind: "route"; route: RouteId; label: string; meta: string };
 
 /** Longueur minimale avant d'interroger le backend, et delai apres la derniere frappe. */
@@ -24,6 +25,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   // apres une pause de frappe pour ne pas lancer une requete par caractere.
   const [champions, setChampions] = useState<{ key: string; name: string }[]>([]);
   const [hits, setHits] = useState<NameHitDto[]>([]);
+  // Equipes esport : liste Leaguepedia, mise en cache 24 h par le backend.
+  const [teams, setTeams] = useState<{ name: string; league: string }[]>([]);
   const [plat, setPlat] = useState(settings.defaultPlatform);
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +54,14 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       .then((c) => setChampions(Object.values(c.champions).map((x: { key: string; name: string }) => ({ key: x.key, name: x.name }))))
       .catch(() => {});
   }, [open, champions.length]);
+
+  useEffect(() => {
+    if (!open || teams.length) return;
+    platform
+      .proTeams()
+      .then((p) => setTeams(p.teams.map((t) => ({ name: t.name, league: t.league }))))
+      .catch(() => {});
+  }, [open, teams.length]);
 
   useEffect(() => {
     const q = query.trim();
@@ -88,6 +99,9 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     for (const c of champions.filter((c) => q && c.name.toLowerCase().startsWith(q)).slice(0, 3)) {
       out.push({ kind: "champion", key: c.key, label: c.name, meta: "Champion" });
     }
+    for (const t of teams.filter((t) => q && t.name.toLowerCase().includes(q)).slice(0, 3)) {
+      out.push({ kind: "team", name: t.name, label: t.name, meta: t.league });
+    }
     // Pseudos croises dans les parties collectees. Les doublons des listes locales
     // ci-dessus sont ecartes : la meme ligne deux fois n'apprend rien.
     const already = new Set(out.flatMap((i) => (i.kind === "player" ? [i.riotId.toLowerCase()] : [])));
@@ -100,7 +114,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       out.push({ kind: "route", route: r.id, label: r.label, meta: "Page" });
     }
     return out;
-  }, [query, plat, favorites, recent, champions, hits]);
+  }, [query, plat, favorites, recent, champions, teams, hits]);
 
   useEffect(() => setActive(0), [query]);
 
@@ -115,6 +129,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     }
     if (item.kind === "champion") {
       navigate("champions", { champion: item.key });
+      onClose();
+      return;
+    }
+    if (item.kind === "team") {
+      navigate("leaderboards", { team: item.name });
       onClose();
       return;
     }
@@ -165,6 +184,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const groups: { title: string; filter: (i: Item) => boolean; clear?: () => void }[] = [
     { title: "Joueur", filter: (i) => i.kind === "player" && i.icon === "user" },
     { title: "Champions", filter: (i) => i.kind === "champion" },
+    { title: "Équipes", filter: (i) => i.kind === "team" },
     { title: "Favoris", filter: (i) => i.kind === "player" && i.icon === "fav" },
     { title: "Recherches récentes", filter: (i) => i.kind === "player" && i.icon === "recent", clear: () => void clearRecent() },
     // Le titre dit d'ou viennent ces noms : seuls les joueurs croises dans les parties
@@ -236,6 +256,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                       <ArrowUpRight aria-hidden="true" />
                     ) : it.kind === "champion" ? (
                       <Swords aria-hidden="true" />
+                    ) : it.kind === "team" ? (
+                      <Trophy aria-hidden="true" />
                     ) : it.icon === "fav" ? (
                       <Star aria-hidden="true" />
                     ) : it.icon === "recent" ? (

@@ -68,6 +68,7 @@ const proKey = (plat: string, gameName: string, tagLine: string) => `${plat}:${`
 
 export function LeaderboardsPage() {
   const { settings } = useAppState();
+  const { location } = useNav();
   const [tab, setTab] = useState<Tab>(saved.tab);
   const [plat, setPlat] = useState(saved.plat || (settings.linkedRiotId ? settings.linkedPlatform : settings.defaultPlatform));
   useEffect(() => {
@@ -93,6 +94,14 @@ export function LeaderboardsPage() {
   useEffect(() => {
     saved.team = team;
   }, [team]);
+  // Equipe demandee par la navigation (recherche globale). Le tableau d'equipe n'existe
+  // que sur un onglet classe : on y revient si l'onglet courant ne le permet pas.
+  const paramTeam = location.params?.team;
+  useEffect(() => {
+    if (!paramTeam) return;
+    setTeam(paramTeam);
+    setTab((t) => (t === "solo" || t === "flex" ? t : "solo"));
+  }, [paramTeam]);
   const proIndex = useMemo(() => buildProIndex(pros.data), [pros.data]);
   const openTeam = pros.data?.teams.find((t) => t.name === team) ?? null;
   const ranked = tab === "solo" || tab === "flex";
