@@ -82,11 +82,11 @@ Tauri 2 · Rust · React · TypeScript · SQLite.
 | --- | --- |
 | Installer les dépendances | `npm install` |
 | Lancer le backend NEX (clé dans `backend/.env`) | `npm run backend` |
-| Préparer le backend embarqué (avant `tauri build`) | `scripts/build-sidecar.ps1` |
+| Préparer le backend embarqué seul (rarement utile) | `npm run sidecar` |
 | Lancer l'app en développement | `npm run tauri dev` |
 | Typage + tests TS + tests Rust (workspace) | `npm run check` |
 | Exécutable release (sans installateur) | `npx tauri build --no-bundle` |
-| Installateur Windows (NSIS, non signé) | `npx tauri build` |
+| Installateur Windows (NSIS, non signé) | `npm run tauri build` |
 | Mesurer la mémoire de NEX en cours d'exécution | `npm run measure` |
 | Audit des dépendances (npm + RustSec, nécessite `cargo install cargo-audit`) | `npm run audit` |
 
@@ -102,10 +102,13 @@ chose écoute déjà sur le port, elle n'y touche pas** : un backend lancé à l
 développement garde la main, et sa propre base.
 
 `scripts/build-sidecar.ps1` compile le backend et le dépose sous
-`src-tauri/binaries/nex-backend-<triple>.exe`, où Tauri l'attend. **À lancer avant
-`npx tauri build` dès que le backend change** : sans ce fichier, la compilation de
-l'application échoue, et avec un fichier périmé l'installateur embarquerait un ancien
-backend.
+`src-tauri/binaries/nex-backend-<triple>.exe`, où Tauri l'attend. **Il part tout seul** :
+le `beforeBuildCommand` de `tauri.conf.json` pointe sur `npm run build:app`, qui enchaîne
+le sidecar puis le frontend.
+
+Ce fut longtemps un geste manuel, et son oubli ne se voyait pas : l'installateur embarquait
+un backend périmé, l'application se lançait normalement et affichait seulement des champs
+vides, ce qui se lit comme un bug du code. Ne pas revenir à un appel séparé.
 
 Le backend embarqué range sa base dans `%LOCALAPPDATA%\gg.nex.desktop` — pas dans
 `Roaming`, les parties collectées pesant plusieurs centaines de mégaoctets. C'est une base

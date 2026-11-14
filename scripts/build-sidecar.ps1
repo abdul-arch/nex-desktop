@@ -1,5 +1,9 @@
 # Compile le backend NEX et le place la ou Tauri l'attend pour l'embarquer.
-# A lancer avant `npx tauri build` des que le backend change.
+#
+# Lance automatiquement par `npm run tauri build`, via le beforeBuildCommand qui pointe sur
+# `npm run build:app` (sidecar puis frontend). Ne pas revenir a un appel manuel : l'oubli
+# est invisible, l'installeur embarque alors un backend perime et l'application se lance
+# normalement en affichant seulement des champs vides.
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root

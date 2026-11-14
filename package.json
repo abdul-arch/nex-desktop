@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "sidecar": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-sidecar.ps1",
+    "build:app": "npm run sidecar && npm run build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:rust": "cargo test --workspace",
