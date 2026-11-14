@@ -1,18 +1,29 @@
-import { ArrowUpRight, Clock, Search, Star, User } from "lucide-react";
+import { ArrowUpRight, Clock, Search, Star, Swords, User } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppState } from "../app/AppState";
 import { useNav } from "../app/navigation";
 import { ALL_ROUTES, type RouteId } from "../app/routes";
 import { PLATFORMS, parseRiotId, platformLabel } from "../domain/riotId";
+import { platform } from "../platform";
+import type { NameHitDto } from "../platform/api";
 
 type Item =
-  | { kind: "player"; riotId: string; platform: string; label: string; meta: string; icon: "user" | "recent" | "fav" }
+  | { kind: "player"; riotId: string; platform: string; label: string; meta: string; icon: "user" | "recent" | "fav" | "seen" }
+  | { kind: "champion"; key: string; label: string; meta: string }
   | { kind: "route"; route: RouteId; label: string; meta: string };
+
+/** Longueur minimale avant d'interroger le backend, et delai apres la derniere frappe. */
+const MIN_QUERY = 2;
+const DEBOUNCE_MS = 180;
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { recent, favorites, settings, pushRecent, clearRecent } = useAppState();
   const { navigate } = useNav();
   const [query, setQuery] = useState("");
+  // Champions : catalogue local, aucune latence. Joueurs : index du backend, interroge
+  // apres une pause de frappe pour ne pas lancer une requete par caractere.
+  const [champions, setChampions] = useState<{ key: string; name: string }[]>([]);
+  const [hits, setHits] = useState<NameHitDto[]>([]);
   const [plat, setPlat] = useState(settings.defaultPlatform);
   const [active, setActive] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +44,33 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     }
   }, [open, settings.defaultPlatform]);
 
+  useEffect(() => {
+    if (!open || champions.length) return;
+    platform
+      .staticCatalog()
+      .then((c) => setChampions(Object.values(c.champions).map((x: { key: string; name: string }) => ({ key: x.key, name: x.name }))))
+      .catch(() => {});
+  }, [open, champions.length]);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < MIN_QUERY || q.includes("#")) {
+      setHits([]);
+      return;
+    }
+    let alive = true;
+    const id = window.setTimeout(() => {
+      platform
+        .searchNames(q, 6)
+        .then((r) => alive && setHits(r))
+        .catch(() => alive && setHits([]));
+    }, DEBOUNCE_MS);
+    return () => {
+      alive = false;
+      window.clearTimeout(id);
+    };
+  }, [query]);
+
   const items = useMemo<Item[]>(() => {
     const q = query.trim().toLowerCase();
     const out: Item[] = [];
@@ -47,11 +85,22 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     for (const r of recent.filter(matchPlayer).slice(0, 6)) {
       out.push({ kind: "player", riotId: `${r.gameName}#${r.tagLine}`, platform: r.platform, label: `${r.gameName}#${r.tagLine}`, meta: platformLabel(r.platform), icon: "recent" });
     }
+    for (const c of champions.filter((c) => q && c.name.toLowerCase().startsWith(q)).slice(0, 3)) {
+      out.push({ kind: "champion", key: c.key, label: c.name, meta: "Champion" });
+    }
+    // Pseudos croises dans les parties collectees. Les doublons des listes locales
+    // ci-dessus sont ecartes : la meme ligne deux fois n'apprend rien.
+    const already = new Set(out.flatMap((i) => (i.kind === "player" ? [i.riotId.toLowerCase()] : [])));
+    for (const h of hits) {
+      const id = `${h.gameName}#${h.tagLine}`;
+      if (already.has(id.toLowerCase())) continue;
+      out.push({ kind: "player", riotId: id, platform: h.platform, label: id, meta: platformLabel(h.platform), icon: "seen" });
+    }
     for (const r of ALL_ROUTES.filter((r) => !q || r.label.toLowerCase().includes(q))) {
       out.push({ kind: "route", route: r.id, label: r.label, meta: "Page" });
     }
     return out;
-  }, [query, plat, favorites, recent]);
+  }, [query, plat, favorites, recent, champions, hits]);
 
   useEffect(() => setActive(0), [query]);
 
@@ -61,6 +110,11 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     if (!item) return;
     if (item.kind === "route") {
       navigate(item.route);
+      onClose();
+      return;
+    }
+    if (item.kind === "champion") {
+      navigate("champions", { champion: item.key });
       onClose();
       return;
     }
@@ -110,8 +164,12 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const groups: { title: string; filter: (i: Item) => boolean; clear?: () => void }[] = [
     { title: "Joueur", filter: (i) => i.kind === "player" && i.icon === "user" },
+    { title: "Champions", filter: (i) => i.kind === "champion" },
     { title: "Favoris", filter: (i) => i.kind === "player" && i.icon === "fav" },
     { title: "Recherches récentes", filter: (i) => i.kind === "player" && i.icon === "recent", clear: () => void clearRecent() },
+    // Le titre dit d'ou viennent ces noms : seuls les joueurs croises dans les parties
+    // collectees peuvent apparaitre, Riot n'offrant aucune recherche par prefixe.
+    { title: "Joueurs vus dans les parties collectées", filter: (i) => i.kind === "player" && i.icon === "seen" },
     { title: "Pages", filter: (i) => i.kind === "route" },
   ];
 
@@ -176,6 +234,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                   >
                     {it.kind === "route" ? (
                       <ArrowUpRight aria-hidden="true" />
+                    ) : it.kind === "champion" ? (
+                      <Swords aria-hidden="true" />
                     ) : it.icon === "fav" ? (
                       <Star aria-hidden="true" />
                     ) : it.icon === "recent" ? (

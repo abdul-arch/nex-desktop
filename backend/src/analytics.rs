@@ -80,6 +80,17 @@ CREATE TABLE IF NOT EXISTS a_bans (
     champion_id INTEGER NOT NULL,
     PRIMARY KEY (match_id, champion_id)
 );
+-- Pseudos croises dans les parties collectees. Ce sont des Riot ID publics, les memes
+-- que n'importe quel site de suivi affiche ; ils ne servent qu'a proposer des noms pendant
+-- la frappe. Aucune donnee de jeu n'y est attachee.
+CREATE TABLE IF NOT EXISTS a_names (
+    game_name TEXT    NOT NULL,
+    tag_line  TEXT    NOT NULL,
+    platform  TEXT    NOT NULL,
+    seen_at   INTEGER NOT NULL,
+    PRIMARY KEY (game_name, tag_line, platform)
+);
+CREATE INDEX IF NOT EXISTS a_names_prefix ON a_names(game_name COLLATE NOCASE, seen_at DESC);
 -- Issue observee par tranche de temps et d'ecart d'or. Table de comptage : une ligne
 -- par case, jamais une ligne par partie. Chaque partie observee y verse ses deux points
 -- de vue (equipe 100 avec l'ecart +d, equipe 200 avec -d), ce qui rend la table
@@ -193,6 +204,64 @@ pub fn backfill_winprob(conn: &Connection) -> BResult<u32> {
         done += 1;
     }
     Ok(done)
+}
+
+/// Rattrapage de l'index des pseudos depuis les parties encore en cache. Aucun appel a
+/// Riot. Idempotent par construction (la cle primaire est le Riot ID), mais le scan n'est
+/// lance que si l'index est vide : les parties deja ingerees n'ont pas alimente la table,
+/// qui n'existait pas encore.
+pub fn backfill_names(conn: &Connection) -> BResult<u32> {
+    let known: i64 = conn.query_row("SELECT COUNT(*) FROM a_names", [], |r| r.get(0))?;
+    if known > 0 {
+        return Ok(0);
+    }
+    let bodies: Vec<String> = conn
+        .prepare("SELECT body FROM cache WHERE key LIKE 'm:v%'")?
+        .query_map([], |r| r.get(0))?
+        .collect::<Result<_, _>>()?;
+    let tx = conn.unchecked_transaction()?;
+    let mut added = 0;
+    for body in bodies {
+        let Ok(m) = serde_json::from_str::<MatchDto>(&body) else { continue };
+        for p in &m.participants {
+            if p.game_name.is_empty() || p.tag_line.is_empty() {
+                continue;
+            }
+            tx.execute(
+                "INSERT INTO a_names (game_name, tag_line, platform, seen_at) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(game_name, tag_line, platform) DO UPDATE SET seen_at = max(seen_at, excluded.seen_at)",
+                params![p.game_name, p.tag_line, m.platform, m.started_at],
+            )?;
+            added += 1;
+        }
+    }
+    tx.commit()?;
+    Ok(added)
+}
+
+/// Pseudos commencant par `prefix`, les plus recemment vus d'abord.
+///
+/// LIMITE A DIRE A L'UTILISATEUR : ne sont proposes que les joueurs croises dans les
+/// parties que NEX a collectees. Riot n'offre aucune recherche de pseudo par prefixe ;
+/// un joueur jamais collecte ne peut donc pas apparaitre, et il faut taper son Riot ID
+/// complet.
+pub fn search_names(conn: &Connection, prefix: &str, limit: u32) -> BResult<Vec<NameHitDto>> {
+    let prefix = prefix.trim();
+    if prefix.is_empty() {
+        return Ok(Vec::new());
+    }
+    // `%` et `_` sont des jokers LIKE : echappes pour qu'une saisie reste litterale.
+    let escaped = prefix.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_");
+    let mut stmt = conn.prepare(
+        "SELECT game_name, tag_line, platform FROM a_names
+         WHERE game_name LIKE ?1 ESCAPE '\\' ORDER BY seen_at DESC LIMIT ?2",
+    )?;
+    let rows = stmt
+        .query_map(params![format!("{escaped}%"), limit.clamp(1, 20)], |r| {
+            Ok(NameHitDto { game_name: r.get(0)?, tag_line: r.get(1)?, platform: r.get(2)? })
+        })?
+        .collect::<Result<_, _>>()?;
+    Ok(rows)
 }
 
 /// Grille observee, cases trop peu peuplees exclues.
@@ -404,6 +473,17 @@ pub fn ingest(conn: &Connection, m: &MatchDto, t: Option<&TimelineDto>, tier: &s
                 gold_diff15,
                 p.profile_icon_id,
             ],
+        )?;
+    }
+    // Index des pseudos : alimente l'autocompletion de la recherche.
+    for p in &m.participants {
+        if p.game_name.is_empty() || p.tag_line.is_empty() {
+            continue;
+        }
+        tx.execute(
+            "INSERT INTO a_names (game_name, tag_line, platform, seen_at) VALUES (?1, ?2, ?3, ?4)
+             ON CONFLICT(game_name, tag_line, platform) DO UPDATE SET seen_at = excluded.seen_at",
+            params![p.game_name, p.tag_line, m.platform, m.started_at],
         )?;
     }
     count_winprob(&tx, m, t)?;

@@ -27,6 +27,7 @@ import type {
   MayhemRulesInfo,
   WinProbDto,
   PlayerRanksDto,
+  NameHitDto,
 } from "./api";
 
 /** Equivalent web de la commande Rust : texte brut, balises retirees via DOMParser (jamais injecte). */
@@ -273,6 +274,7 @@ export function createWebPlatform(): Platform {
     // Aucun client local depuis un navigateur ; `?roster` montre une composition
     // d'exemple en developpement, pour travailler le panneau de chargement.
     loadingRoster: async () => (devFlag("roster") ? EXAMPLE_ROSTER : null),
+    searchNames: async (q, limit) => api<NameHitDto[]>(["v1", "names"], { q, limit: String(limit) }),
     ranksBulk: async (platform, riotIds) => {
       if (devFlag("roster")) return EXAMPLE_RANKS;
       const out = await Promise.all(

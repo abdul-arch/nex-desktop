@@ -176,6 +176,11 @@ pub async fn stats_baselines(http: &reqwest::Client, base: &str, p: &StatsParams
 
 /// Rangs de plusieurs joueurs d'un coup (ecran de chargement). Un joueur dont la lecture
 /// echoue est absent de la reponse, les autres sont servis quand meme.
+/// Pseudos proposes pendant la frappe. Lecture locale du backend, aucun appel a Riot.
+pub async fn search_names(http: &reqwest::Client, base: &str, q: &str, limit: u32) -> AppResult<Vec<nex_domain::api::NameHitDto>> {
+    get_json(http, base, &["v1", "names"], &[("q", q.to_string()), ("limit", limit.to_string())], Duration::from_secs(10)).await
+}
+
 pub async fn ranks_by_riot_id(http: &reqwest::Client, base: &str, platform: &str, game_name: &str, tag_line: &str) -> AppResult<nex_domain::api::PlayerRanksDto> {
     get_json(http, base, &["v1", "ranks-by-id", platform, game_name, tag_line], &[], Duration::from_secs(25)).await
 }

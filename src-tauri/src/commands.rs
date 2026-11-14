@@ -379,6 +379,16 @@ pub async fn loading_roster(window: Window, svc: State<'_, ClientService>) -> Ap
     Ok(Some(roster))
 }
 
+/// Pseudos proposes pendant la frappe, parmi les parties collectees.
+#[tauri::command]
+pub async fn search_names(window: Window, state: State<'_, AppState>, q: String, limit: u32) -> AppResult<Vec<nex_domain::api::NameHitDto>> {
+    require_main(&window)?;
+    if q.chars().count() > 32 {
+        return Err(AppError::InvalidInput("recherche trop longue".into()));
+    }
+    backend::search_names(&state.http, &backend_url(&state)?, &q, limit).await
+}
+
 /// Rangs des joueurs de la partie en chargement. Un appel Riot par joueur, par le
 /// backend, qui les met en cache deux minutes. Au plus dix a la fois.
 #[tauri::command]

@@ -142,6 +142,7 @@ export interface Platform {
   champSelect(): Promise<ChampSelectState | null>;
   loadingRoster(): Promise<LoadingRosterDto | null>;
   ranksBulk(platform: string, riotIds: string[]): Promise<PlayerRanksDto[]>;
+  searchNames(q: string, limit: number): Promise<NameHitDto[]>;
   liveSnapshot(): Promise<LiveSnapshot | null>;
   importRunes(input: RunePageInput): Promise<ImportOutcome>;
   importItems(input: ItemSetInput): Promise<ImportOutcome>;
@@ -283,5 +284,6 @@ import type {
   WinProbDto,
   LoadingRosterDto,
   PlayerRanksDto,
+  NameHitDto,
 } from "./api";
 export type * from "./api";

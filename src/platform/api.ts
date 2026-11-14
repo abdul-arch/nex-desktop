@@ -408,6 +408,13 @@ export interface WinProbDto {
   maxBucket: number;
 }
 
+/** Un pseudo proposé pendant la frappe (miroir de NameHitDto). */
+export interface NameHitDto {
+  gameName: string;
+  tagLine: string;
+  platform: string;
+}
+
 /** Rangs d'un joueur, pour une lecture groupee (miroir de PlayerRanksDto). */
 export interface PlayerRanksDto {
   /** Riot ID demandé : le client local et l'API Riot n'ont pas le même identifiant. */

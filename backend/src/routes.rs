@@ -37,6 +37,7 @@ pub fn router(state: Shared) -> Router {
         .route("/v1/mayhem/rules", get(crate::mayhem::get_rules))
         .route("/v1/mayhem/dataset", get(crate::mayhem::get_dataset))
         .route("/v1/mayhem/rate", axum::routing::post(crate::mayhem::post_rate))
+        .route("/v1/names", get(search_names))
         .route("/v1/stats/meta", get(stats_meta))
         .route("/v1/stats/tierlist", get(stats_tierlist))
         .route("/v1/stats/baselines", get(stats_baselines))
@@ -417,6 +418,23 @@ struct RanksQuery {
 
 /// Releves de rang deja observes par NEX pour ce joueur. Aucune requete Riot : ce que le
 /// backend n'a pas vu passer n'existe pas, et la liste est alors vide.
+#[derive(Deserialize)]
+struct NameQuery {
+    #[serde(default)]
+    q: String,
+    #[serde(default)]
+    limit: Option<u32>,
+}
+
+/// Pseudos proposes pendant la frappe, pris dans les parties deja collectees.
+/// Aucun appel a Riot : lecture locale, donc instantanee et sans limite de debit.
+async fn search_names(State(s): State<Shared>, Query(q): Query<NameQuery>) -> BResult<Json<Vec<NameHitDto>>> {
+    if q.q.chars().count() > 32 {
+        return Err(BackendError::InvalidInput("recherche trop longue".into()));
+    }
+    Ok(Json(s.riot.store().with(|c| crate::analytics::search_names(c, &q.q, q.limit.unwrap_or(8)))?))
+}
+
 /// Rang d'un joueur designe par son Riot ID. Deux appels Riot au plus, tous deux en
 /// cache : le compte (24 h) puis le classement (2 min). Sert l'ecran de chargement, ou
 /// les dix joueurs sont demandes un par un : le client local ne publie pas le PUUID

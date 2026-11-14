@@ -38,6 +38,7 @@
     "allow-client-champ-select",
     "allow-loading-roster",
     "allow-ranks-bulk",
+    "allow-search-names",
     "allow-live-snapshot",
     "allow-lcu-import-runes",
     "allow-lcu-import-items",

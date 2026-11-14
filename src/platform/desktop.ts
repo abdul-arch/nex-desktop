@@ -40,6 +40,7 @@ export function createDesktopPlatform(): Platform {
     champSelect: () => invoke("client_champ_select"),
     loadingRoster: () => invoke("loading_roster"),
     ranksBulk: (platform, riotIds) => invoke("ranks_bulk", { platform, riotIds }),
+    searchNames: (q, limit) => invoke("search_names", { q, limit }),
     liveSnapshot: () => invoke("live_snapshot"),
     importRunes: (input) => invoke("lcu_import_runes", { input }),
     importItems: (input) => invoke("lcu_import_items", { input }),

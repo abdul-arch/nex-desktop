@@ -82,6 +82,11 @@ async fn main() {
     }
     // Rattrapage de la grille « probabilite de victoire » depuis les timelines encore en
     // cache. Sans appel reseau, et sans effet si tout est deja compte.
+    match store.with(analytics::backfill_names) {
+        Ok(0) => {}
+        Ok(n) => tracing::info!("index des pseudos : {n} entree(s) depuis le cache"),
+        Err(e) => tracing::warn!("index des pseudos : {e}"),
+    }
     match store.with(analytics::backfill_winprob) {
         Ok(0) => {}
         Ok(n) => tracing::info!("probabilite de victoire : {n} partie(s) rattrapee(s) depuis le cache"),

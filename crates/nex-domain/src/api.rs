@@ -264,6 +264,15 @@ pub struct StatsScopeDto {
     pub matches: u32,
 }
 
+/// Un pseudo propose pendant la frappe, vu dans les parties collectees.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct NameHitDto {
+    pub game_name: String,
+    pub tag_line: String,
+    pub platform: String,
+}
+
 /// Rangs d'un joueur, pour une lecture groupee (ecran de chargement).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
