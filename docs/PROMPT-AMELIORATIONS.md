@@ -59,6 +59,25 @@ Et **aucun linter dans le projet** : ni ESLint, ni Stylelint, ni Prettier, ni CI
 de `NexLogo` **sans effet partout dans l'application** : `shell.css` lui impose 30 px, ce qui
 annule l'attribut de taille du SVG. Un prop de composant qui ne fait rien, en silence.
 
+### Fait le 14 novembre 2026 — outillage posé, doublons restants
+
+- `scripts/css-doublons.mjs` liste les classes définies dans plusieurs feuilles et celles
+  qui ne sont citées nulle part. Branché dans `npm run check` via `--check`, qui échoue sur
+  un doublon **nouveau** seulement : la base `scripts/css-doublons-connus.json` fige
+  l'existant pour que la vérification ne soit pas ignorée dès le premier jour.
+  Garde-fou éprouvé en introduisant un faux doublon : il sort en erreur et nomme les deux
+  feuilles.
+- Première version du script : 37 doublons annoncés. Elle comptait `.intro .muted { }` comme
+  une redéfinition de `.muted`, ce qui est une surcharge contextuelle parfaitement normale.
+  En ne retenant que les règles portant **directement** sur la classe, il en reste **4** :
+  `.content`, `.neg`, `.ov-widget`, `.select`. Un rapport bruyant ne se lit pas.
+- Stylelint, avec quatre règles seulement — pas la config standard, qui sortirait des
+  centaines de remarques de style sur 7 500 lignes. Il a trouvé deux sélecteurs écrits en
+  deux fois dans `intro.css`, fusionnés.
+
+**Reste à faire** : les 4 doublons ci-dessus, un par un, et la revue des 28 classes jamais
+citées (certaines sont de faux positifs).
+
 ### Ce qu'il faut faire
 
 1. Ajouter **Stylelint** avec, au minimum, `no-duplicate-selectors` et
