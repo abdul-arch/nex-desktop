@@ -5,14 +5,16 @@
 // le monte et le demonte. Rien n'est ecrit ici, et aucune donnee n'est inventee — un joueur
 // non classe montre son etat reel plutot qu'un faux rang.
 import { ArrowRight } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useAsync } from "../../app/useAsync";
-import { championSplash, profileIcon, rankEmblem } from "../../data/assets";
+import { championName, championSplash, profileIcon, rankMiniCrest } from "../../data/assets";
 import { demoPlayer } from "../../data/demo";
 import { digitsOf } from "../../domain/countUp";
+import { toSummary } from "../../domain/fromMatch";
+import { championAggregates } from "../../domain/metrics";
 import { platform } from "../../platform";
-import type { PlayerProfileDto } from "../../platform/api";
+import type { MatchPageDto, PlayerProfileDto } from "../../platform/api";
 import { TIER_LABEL } from "../../ui/format";
 import { NexLogo } from "../../ui/NexLogo";
 import { RemoteImg } from "../../ui/primitives";
@@ -103,9 +105,26 @@ export function IntroScreen({ onEnter }: { onEnter: () => void }) {
   const lp = solo ? solo.lp : null;
   const lpAffiche = useCountUp(lp, etape >= 4, reduit ? 0 : DUREE_LP);
 
-  // Illustration : le premier champion favori, sans valeur par defaut imposee a tous.
+  // Illustration : le champion le plus joue sur les dernieres parties. Meme cle de cache et
+  // meme appel que le tableau de bord, donc une seule lecture pour les deux, et le tableau
+  // de bord s'ouvre ensuite sans attendre.
+  const puuid = mine.data?.puuid ?? null;
+  const parties = useAsync<MatchPageDto>(
+    puuid && !settings.demoMode ? `dash-matches:${settings.linkedPlatform}:${puuid}` : null,
+    () => platform.playerMatches({ platform: settings.linkedPlatform, puuid: puuid!, start: 0, count: 20, timelines: 10 }),
+    120_000,
+  );
+  const plusJoue = useMemo(() => {
+    const liste = parties.data?.matches ?? [];
+    if (!puuid || liste.length === 0) return null;
+    const sommaires = liste.map((m) => toSummary(m, puuid)).filter((x): x is NonNullable<typeof x> => x !== null);
+    const classe = championAggregates(sommaires).sort((a, b) => b.games - a.games);
+    return classe[0] ?? null;
+  }, [parties.data, puuid]);
+  // A defaut de parties lues, le premier champion favori. Sans l'un ni l'autre, pas
+  // d'illustration : aucun champion n'est impose a tous.
   const favori = settings.favoriteChampions?.[0];
-  const cleChampion = favori !== undefined ? catalog?.champions[String(favori)]?.key : undefined;
+  const cleChampion = plusJoue?.champion ?? (favori !== undefined ? catalog?.champions[String(favori)]?.key : undefined);
 
   const pseudo = joueur?.gameName ?? "";
   const tag = joueur?.tagLine ?? "";
@@ -118,6 +137,17 @@ export function IntroScreen({ onEnter }: { onEnter: () => void }) {
         <div className="intro-fond" aria-hidden="true">
           <RemoteImg src={championSplash(cleChampion)} alt="" />
         </div>
+      )}
+
+      {/* Dit pourquoi ce champion est la : le nombre de parties, mesure sur l'echantillon
+          lu. Riot expose aussi des points de maitrise, que l'application ne lit pas encore. */}
+      {plusJoue && (
+        <p className="intro-champion">
+          <b>{championName(plusJoue.champion)}</b>
+          <span className="muted">
+            {plusJoue.games} partie{plusJoue.games > 1 ? "s" : ""} sur {parties.data?.matches.length ?? 0}
+          </span>
+        </p>
       )}
 
       <div
@@ -158,7 +188,7 @@ export function IntroScreen({ onEnter }: { onEnter: () => void }) {
           {rangConnu ? (
             <>
               <span className="intro-embleme">
-                <RemoteImg src={rankEmblem(solo.tier)} alt="" />
+                <RemoteImg src={rankMiniCrest(solo.tier)} alt="" />
               </span>
               <span className="intro-rang-nom">
                 {TIER_LABEL[solo.tier] ?? solo.tier}
