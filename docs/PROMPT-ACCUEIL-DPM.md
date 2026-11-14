@@ -13,6 +13,27 @@ referme sur les deux cartes restantes de cette rangée.
 
 ---
 
+## État — appliqué le 14 novembre 2026
+
+Ce document a servi. Ce qui suit reste la référence, mais trois choses ont changé depuis
+sa rédaction et il faut les lire avant de reprendre le travail.
+
+**Trois étapes étaient déjà faites** dans le code au moment de l'appliquer, vérification
+faite dans les fichiers et non à l'œil :
+
+- `.dash` était déjà en `minmax(0, 1fr) 300px` avec 14 px de gouttière, soit les
+  795 / 14 / 304 relevés au pixel sur la capture (§1).
+- `.metrics` était déjà en `repeat(4, minmax(0, 1fr))` : le héros était déjà en quatre
+  colonnes sur deux rangées (§3).
+- `ScoreRing` était déjà branché dans la liste des parties du rail avec son `rankLabel`,
+  ce qui est exactement l'anneau « 88 / 2e » de la capture (§4).
+
+**L'écart réel était l'ordre des blocs**, pas la structure. Il est corrigé.
+
+**La carte « partie pro en cours » n'est pas réalisable.** Voir §5, réécrit.
+
+---
+
 ## 0. Contexte à donner à l'agent
 
 > Tu travailles sur **nex.lol**, application compagnon League of Legends (Tauri 2 + Rust +
@@ -56,6 +77,7 @@ Relevée sur la capture : fond de page entre `#0d0f14` et `#12151f`, fond de car
 **C'est déjà la palette de NEX.** `--bg: #0b0c10` et `--panel: #14151d` dans
 `src/styles/tokens.css` sont à quelques points de ces valeurs. Reproduire le design ne
 demande donc aucun changement de couleur : garder les jetons existants donne le même rendu.
+Vérifié à l'application : aucune couleur n'a eu besoin d'être touchée.
 
 Couleurs de signal, à reprendre telles que la capture les utilise :
 
@@ -89,7 +111,8 @@ KDA, Score, KP %, CS/min sur la première rangée ; Dégâts/min, Part des dég�
 
 **2. Rangée de deux cartes.**
 
-- *Partie pro en cours* — deux splashs de champions qui se font face, séparés par un `VS`
+- *Partie pro en cours* — **non reproduite, voir §5 avant d'y revenir.** Description de la
+  capture, pour mémoire : deux splashs de champions qui se font face, séparés par un `VS`
   incliné. En haut : minuteur et région. En bas : les joueurs et leurs champions de part et
   d'autre, les icônes de champions des deux équipes, et un bouton **Regarder** au centre. Une
   flèche de chaque côté pour passer à une autre partie.
@@ -141,23 +164,49 @@ nombre de parties.
 
 ---
 
-## 5. Les deux cartes qui dépendent d'une source absente
+## 5. Les deux cartes sans source chez NEX — une repliée, une abandonnée
 
 La capture les montre remplies ; chez NEX elles peuvent être vides. Dans ce cas :
 
 - **Extraits de la dernière partie** — l'enregistrement est désactivé par défaut. La carte
   garde le résumé de la partie et remplace la liste d'extraits par une ligne
   « L'enregistrement de parties est désactivé. [Activer] ». Jamais quatre vignettes vides.
-- **Partie pro** — si aucune partie pro n'est en cours **ou si la liste n'est pas déjà en
-  cache**, la carte se replie en une bande d'une ligne. Elle ne déclenche aucune requête au
-  chargement de l'accueil.
+- **Partie pro** — **abandonnée après audit.** Ne pas la retenter sans avoir lu ce qui
+  suit ; le mur n'est pas un manque de temps mais l'architecture de NEX.
+
+  Ce que les sources disent :
+  - `/v1/pro/teams` sert un effectif Leaguepedia (équipes, joueurs, comptes) **sans aucun
+    état de partie**.
+  - `/v1/live/{platform}/{puuid}` prend **un puuid précis**. Il n'existe pas d'endpoint
+    « parties en vedette ».
+  - Savoir qu'un pro joue demande donc un profil puis un live **par compte**, soit deux
+    requêtes chacun. Le quota est de cent requêtes par deux minutes, partagé avec le
+    collecteur : quelques dizaines de pros le consomment entièrement.
+
+  DPM y arrive parce qu'un serveur central surveille les pros pour tous ses clients. Le
+  backend de NEX tourne sur la machine du joueur avec sa propre clé : il n'a pas cette vue
+  partagée. La carte serait une bande vide en permanence.
+
+  **À sa place**, la même fonction — quelqu'un joue maintenant, on peut regarder — avec une
+  source que NEX possède : les amis observables, lus dans le client League
+  (`observableFriends`, aucune requête Riot, même clé de cache que la page Spectate). Le
+  client n'est sollicité que sur le clic « Regarder ». La rangée passe à trois colonnes
+  quand un ami joue et reste à deux sinon.
 
 ---
 
-## 6. Ce que la reproduction déplace hors de l'accueil
+## 6. Ce que la reproduction déplace hors de l'accueil — fait
 
-La capture ne contient pas ces cartes, qui sont aujourd'hui sur l'accueil de NEX. Une
-reproduction fidèle les en retire. **Les déplacer vers le Profil, ne pas les supprimer** :
+La capture ne contient pas ces cartes. Elles ont été **déplacées vers le Profil, pas
+supprimées**. Deux d'entre elles (courbe de LP, coéquipiers) y étaient déjà : elles étaient
+affichées aux deux endroits, et seul l'accueil les a perdues. Les trois autres vivent
+maintenant dans `src/features/profile/ProgressCards.tsx`.
+
+Effet de bord relevé à cette occasion : la deuxième page de parties Riot (clé
+`dash-mates`, vingt parties de plus) n'était chargée que pour la carte des coéquipiers.
+Elle est partie avec elle, donc **l'accueil fait un appel Riot de moins au chargement**.
+
+Liste, pour mémoire :
 
 - Historique des LP (`src/features/profile/LpCard.tsx`) — donnée que NEX est seul à avoir,
   puisque Riot ne fournit que le rang courant.
