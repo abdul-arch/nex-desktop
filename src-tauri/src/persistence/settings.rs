@@ -39,6 +39,13 @@ pub struct Settings {
     pub overlay_auto: bool,
     /// Panneau des dix joueurs pendant l'ecran de chargement.
     pub overlay_loading: bool,
+    /// Opacite du fond des widgets, en pour-cent. Bornee a 65, mesure a l'appui : sur les
+    /// 5 % de pixels les plus clairs d'une scene de jeu, le texte secondaire tient 4,94 de
+    /// contraste a 70 % et tombe a 3,84 a 50 %, meme en eclaircissant la couleur du texte
+    /// avec le fond. En dessous de 65, aucune couleur ne garde un contraste suffisant.
+    pub overlay_background: u32,
+    /// Aimantation pendant le deplacement : bords, axes centraux et autres widgets.
+    pub overlay_snap: bool,
     /// Tampon de replay : duree (s) et taille maximale (Mio).
     pub replay_seconds: u32,
     pub replay_max_mib: u32,
@@ -83,6 +90,8 @@ impl Default for Settings {
             favorite_champions: Vec::new(),
             overlay_auto: true,
             overlay_loading: true,
+            overlay_background: 86,
+            overlay_snap: true,
             replay_seconds: 120,
             replay_max_mib: 512,
             record_full_games: false,
@@ -156,6 +165,11 @@ pub fn apply(mut s: Settings, key: &str, value: &Value) -> AppResult<Settings> {
         "demoMode" => s.demo_mode = boolean(value, key)?,
         "overlayAuto" => s.overlay_auto = boolean(value, key)?,
         "overlayLoading" => s.overlay_loading = boolean(value, key)?,
+        "overlaySnap" => s.overlay_snap = boolean(value, key)?,
+        "overlayBackground" => {
+            let v = value.as_u64().ok_or_else(|| AppError::InvalidInput("nombre attendu".into()))?;
+            s.overlay_background = (v as u32).clamp(65, 100);
+        }
         "recordFullGames" => s.record_full_games = boolean(value, key)?,
         "autoClips" => s.auto_clips = boolean(value, key)?,
         "replaySeconds" => s.replay_seconds = ranged(value, key, 30, 600)?,

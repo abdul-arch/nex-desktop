@@ -8,6 +8,14 @@ html.overlay-root #root {
 .ov-surface {
   position: fixed;
   inset: 0;
+  /* Opacite du fond des panneaux, pilotee par le reglage « Fond ». */
+  --ov-bg: 0.86;
+  /* Texte secondaire : il s'eclaircit a mesure que le fond s'allege, sinon baisser le
+     fond le rendrait illisible. Mesure sur les 5 % de pixels les plus clairs d'une scene
+     de jeu : a fond 86 % le gris tenait 4,86 de contraste, a 30 % il tombait a 1,40.
+     `color-mix` manquant, la couleur de repli reste le gris d'origine. */
+  --ov-sub: #8b8fa3;
+  --ov-sub: color-mix(in srgb, #8b8fa3 calc(var(--ov-bg) * 100%), #eef0f6);
 }
 .ov-surface.config {
   background: rgba(8, 9, 12, 0.35);
@@ -67,7 +75,7 @@ html.overlay-root #root {
   max-width: 268px;
   padding: 9px 11px 10px;
   border-radius: 10px;
-  background: rgba(13, 15, 21, 0.86);
+  background: rgba(13, 15, 21, var(--ov-bg, 0.86));
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
@@ -108,7 +116,7 @@ html.overlay-root #root {
   color: rgba(255, 255, 255, 0.85);
 }
 .ov-wait {
-  color: var(--muted);
+  color: var(--ov-sub, var(--muted));
   font-size: 11px;
 }
 .ov-clock {
@@ -143,7 +151,7 @@ html.overlay-root #root {
 }
 .ov-sub {
   font-size: 10.5px;
-  color: var(--muted);
+  color: var(--ov-sub, var(--muted));
 }
 
 /* Barre d'or des deux equipes : pastille centree en haut de l'ecran. */
@@ -153,7 +161,7 @@ html.overlay-root #root {
   gap: 9px;
   padding: 5px 12px;
   border-radius: 8px;
-  background: rgba(13, 15, 21, 0.86);
+  background: rgba(13, 15, 21, var(--ov-bg, 0.86));
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
@@ -241,7 +249,7 @@ html.overlay-root #root {
   gap: 9px;
   padding: 6px 9px;
   border-radius: 10px;
-  background: rgba(13, 15, 21, 0.86);
+  background: rgba(13, 15, 21, var(--ov-bg, 0.86));
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
@@ -316,7 +324,7 @@ html.overlay-root #root {
   gap: 10px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(13, 15, 21, 0.88);
+  background: rgba(13, 15, 21, var(--ov-bg, 0.86));
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(10px);
@@ -404,10 +412,10 @@ html.overlay-root #root {
   font-size: 11px;
 }
 .ld-rank.muted {
-  color: var(--muted);
+  color: var(--ov-sub, var(--muted));
 }
 .ld-wl {
-  color: var(--muted);
+  color: var(--ov-sub, var(--muted));
   font-size: 10px;
 }
 
@@ -774,6 +782,14 @@ html.overlay-root #root {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Ce qui vaut pour tous les overlays, separe des reglages d'un module. */
+.ovx-global {
+  border-top: 1px solid var(--border);
+  padding: 10px 6px 2px;
+  display: grid;
+  gap: 10px;
 }
 
 .ovx-main {

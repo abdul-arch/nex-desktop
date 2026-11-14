@@ -3,6 +3,7 @@
 // chaque depot est enregistre et l'overlay ouvert se met a jour en direct.
 import { useEffect, useRef, useState } from "react";
 import type { WidgetId, WidgetLayout } from "../../platform/api";
+import { snapPoint } from "../../domain/snap";
 import { WIDGET_INFO } from "./widgets";
 
 /** Taille approximative de chaque widget (px CSS a l'echelle 1, cf. overlay.css). */
@@ -23,7 +24,7 @@ const HUD = [
   { label: "Score", x: 0.84, y: 0, w: 0.16, h: 0.035 },
 ];
 
-export function LayoutEditor({ layout, onChange }: { layout: WidgetLayout[]; onChange: (w: WidgetLayout) => void }) {
+export function LayoutEditor({ layout, onChange, snap = true }: { layout: WidgetLayout[]; onChange: (w: WidgetLayout) => void; snap?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<Record<string, { x: number; y: number }>>({});
   const [selected, setSelected] = useState<WidgetId | null>(null);
@@ -42,9 +43,14 @@ export function LayoutEditor({ layout, onChange }: { layout: WidgetLayout[]; onC
     const [bw, bh] = SIZE[w.id];
     return { fw: Math.min(1, (bw * w.scale) / screenW), fh: Math.min(1, (bh * w.scale) / screenH) };
   };
-  const clamp = (w: WidgetLayout, x: number, y: number) => {
+  /** Borne le widget a l'ecran, puis l'aimante (sauf Maj enfoncee). */
+  const clamp = (w: WidgetLayout, x: number, y: number, free = false) => {
     const { fw, fh } = box(w);
-    return { x: Math.min(Math.max(0, x), 1 - fw), y: Math.min(Math.max(0, y), 1 - fh) };
+    const inside = { x: Math.min(Math.max(0, x), 1 - fw), y: Math.min(Math.max(0, y), 1 - fh) };
+    const others = layout.filter((o) => o.id !== w.id).map((o) => ({ x: o.x, y: o.y }));
+    const aimed = snapPoint(inside, others, snap && !free);
+    // L'aimantation peut viser un bord hors limites : on reborne apres.
+    return { x: Math.min(Math.max(0, aimed.x), 1 - fw), y: Math.min(Math.max(0, aimed.y), 1 - fh) };
   };
   const frac = (e: { clientX: number; clientY: number }) => {
     const r = ref.current!.getBoundingClientRect();
@@ -94,7 +100,7 @@ export function LayoutEditor({ layout, onChange }: { layout: WidgetLayout[]; onC
                 const d = drag.current;
                 if (!d || d.id !== w.id) return;
                 const { fx, fy } = frac(e);
-                d.last = clamp(w, fx - d.dx, fy - d.dy);
+                d.last = clamp(w, fx - d.dx, fy - d.dy, e.shiftKey);
                 setPos((s) => ({ ...s, [w.id]: d.last }));
               }}
               onPointerUp={() => {

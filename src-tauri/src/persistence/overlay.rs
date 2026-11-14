@@ -87,6 +87,16 @@ pub fn reset(conn: &Connection) -> AppResult<Vec<WidgetLayout>> {
     load(conn)
 }
 
+/// Remet un seul widget a sa position par defaut. Sa taille, son opacite, son mode et son
+/// verrouillage sont conserves : on ne reinitialise que ce que l'intitule annonce.
+pub fn reset_position(conn: &Connection, id: &str) -> AppResult<Vec<WidgetLayout>> {
+    let Some(d) = defaults().into_iter().find(|w| w.id == id) else {
+        return Err(AppError::InvalidInput("widget inconnu".into()));
+    };
+    let current = load(conn)?.into_iter().find(|w| w.id == id).unwrap_or_else(|| d.clone());
+    save(conn, &WidgetLayout { x: d.x, y: d.y, ..current })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

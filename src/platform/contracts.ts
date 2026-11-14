@@ -58,6 +58,8 @@ export interface Settings {
   favoriteChampions: number[];
   overlayAuto: boolean;
   overlayLoading: boolean;
+  overlayBackground: number;
+  overlaySnap: boolean;
   replaySeconds: number;
   replayMaxMib: number;
   recordFullGames: boolean;
@@ -153,7 +155,7 @@ export interface Platform {
   overlayMode(): Promise<boolean>;
   overlayLayoutGet(): Promise<WidgetLayout[]>;
   overlayLayoutSet(widget: WidgetLayout): Promise<WidgetLayout[]>;
-  overlayLayoutReset(): Promise<WidgetLayout[]>;
+  overlayLayoutReset(widget?: string): Promise<WidgetLayout[]>;
   captureStatus(): Promise<CaptureStatus>;
   captureSources(): Promise<string[]>;
   captureStart(source: string, keepAll: boolean): Promise<CaptureStatus>;
@@ -231,6 +233,8 @@ export const DEFAULT_SETTINGS: Settings = {
   favoriteChampions: [],
   overlayAuto: true,
   overlayLoading: true,
+  overlayBackground: 86,
+  overlaySnap: true,
   replaySeconds: 120,
   replayMaxMib: 512,
   recordFullGames: false,

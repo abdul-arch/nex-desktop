@@ -50,7 +50,7 @@ export function createDesktopPlatform(): Platform {
     overlayMode: () => invoke("overlay_mode"),
     overlayLayoutGet: () => invoke("overlay_layout_get"),
     overlayLayoutSet: (widget) => invoke("overlay_layout_set", { widget }),
-    overlayLayoutReset: () => invoke("overlay_layout_reset"),
+    overlayLayoutReset: (widget) => invoke("overlay_layout_reset", { widget: widget ?? null }),
     on: (event, cb) => listen(event, (e) => cb(e.payload as never)),
     captureStatus: () => invoke("capture_status"),
     captureSources: () => invoke("capture_sources"),

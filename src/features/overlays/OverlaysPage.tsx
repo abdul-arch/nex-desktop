@@ -269,6 +269,26 @@ export function OverlaysPage() {
               </div>
             );
           })}
+          <div className="ovx-group ovx-global">
+            <div className="ovx-group-head">
+              <span>Tous les overlays</span>
+            </div>
+            <label className="field" title="Opacité du fond des panneaux. Le minimum est 65 % : en dessous, le texte cesse d'être lisible sur une scène de jeu claire.">
+              <span>Fond {settings.overlayBackground ?? 86} %</span>
+              <input
+                type="range"
+                min={65}
+                max={100}
+                step={2}
+                value={settings.overlayBackground ?? 86}
+                onChange={(e) => setSetting("overlayBackground", Number(e.target.value))}
+              />
+            </label>
+            <label className="check" title="Aligne sur les bords, les axes centraux et les autres widgets. Maj enfoncée pour un placement libre.">
+              <input type="checkbox" checked={settings.overlaySnap ?? true} onChange={(e) => setSetting("overlaySnap", e.target.checked)} /> Magnétisme au
+              déplacement
+            </label>
+          </div>
         </nav>
 
         <section className="ovx-main card">
@@ -301,7 +321,18 @@ export function OverlaysPage() {
               ) : def.id === "loading" ? (
                 <LoadingSettings />
               ) : (
-                <WidgetSettings w={layout.find((w) => w.id === def.id)} onChange={update} />
+                <WidgetSettings
+                  w={layout.find((w) => w.id === def.id)}
+                  onChange={update}
+                  onResetPosition={() =>
+                    run(
+                      platform.overlayLayoutReset(def.id).then((l) => {
+                        setLayout(l);
+                        notify(`Position de « ${def.name} » réinitialisée`);
+                      }),
+                    )
+                  }
+                />
               )}
             </div>
             <div>
@@ -312,7 +343,7 @@ export function OverlaysPage() {
                   emplacements de joueur pour l'écran de chargement.
                 </p>
               ) : (
-                <LayoutEditor layout={layout} onChange={update} />
+                <LayoutEditor layout={layout} onChange={update} snap={settings.overlaySnap ?? true} />
               )}
             </div>
           </div>
@@ -364,7 +395,7 @@ function ModuleRow({
 }
 
 /** Reglages d'un widget deplacable. */
-function WidgetSettings({ w, onChange }: { w: WidgetLayout | undefined; onChange: (w: WidgetLayout) => void }) {
+function WidgetSettings({ w, onChange, onResetPosition }: { w: WidgetLayout | undefined; onChange: (w: WidgetLayout) => void; onResetPosition: () => void }) {
   if (!w) return <p className="muted ovx-note">Disposition non chargée.</p>;
   return (
     <div className="ovx-fields">
@@ -391,6 +422,11 @@ function WidgetSettings({ w, onChange }: { w: WidgetLayout | undefined; onChange
       <label className="check">
         <input type="checkbox" checked={w.locked} onChange={(e) => onChange({ ...w, locked: e.target.checked })} /> Verrouillé (non déplaçable en jeu)
       </label>
+      <div className="overlay-actions">
+        <button className="btn btn-sm btn-ghost" onClick={onResetPosition}>
+          <RotateCcw /> Réinitialiser la position
+        </button>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import type { Catalog, ChampionBuildDto, ChampionSpell, LiveSnapshot, WidgetId, 
 import { MayhemLayer } from "./MayhemLayer";
 import { LoadingPanel } from "./LoadingPanel";
 import { renderWidget } from "./render";
+import { snapPoint } from "../domain/snap";
 
 export function OverlayApp() {
   const [layout, setLayout] = useState<WidgetLayout[]>([]);
@@ -15,6 +16,8 @@ export function OverlayApp() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [version, setVersion] = useState<string | null>(null);
   const [keys, setKeys] = useState<"AZER" | "QWER">("AZER");
+  const [snapOn, setSnapOn] = useState(true);
+  const [bgAlpha, setBgAlpha] = useState(86);
   const [build, setBuild] = useState<ChampionBuildDto | null>(null);
   const [grid, setGrid] = useState<WinProbDto | null>(null);
   const [spells, setSpells] = useState<ChampionSpell[]>([]);
@@ -41,7 +44,15 @@ export function OverlayApp() {
       offs.push(await platform.on<boolean>("overlay://mode", setConfig));
       offs.push(await platform.on<boolean>("overlay://hold", setHold));
       offs.push(await platform.on<LiveSnapshot | null>("live://snapshot", (p) => setSnap({ s: p, at: performance.now() })));
-      platform.getSettings().then((st) => alive && setKeys(st.abilityKeys)).catch(() => {});
+      platform
+        .getSettings()
+        .then((st) => {
+          if (!alive) return;
+          setKeys(st.abilityKeys);
+          setSnapOn(st.overlaySnap ?? true);
+          setBgAlpha(st.overlayBackground ?? 86);
+        })
+        .catch(() => {});
       platform.staticCatalog().then((c) => alive && setCatalog(c)).catch(() => {});
       platform.staticDataVersion().then((v) => alive && setVersion(v.version)).catch(() => {});
       // Grille chargee une fois : elle ne bouge qu'au rythme de la collecte.
@@ -109,7 +120,7 @@ export function OverlayApp() {
   const inputs = { snap: snap.s, gameTime, catalog, version, keys, build, spells, grid, config, onClose: config ? undefined : (id: WidgetId) => setClosed((c) => (c.includes(id) ? c : [...c, id])) };
 
   return (
-    <div className={`ov-surface ${config ? "config" : ""}`}>
+    <div className={`ov-surface ${config ? "config" : ""}`} style={{ ["--ov-bg" as string]: (bgAlpha / 100).toFixed(2) }}>
       {config && (
         <div className="ov-config-bar">
           <span>
@@ -130,7 +141,14 @@ export function OverlayApp() {
         // reste visible, sinon on ne pourrait pas placer un widget qu'on ne voit pas.
         .filter((w) => w.visible && !closed.includes(w.id) && (config || w.mode !== "hold" || hold))
         .map((w) => (
-          <Draggable key={w.id} w={w} config={config} onDrop={(nw) => platform.overlayLayoutSet(nw).then(setLayout).catch(() => {})}>
+          <Draggable
+            key={w.id}
+            w={w}
+            config={config}
+            snap={snapOn}
+            others={layout.filter((o) => o.id !== w.id).map((o) => ({ x: o.x, y: o.y }))}
+            onDrop={(nw) => platform.overlayLayoutSet(nw).then(setLayout).catch(() => {})}
+          >
             {renderWidget(w.id, inputs)}
           </Draggable>
         ))}
@@ -138,7 +156,21 @@ export function OverlayApp() {
   );
 }
 
-function Draggable({ w, config, onDrop, children }: { w: WidgetLayout; config: boolean; onDrop: (w: WidgetLayout) => void; children: React.ReactNode }) {
+function Draggable({
+  w,
+  config,
+  snap,
+  others,
+  onDrop,
+  children,
+}: {
+  w: WidgetLayout;
+  config: boolean;
+  snap: boolean;
+  others: { x: number; y: number }[];
+  onDrop: (w: WidgetLayout) => void;
+  children: React.ReactNode;
+}) {
   const [pos, setPos] = useState({ x: w.x, y: w.y });
   // Position courante lue au relachement (pas de valeur figee par une fermeture).
   const posRef = useRef(pos);
@@ -177,7 +209,10 @@ function Draggable({ w, config, onDrop, children }: { w: WidgetLayout; config: b
         const d = drag.current;
         if (!d) return;
         const clamp = (v: number, max: number) => Math.min(max, Math.max(0, v));
-        posRef.current = { x: clamp(e.clientX / innerWidth - d.dx, d.maxX), y: clamp(e.clientY / innerHeight - d.dy, d.maxY) };
+        const raw = { x: clamp(e.clientX / innerWidth - d.dx, d.maxX), y: clamp(e.clientY / innerHeight - d.dy, d.maxY) };
+        // Maj enfoncee : placement libre, sans aimantation.
+        const aimed = snapPoint(raw, others, snap && !e.shiftKey);
+        posRef.current = { x: clamp(aimed.x, d.maxX), y: clamp(aimed.y, d.maxY) };
         setPos(posRef.current);
       }}
       onPointerUp={() => end(true)}

@@ -470,9 +470,13 @@ pub fn overlay_layout_set(window: Window, app: AppHandle, state: State<'_, AppSt
 }
 
 #[tauri::command]
-pub fn overlay_layout_reset(window: Window, app: AppHandle, state: State<'_, AppState>) -> AppResult<Vec<WidgetLayout>> {
+pub fn overlay_layout_reset(window: Window, app: AppHandle, state: State<'_, AppState>, widget: Option<String>) -> AppResult<Vec<WidgetLayout>> {
     require_main(&window)?;
-    let all = state.db.with(overlay_layout::reset)?;
+    // Avec un identifiant : seule la position de ce widget revient au defaut. Sans : tout.
+    let all = match widget {
+        Some(id) => state.db.with(|c| overlay_layout::reset_position(c, &id))?,
+        None => state.db.with(overlay_layout::reset)?,
+    };
     let _ = tauri::Emitter::emit(&app, "overlay://layout", &all);
     Ok(all)
 }
