@@ -158,11 +158,15 @@ pub fn spawn(app: AppHandle) {
                 }
                 "loading" | "in_game" | "reconnect" => {
                     set(&app, &service.champ_select, None, "client://champselect");
+                    // L'overlay s'ouvre sur l'etape, pas sur l'instantane. Pendant l'ecran
+                    // de chargement la Live Client Data API ne repond pas encore : attendre
+                    // un instantane reviendrait a n'ouvrir l'overlay qu'une fois la partie
+                    // lancee, et le panneau des dix joueurs n'apparaitrait jamais.
+                    if !overlay::is_open(&app) && auto_overlay(&app) {
+                        let _ = overlay::open(&app, false);
+                    }
                     match lcu::live_all(&lcu_http).await.ok().and_then(|v| model::live_snapshot(&v)) {
                         Some(snap) => {
-                            if !overlay::is_open(&app) && auto_overlay(&app) {
-                                let _ = overlay::open(&app, false);
-                            }
                             capture_hook(&app, &snap, &mut capture_tried);
                             if let Some(m) = app.try_state::<std::sync::Arc<crate::mayhem::service::MayhemService>>() {
                                 m.on_snapshot(&app, &snap);
