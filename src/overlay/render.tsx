@@ -140,26 +140,42 @@ function BuildWidget({
   config: boolean;
   onClose?: () => void;
 }) {
-  if (!live) return <Widget title="Prochain objet" onClose={onClose}><span className="ov-wait">En attente de partie</span></Widget>;
-  const core = build?.coreItems[0]?.ids ?? [];
+  if (!live) return <Widget title="Ordre d'achat" onClose={onClose}><span className="ov-wait">En attente de partie</span></Widget>;
+  const variant = build?.coreItems[0];
+  const core = variant?.ids ?? [];
   if (!build || core.length === 0)
     // En configuration, un widget sans donnee reste visible pour pouvoir etre place.
-    return config ? <Widget title="Prochain objet"><span className="ov-wait">Pas de build observé pour ce champion</span></Widget> : null;
+    return config ? <Widget title="Ordre d'achat"><span className="ov-wait">Pas de build observé pour ce champion</span></Widget> : null;
   const next = core.find((id) => !owned.includes(id));
-  if (!next) return <Widget title="Prochain objet" onClose={onClose}><span className="ov-wait">Build principal terminé</span></Widget>;
+  if (!next) return <Widget title="Ordre d'achat" onClose={onClose}><span className="ov-wait">Build principal terminé</span></Widget>;
   const item = catalog?.items[String(next)];
   const src = itemIcon(version, next);
+  // Suite du build principal : ce qui vient apres l'objet conseille, dans l'ordre observe.
+  const after = core.filter((id) => id !== next && !owned.includes(id));
   return (
-    <Widget title="Prochain objet" onClose={onClose}>
+    <Widget title="Ordre d'achat" onClose={onClose}>
       <div className="ov-item">
         {src && <img src={src} alt="" width={34} height={34} />}
         <div>
           <b>{item?.name ?? `Objet ${next}`}</b>
           <span className="ov-sub">
-            Build observé · {build.coreItems[0].games} parties{item?.gold ? ` · ${item.gold} PO` : ""}
+            Build observé · {variant!.games} parties{item?.gold ? ` · ${item.gold} PO` : ""}
           </span>
         </div>
       </div>
+      {(after.length > 0 || owned.some((id) => core.includes(id))) && (
+        <div className="ov-steps">
+          {core.map((id) => {
+            const got = owned.includes(id);
+            const icon = itemIcon(version, id);
+            return (
+              <span key={id} className={`ov-step ${got ? "done" : id === next ? "next" : ""}`} title={catalog?.items[String(id)]?.name ?? `Objet ${id}`}>
+                {icon && <img src={icon} alt="" width={20} height={20} />}
+              </span>
+            );
+          })}
+        </div>
+      )}
     </Widget>
   );
 }

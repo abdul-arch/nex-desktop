@@ -51,11 +51,11 @@ export const WIDGET_INFO: Record<
     missing: "Aucun minuteur affiché sans événement vérifiable",
   },
   build: {
-    name: "Prochain objet",
-    summary: "Le prochain objet à acheter, d'après les parties observées.",
+    name: "Ordre d'achat",
+    summary: "Quoi acheter, et la suite du build principal.",
     source: "Build observé NEX (backend) pour ton champion + inventaire visible",
     frequency: "Build chargé une fois par partie ; inventaire toutes les 2 s",
-    transform: "Premier objet du build principal pas encore possédé",
+    transform: "Premier objet du build principal pas encore possédé, puis la suite dans l'ordre observé. Les objets déjà achetés sont marqués.",
     missing: "Masqué si le champion n'a pas assez de parties collectées",
   },
   skills: {

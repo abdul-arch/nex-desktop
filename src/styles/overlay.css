@@ -154,6 +154,33 @@ html.overlay-root #root {
   color: var(--ov-sub, var(--muted));
 }
 
+/* Suite du build : les etapes du build principal, celles deja achetees marquees. */
+.ov-steps {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 1px;
+}
+.ov-step {
+  display: inline-flex;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  opacity: 0.55;
+}
+.ov-step img {
+  display: block;
+}
+.ov-step.next {
+  opacity: 1;
+  border-color: var(--accent-strong);
+}
+/* Deja achete : grise, pour distinguer d'un coup ce qui reste a prendre. */
+.ov-step.done {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
 /* Barre d'or des deux equipes : pastille centree en haut de l'ecran. */
 .ov-gold-box {
   display: flex;
