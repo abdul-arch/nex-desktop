@@ -190,17 +190,28 @@ sans commune mesure avec le bénéfice ici.
 
 ---
 
-## 7. Le contraste n'est vérifié par rien
+## 7. ~~Le contraste n'est vérifié par rien~~ — fait le 14 novembre 2026
 
 En posant un fond de jeu sur la carte Overlays, la colonne de référence du tableau (gris
 sourd `#8b8fa3`) est tombée à **3,13:1** sur les zones claires de l'image, sous le seuil de
 4,5. À l'œil sur une capture, ça passait. Le défaut n'a été trouvé qu'en compositant les
 couches et en calculant le rapport.
 
-**À faire** : une petite fonction dans `src/domain/` qui calcule un rapport de contraste,
-avec ses tests, et l'utiliser dans les quelques endroits où du texte passe sur une image
-(héros, carte de rang, collection, overlays). Pas un audit complet de l'application : les
-endroits à risque sont peu nombreux et connus.
+**Fait** : `src/domain/contrast.ts` (luminance WCAG, rapport de contraste, composition de
+couches) et ses onze tests.
+
+Le garde ne recopie pas les valeurs de la feuille : il les **lit** dans `dashboard.css`,
+compose image puis voile sur le panneau, et exige que le gris sourd reste au-dessus de
+4,5:1 sur le pixel le plus clair de la capture. Éprouvé en desserrant le voile de 0,72 à
+0,50 : un test échoue, la remise en état le repasse au vert. Un test garde aussi le garde,
+en vérifiant que le réglage d'origine (image 0,5 / voile 0,55) tombe bien sous le seuil.
+
+Une limite assumée : la luminance du pixel le plus clair (225) est une constante mesurée le
+jour même, faute de décodeur webp dans les tests. Si l'illustration change, elle est à
+remesurer — c'est écrit dans le test.
+
+Reste à étendre aux autres fonds d'image (héros, carte de rang, collection), sur le même
+modèle.
 
 ---
 
