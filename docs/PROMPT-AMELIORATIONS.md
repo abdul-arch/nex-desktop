@@ -154,16 +154,24 @@ sans le réécrire. Même traitement pour `LeaderboardsPage.tsx` (989 lignes). N
 
 ---
 
-## 5. Le backend reste orphelin quand l'application est tuée
+## 5. ~~Le backend reste orphelin quand l'application est tuée~~ — fait le 14 novembre 2026
 
 Un arrêt propre ferme bien le processus `nex-backend`. Une fermeture forcée le laisse
 tourner : il a été retrouvé plusieurs heures après, en écoute sur 8787. Au lancement suivant,
 l'application voit le port occupé et **n'allume pas son backend embarqué** — elle parle à
 l'orphelin, qui peut être une version ancienne.
 
-**À faire** : au démarrage, si quelque chose écoute déjà sur 8787, vérifier que c'est bien un
-`nex-backend` de la même version (la route `/v1/health` porte déjà `version`) et, sinon, le
-dire clairement plutôt que de s'y brancher en silence.
+**Fait** : au démarrage, l'application interroge `/v1/health` en HTTP/1.0 brut plutôt que
+de se contenter d'un `connect`. Trois cas distincts, trois messages : backend NEX de la même
+version (elle lui laisse la place, comme avant), backend NEX d'une **autre** version
+(avertissement nommant les deux versions et conseillant de fermer l'orphelin), et programme
+qui ne répond pas comme un backend NEX (avertissement, et ses données resteront
+indisponibles). Elle ne tue jamais le processus d'un autre.
+
+L'analyse de la réponse est isolée dans `version_annoncee()`, avec trois tests : réponse
+réelle en-têtes compris, réponse d'un autre serveur, version absente ou vide. Vérifié aussi
+que le backend répond bien en HTTP/1.0 et ferme la connexion — sans quoi la lecture
+bloquerait.
 
 ---
 
