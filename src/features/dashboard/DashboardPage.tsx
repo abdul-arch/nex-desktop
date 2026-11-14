@@ -594,20 +594,16 @@ function CollectionCard({ onOpen, champion }: { onOpen: () => void; champion: st
       inventory.data,
     );
     const owned = views.filter((v) => v.state === "owned");
-    // En vedette : des skins reellement possedes, jamais l'apparence de base, et un seul
-    // par champion pour ne pas montrer trois fois le meme visage.
-    const vus = new Set<number>();
-    const vedettes = owned
-      .filter((v) => v.num > 0)
-      .filter((v) => (vus.has(v.championId) ? false : (vus.add(v.championId), true)))
-      .slice(0, 3)
-      .map((v) => ({ id: v.id, name: v.name, key: champCatalog.champions[String(v.championId)]!.key, num: v.num }));
-    return { owned: owned.length, total: views.length, source: inventory.data.source, vedettes };
+    // Un seul skin en vedette, et jamais l'apparence de base : c'est lui qui fait le fond
+    // de la carte, donc l'afficher une deuxieme fois en vignette ne dirait rien de plus.
+    const v = owned.find((x) => x.num > 0);
+    const vedette = v ? { name: v.name, key: champCatalog.champions[String(v.championId)]!.key, num: v.num } : null;
+    return { owned: owned.length, total: views.length, source: inventory.data.source, vedette };
   }, [catalog.data, inventory.data, champCatalog]);
 
   // Sans inventaire lu, aucun skin n'est revendique : le fond reste le champion le plus
   // joue, et la carte dit ce qui manque.
-  const fond = vue?.vedettes[0] ? championSplash(vue.vedettes[0].key, vue.vedettes[0].num) : champion ? championSplash(champion, 0) : null;
+  const fond = vue?.vedette ? championSplash(vue.vedette.key, vue.vedette.num) : champion ? championSplash(champion, 0) : null;
 
   return (
     <button className="card card-link collection-card" onClick={onOpen}>
@@ -622,15 +618,7 @@ function CollectionCard({ onOpen, champion }: { onOpen: () => void; champion: st
 
         {vue ? (
           <>
-            {vue.vedettes.length > 0 && (
-              <ul className="skin-strip">
-                {vue.vedettes.map((v) => (
-                  <li key={v.id} title={v.name}>
-                    <RemoteImg src={championLoading(v.key, v.num)} alt={v.name} />
-                  </li>
-                ))}
-              </ul>
-            )}
+            {vue.vedette && <div className="skin-name">{vue.vedette.name}</div>}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--fs-xs)" }}>
               <span className="muted">Skins possédés</span>
               <span className="num">
