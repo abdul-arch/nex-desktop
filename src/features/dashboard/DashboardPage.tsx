@@ -354,20 +354,6 @@ function DashboardView({
             <MediaRow />
           )}
 
-          {!demo && plat && player.puuid && (
-            <div className="row-media two">
-              <LpCard puuid={player.puuid} plat={plat} />
-              {teammates && <TeammatesCard mates={teammates} plat={plat} sample={teammatesSample} />}
-            </div>
-          )}
-
-          {!demo && (
-            <div className="row-week">
-              <WeekCard matches={allMatches} />
-              <NextStepCard matches={countable} role={topRole} />
-              <HighlightsCard awards={awards} />
-            </div>
-          )}
 
           <div className="row-extras">
             <button className="card card-link overlay-card" onClick={() => navigate("overlays")}>
@@ -441,6 +427,24 @@ function DashboardView({
 
             <LensCard matches={countable} />
           </div>
+
+          {/* Sous la rangee overlays/collection : ces blocs ne figurent pas dans la
+              maquette de reference, qui enchaine heros, medias puis overlays. Ils
+              restent accessibles sans repousser le haut de page. */}
+          {!demo && plat && player.puuid && (
+            <div className="row-media two">
+              <LpCard puuid={player.puuid} plat={plat} />
+              {teammates && <TeammatesCard mates={teammates} plat={plat} sample={teammatesSample} />}
+            </div>
+          )}
+
+          {!demo && (
+            <div className="row-week">
+              <WeekCard matches={allMatches} />
+              <NextStepCard matches={countable} role={topRole} />
+              <HighlightsCard awards={awards} />
+            </div>
+          )}
           <div className="provenance">
             {demo && <DemoTag compact />} {provenance} · Score NEX v{NEX_SCORE_VERSION} · repères provisoires
           </div>
