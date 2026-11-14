@@ -9,9 +9,6 @@
   color: var(--accent-strong);
   text-decoration: underline;
 }
-.neg {
-  color: var(--red);
-}
 .field-error {
   color: var(--red);
   font-size: var(--fs-xs);

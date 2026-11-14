@@ -20,7 +20,7 @@ import { pct, ROLE_LABEL, TIER_LABEL, timeAgo } from "../../ui/format";
 import { ChampIcon, EmptyState, PositionIcon, RankCrest, RemoteImg, Segmented } from "../../ui/primitives";
 import { awardsByMatch } from "../../domain/badges";
 import { LpCard } from "./LpCard";
-import { HighlightsCard, NextStepCard, WeekCard } from "./ProgressCards";
+import { HighlightsCard, NextStepCard, SessionCard, WeekCard } from "./ProgressCards";
 import { MatchHistoryRow } from "./MatchHistory";
 import { TeammatesCard } from "../dashboard/TeammatesCard";
 
@@ -243,6 +243,8 @@ function ProfileLoaded({
   const mates = useMemo(() => frequentTeammates(shown, profile.puuid), [shown, profile.puuid]);
   // ±LP par partie, a partir des releves deja enregistres (lecture locale du backend).
   const lp = useMemo(() => attributeLp(summaries, ranks.data ?? []), [summaries, ranks.data]);
+  // Parties portant leur ±LP : la carte de session l'affiche, et sans lui elle montre « — ».
+  const avecLp = useMemo(() => summaries.map((s) => ({ ...s, lpDelta: lp.get(s.id) ?? null })), [summaries, lp]);
   // Fin de la partie la plus recente chargee, pour « Dernière partie il y a … ».
   const lastPlayed = summaries.length ? Math.max(...summaries.map((m) => m.startedAt + m.durationSec * 1000)) : null;
   const period = counted.length
@@ -313,6 +315,7 @@ function ProfileLoaded({
           l'accueil ne les contient pas, mais elles disent ce que les moyennes ne disent
           pas. Pleine largeur, au-dessus des deux colonnes. */}
       <div className="row-week">
+        <SessionCard matches={avecLp} />
         <WeekCard matches={summaries} />
         <NextStepCard matches={counted} role={roles[0]?.role ?? null} />
         <HighlightsCard awards={awards} />

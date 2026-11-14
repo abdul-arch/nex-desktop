@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
 import type { Award } from "../../domain/badges";
-import { dayLabel, groupByDay } from "../../domain/sessions";
+import { dayLabel, groupByDay, lastSession } from "../../domain/sessions";
 import type { MatchSummary } from "../../domain/types";
 import { platform } from "../../platform";
 import type { BaselinesDto } from "../../platform/api";
@@ -131,6 +131,45 @@ export function HighlightsCard({ awards }: { awards?: Map<string, Award> }) {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Derniere session de jeu : les parties enchainees, coupees des que plus de deux heures
+ *  s'ecoulent. Arrivee de l'accueil, qui ne la porte plus. */
+export function SessionCard({ matches }: { matches: MatchSummary[] }) {
+  const s = useMemo(() => lastSession(matches), [matches]);
+  if (!s) return null;
+  const when = new Date(s.startedAt);
+  const day = dayLabel(midnightOf(s.startedAt));
+  return (
+    <section className="card card-pad session-card" aria-label="Dernière session">
+      <div className="card-title" style={{ justifyContent: "space-between" }}>
+        <span>Dernière session</span>
+        <span className="muted num" style={{ fontWeight: 400, fontSize: "var(--fs-xs)" }}>
+          {day} · {when.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+        </span>
+      </div>
+      <div className="session-figures">
+        <span>
+          <b className="num win">{s.wins}</b>
+          <small>victoires</small>
+        </span>
+        <span>
+          <b className="num loss">{s.losses}</b>
+          <small>défaites</small>
+        </span>
+        <span>
+          <b className="num">{s.lpDelta === null ? "—" : `${s.lpDelta > 0 ? "+" : ""}${s.lpDelta}`}</b>
+          <small>LP</small>
+        </span>
+        <span>
+          <b className="num">{duration(s.durationSec)}</b>
+          <small>
+            de jeu · {s.games} partie{s.games > 1 ? "s" : ""}
+          </small>
+        </span>
+      </div>
     </section>
   );
 }

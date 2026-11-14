@@ -18,6 +18,11 @@
 }
 
 .content {
+  /* Conteneur de requetes : les `@container content (...)` de dashboard.css et des autres
+     feuilles s'y referent. La declaration vivait dans dashboard.css, ce qui faisait deux
+     definitions de `.content` dans deux feuilles pour le meme element. */
+  container-type: inline-size;
+  container-name: content;
   min-height: 0;
   min-width: 0;
   overflow-x: hidden;

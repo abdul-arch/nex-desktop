@@ -1,9 +1,4 @@
 {
   "note": "Doublons connus au moment ou le script a ete pose. Le but est d'empecher les NOUVEAUX, pas de bloquer sur l'existant. Retirer une entree d'ici quand le doublon est resolu.",
-  "classes": [
-    "content",
-    "neg",
-    "ov-widget",
-    "select"
-  ]
+  "classes": []
 }

@@ -51,8 +51,11 @@ function classesDefinies() {
       const entete = regle[1].trim();
       if (entete === "" || entete.startsWith("@")) continue;
       for (const sel of entete.split(",")) {
-        // Le selecteur porte entierement sur une classe : ni espace, ni combinateur.
-        const m = /^\.(-?[A-Za-z_][\w-]*)(?:[:.[][^\s>+~]*)?$/.exec(sel.trim());
+        // Le selecteur porte sur la classe SEULE, pseudo-classes comprises : `.foo`,
+        // `.foo:hover`, `.foo::after`. Pas `.foo.bar` ni `.foo[x]`, qui sont des variantes
+        // auxquelles un element doit adherer : les voir ailleurs est normal, et les
+        // signaler reintroduirait du bruit (`.select` / `.select.mini` par exemple).
+        const m = /^\.(-?[A-Za-z_][\w-]*)(?::{1,2}[A-Za-z-]+(?:\([^)]*\))?)*$/.exec(sel.trim());
         if (!m) continue;
         if (!par.has(m[1])) par.set(m[1], new Set());
         par.get(m[1]).add(nom);

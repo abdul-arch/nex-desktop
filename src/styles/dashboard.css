@@ -1,8 +1,3 @@
-.content {
-  container-type: inline-size;
-  container-name: content;
-}
-
 .dash {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
@@ -519,7 +514,11 @@
   border: 2px solid currentColor;
   opacity: 0.8;
 }
-.ov-widget {
+/* Maquette d'apercu sur l'accueil, pas un vrai module d'overlay. Le nom precedent,
+   `.ov-widget`, est celui des modules reels dans overlay.css : les deux feuilles etant
+   chargees ensemble, l'apercu recevait `position: absolute` et les modules reels
+   recevaient cette marge et ce fond. */
+.ov-preview {
   margin: 10px auto 0;
   width: min(190px, 100%);
   border-radius: 8px;
@@ -528,23 +527,23 @@
   padding: 6px 8px;
   font-size: 10px;
 }
-.ov-widget header {
+.ov-preview header {
   display: flex;
   align-items: center;
   gap: 6px;
   font-weight: 700;
   margin-bottom: 4px;
 }
-.ov-widget dl {
+.ov-preview dl {
   margin: 0;
   display: grid;
   grid-template-columns: 1fr auto auto;
   gap: 2px 8px;
 }
-.ov-widget dt {
+.ov-preview dt {
   color: var(--muted);
 }
-.ov-widget dd {
+.ov-preview dd {
   margin: 0;
   text-align: right;
 }
