@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useAsync } from "../../app/useAsync";
-import { championName, championSplash, profileIcon, rankMiniCrest } from "../../data/assets";
+import { championName, championSplash, profileIcon, rankEmblem } from "../../data/assets";
 import { demoPlayer } from "../../data/demo";
 import { digitsOf } from "../../domain/countUp";
 import { toSummary } from "../../domain/fromMatch";
@@ -188,7 +188,7 @@ export function IntroScreen({ onEnter }: { onEnter: () => void }) {
           {rangConnu ? (
             <>
               <span className="intro-embleme">
-                <RemoteImg src={rankMiniCrest(solo.tier)} alt="" />
+                <RemoteImg src={rankEmblem(solo.tier)} alt="" />
               </span>
               <span className="intro-rang-nom">
                 {TIER_LABEL[solo.tier] ?? solo.tier}

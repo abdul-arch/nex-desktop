@@ -222,19 +222,30 @@
   gap: 9px;
   font-size: 17px;
 }
-/* Mini-blason et non embleme : mesure faite, l'embleme officiel n'occupe que 3 % de sa
-   toile de 1280x720 et se lit comme un point, la ou le mini-blason remplit sa boite.
-   Marges negatives : il depasse la ligne sans l'ecarter. */
+/* L'embleme officiel est une petite marque au centre d'une toile de 1280x720 presque
+   vide : affichee entiere, son encre tombait a treize pixels. Mesure sur Or, Maitre et
+   Challenger, cette encre tient toujours dans ~330x250 autour de (640, 343). On rogne
+   donc cette zone-la.
+
+   Geometrie : k = 64/330 = 0,19394 — l'image fait 1280k x 720k, et on la decale pour
+   amener le point (640, 343) au centre de la fenetre de rognage.
+   Marges negatives : l'embleme depasse la ligne du rang sans l'ecarter. */
 .intro-embleme {
-  width: 52px;
-  height: 52px;
+  position: relative;
+  width: 64px;
+  height: 50px;
+  overflow: hidden;
   line-height: 0;
-  margin: -12px 0;
+  margin: -10px 0;
+  flex: none;
 }
 .intro-embleme img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  position: absolute;
+  max-width: none;
+  width: 248.24px;
+  height: 139.64px;
+  left: -92.12px;
+  top: -41.52px;
 }
 .intro-rang-nom {
   font-weight: 700;
