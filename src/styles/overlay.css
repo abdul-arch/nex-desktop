@@ -636,6 +636,23 @@ html.overlay-root #root {
   font-size: var(--fs-xs);
 }
 
+/* Action principale : placer les widgets sur le jeu, pas dans la miniature. */
+.ov-place {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.ov-place p {
+  max-width: 68ch;
+}
+.btn-lg {
+  padding: 9px 16px;
+  font-size: var(--fs-md);
+}
+
 /* Page Overlays : grille de cartes (apercu, intitule, interrupteur, roue dentee). */
 .ov-group {
   margin-bottom: 18px;

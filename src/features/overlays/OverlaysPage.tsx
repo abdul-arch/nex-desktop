@@ -105,20 +105,26 @@ export function OverlaysPage() {
           </p>
         )}
       </div>
-      <section className="card card-pad" style={{ marginBottom: 14 }}>
-        <div className="panel-label">Disposition à l'écran</div>
-        <LayoutEditor layout={layout} onChange={update} />
-      </section>
       {!caps.windowControls ? (
         <div className="card">
           <EmptyState title="Overlay en jeu disponible dans l'application desktop" />
         </div>
       ) : (
         <>
-          <section className="card card-pad overlay-actions">
-            <button className="btn btn-primary" onClick={() => run(platform.overlayOpen(true))}>
+          <section className="card card-pad ov-place">
+            <div>
+              <b>Placer les widgets par-dessus le jeu</b>
+              <p className="muted" style={{ margin: "4px 0 0", fontSize: "var(--fs-sm)" }}>
+                Ouvre l'overlay en mode configuration : tu attrapes chaque widget à la souris et tu le poses où tu veux, directement sur l'écran
+                de jeu. En partie, <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>N</kbd> fait la même chose sans quitter le jeu, et le même raccourci en sort.
+              </p>
+            </div>
+            <button className="btn btn-primary btn-lg" onClick={() => run(platform.overlayOpen(true))}>
               <Move /> Déplacer sur l'écran réel
             </button>
+          </section>
+
+          <section className="card card-pad overlay-actions">
             <button className="btn" onClick={() => run(platform.overlaySetMode(false))}>
               Verrouiller (mode jeu)
             </button>
@@ -148,6 +154,13 @@ export function OverlaysPage() {
             mode <b>fenêtré sans bordure</b> : une fenêtre ne peut pas s'afficher au-dessus du plein écran exclusif. État actuel :{" "}
             {client.state?.stage === "in_game" ? "partie en cours" : "aucune partie"}.
           </p>
+
+          <details className="card card-pad" style={{ marginBottom: 14 }}>
+            <summary className="panel-label" style={{ cursor: "pointer" }}>
+              Placer depuis l'app (utile quand le jeu n'est pas lancé)
+            </summary>
+            <LayoutEditor layout={layout} onChange={update} />
+          </details>
 
           {GROUPS.map(([label, ids]) => (
             <section key={label} className="ov-group">
