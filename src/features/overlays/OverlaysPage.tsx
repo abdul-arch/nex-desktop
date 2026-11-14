@@ -41,6 +41,7 @@ const MODULES: ModuleDef[] = [
   { id: "gold", phase: "En jeu", name: WIDGET_INFO.gold.name, summary: WIDGET_INFO.gold.summary, icon: Coins },
   { id: "winprob", phase: "En jeu", name: WIDGET_INFO.winprob.name, summary: WIDGET_INFO.winprob.summary, icon: Percent },
   { id: "trinket", phase: "En jeu", name: WIDGET_INFO.trinket.name, summary: WIDGET_INFO.trinket.summary, icon: Eye },
+  { id: "runes", phase: "Sélection des champions", name: WIDGET_INFO.runes.name, summary: WIDGET_INFO.runes.summary, icon: Sparkles },
   { id: "counters", phase: "Sélection des champions", name: WIDGET_INFO.counters.name, summary: WIDGET_INFO.counters.summary, icon: Crosshair },
   { id: "loading", phase: "Écran de chargement", name: "Analyse à l'écran de chargement", summary: "Les dix joueurs, leur rang et leurs LP.", icon: Users },
   { id: "mayhem", phase: "ARAM Mayhem", name: "Badges et optimisations", summary: "Tes repères au moment de choisir.", icon: Snowflake },
@@ -74,6 +75,7 @@ const FRAMING: Record<ModuleId, string> = {
   skills: "40% 88%",
   trinket: "78% 76%",
   counters: "62% 18%",
+  runes: "20% 45%",
   loading: "50% 30%",
   mayhem: "30% 55%",
 };

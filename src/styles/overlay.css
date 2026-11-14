@@ -154,6 +154,31 @@ html.overlay-root #root {
   color: var(--ov-sub, var(--muted));
 }
 
+/* Runes et build : une ligne par famille, intitule a gauche, icones a droite. */
+.ov-rb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ov-rb-label {
+  width: 52px;
+  flex: none;
+  font-size: 10.5px;
+  color: var(--ov-sub, var(--muted));
+}
+.ov-rb-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ov-rb-icons img {
+  border-radius: 5px;
+  display: block;
+}
+.ov-rb-small {
+  opacity: 0.85;
+}
+
 /* Counters : un champion par ligne, avec son taux et l'avantage de ligne. */
 .ov-counter {
   display: flex;

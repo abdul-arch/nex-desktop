@@ -21,6 +21,8 @@ export function OverlayApp() {
   const [snapOn, setSnapOn] = useState(true);
   const [bgAlpha, setBgAlpha] = useState(86);
   const [counters, setCounters] = useState<WidgetInputs["counters"]>(null);
+  // Champion choisi en selection : alimente le build quand la partie n'a pas commence.
+  const [draftPick, setDraftPick] = useState<{ id: number; position: string | null } | null>(null);
   const [build, setBuild] = useState<ChampionBuildDto | null>(null);
   const [grid, setGrid] = useState<WinProbDto | null>(null);
   const [spells, setSpells] = useState<ChampionSpell[]>([]);
@@ -86,18 +88,24 @@ export function OverlayApp() {
     return e ? Number(e[0]) : null;
   }, [me?.championKey, catalog]);
 
-  // Build observe : charge une fois par champion.
+  // Champion a suivre : celui de la partie si elle a commence, sinon celui choisi en
+  // selection. Le build sert aux deux phases, charge une fois par champion et par poste.
+  const target = champId ? { id: champId, position: me?.position ?? null } : draftPick;
+  const targetKey = target ? `${target.id}:${target.position ?? ""}` : null;
   useEffect(() => {
-    if (!champId) return;
+    if (!target) {
+      setBuild(null);
+      return;
+    }
     let alive = true;
     platform
-      .statsBuild(champId, { position: me?.position ?? undefined, patch: "all" })
+      .statsBuild(target.id, { position: target.position ?? undefined, patch: "all" })
       .then((b) => alive && setBuild(b))
       .catch(() => alive && setBuild(null));
     return () => {
       alive = false;
     };
-  }, [champId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [targetKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Counters : seulement pendant la selection des champions, et seulement une fois
   // l'adversaire de voie choisi. Hors selection, `champSelect()` rend `null` et le widget
@@ -106,9 +114,16 @@ export function OverlayApp() {
     let alive = true;
     const read = async () => {
       const cs = await platform.champSelect().catch(() => null);
-      if (!cs) return alive && setCounters(null);
+      if (!cs) {
+        if (alive) {
+          setCounters(null);
+          setDraftPick(null);
+        }
+        return;
+      }
       const mine = cs.myTeam.find((x) => x.cellId === cs.localCell);
       const role = mine?.position ?? null;
+      setDraftPick(mine && mine.championId > 0 ? { id: mine.championId, position: role } : null);
       const enemy = role ? cs.theirTeam.find((x) => x.position === role && x.championId > 0) : null;
       if (!role || !enemy) return alive && setCounters(null);
       const params = { position: role, patch: "all" };

@@ -10,7 +10,7 @@
 import { skillLabel } from "../domain/fromMatch";
 import { kdiff, kgold, teamGold } from "../domain/livegold";
 import { winProbability } from "../domain/winprob";
-import { itemIcon, championIcon, spellIcon } from "../data/assets";
+import { itemIcon, championIcon, spellIcon, runeIcon } from "../data/assets";
 import type { Catalog, ChampionBuildDto, ChampionSpell, LiveSnapshot, WidgetId, WinProbDto } from "../platform/api";
 import type { Suggestion } from "../features/matchups/draftLogic";
 
@@ -102,6 +102,8 @@ export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
       return BuildWidget({ build, owned: me?.items ?? [], catalog, version, live: !!snap, config, onClose: shut });
     case "skills":
       return SkillWidget({ snap, build, keys, config, onClose: shut, championKey: me?.championKey ?? null, version, spells });
+    case "runes":
+      return RunesWidget({ build, catalog, version, keys, config, onClose: shut });
     case "counters":
       return CountersWidget({ counters, catalog, version, config, onClose: shut });
     case "trinket":
@@ -412,6 +414,91 @@ function CountersWidget({
           </div>
         );
       })}
+    </Widget>
+  );
+}
+
+/**
+ * Runes et build pendant la selection des champions.
+ *
+ * LECTURE SEULE : l'overlay n'ecrit jamais dans le client. L'import des runes et des
+ * objets reste dans la page Builds, declenche par l'utilisateur ; la fenetre d'overlay
+ * n'a volontairement pas ces permissions.
+ *
+ * Disposition d'une page de runes (`runePages[].ids`), identique a celle de la page
+ * Builds : [0] style principal, [1..5] perks principaux, [5] style secondaire,
+ * [6..8] perks secondaires, [8..11] fragments.
+ */
+function RunesWidget({
+  build,
+  catalog,
+  version,
+  keys,
+  config,
+  onClose,
+}: {
+  build: ChampionBuildDto | null;
+  catalog: Catalog | null;
+  version: string | null;
+  keys: "AZER" | "QWER";
+  config: boolean;
+  onClose?: () => void;
+}) {
+  const page = build?.runePages[0];
+  if (!build || !page || page.ids.length < 11)
+    return config ? (
+      <Widget title="Runes et build" onClose={onClose}>
+        <span className="ov-wait">S'affiche quand ton champion est choisi</span>
+      </Widget>
+    ) : null;
+  const rune = (id: number) => runeIcon(catalog?.runes[String(id)]?.icon);
+  const keystone = page.ids[1];
+  const secondary = page.ids[5];
+  const spells = build.spells[0]?.ids ?? [];
+  const start = build.startItems[0]?.ids ?? [];
+  const core = build.coreItems[0]?.ids ?? [];
+  const order = build.skillPriority[0]?.ids ?? [];
+  const row = (title: string, children: React.ReactNode) => (
+    <div className="ov-rb-row">
+      <span className="ov-rb-label">{title}</span>
+      <span className="ov-rb-icons">{children}</span>
+    </div>
+  );
+  return (
+    <Widget title="Runes et build" onClose={onClose}>
+      {row(
+        "Runes",
+        <>
+          {rune(keystone) && <img src={rune(keystone)!} alt="" width={24} height={24} />}
+          {rune(secondary) && <img className="ov-rb-small" src={rune(secondary)!} alt="" width={18} height={18} />}
+        </>,
+      )}
+      {spells.length > 0 &&
+        row(
+          "Sorts",
+          spells.slice(0, 2).map((id) => {
+            const src = spellIcon(version, catalog?.spells[String(id)]?.image);
+            return src ? <img key={id} src={src} alt="" width={20} height={20} /> : null;
+          }),
+        )}
+      {start.length > 0 &&
+        row(
+          "Départ",
+          start.slice(0, 4).map((id) => {
+            const src = itemIcon(version, id);
+            return src ? <img key={id} src={src} alt="" width={20} height={20} /> : null;
+          }),
+        )}
+      {core.length > 0 &&
+        row(
+          "Build",
+          core.slice(0, 3).map((id) => {
+            const src = itemIcon(version, id);
+            return src ? <img key={id} src={src} alt="" width={20} height={20} /> : null;
+          }),
+        )}
+      {order.length >= 3 && <span className="ov-sub">Compétences : {order.slice(0, 3).map((x) => skillLabel(x, keys)).join(" › ")}</span>}
+      <span className="ov-sub">Build observé · {page.games} parties</span>
     </Widget>
   );
 }

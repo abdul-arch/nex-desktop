@@ -154,6 +154,7 @@ const defaultOverlayLayout = (): WidgetLayout[] => [
   { id: "skills", x: 0.01, y: 0.62, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
   { id: "trinket", x: 0.8, y: 0.55, scale: 1, opacity: 0.92, visible: false, locked: false, mode: "always" as const },
   { id: "counters", x: 0.72, y: 0.22, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
+  { id: "runes", x: 0.01, y: 0.22, scale: 1, opacity: 0.92, visible: true, locked: false, mode: "always" as const },
 ];
 /**
  * Drapeau d'URL reserve au developpement. `typeof location` est verifie parce que ce

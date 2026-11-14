@@ -44,6 +44,15 @@ export const WIDGET_INFO: Record<
     missing:
       "Rien tant que l'adversaire de voie n'est pas choisi, ou si l'échantillon est trop mince. Un écart de taux n'est pas un taux de victoire : les deux sont affichés séparément.",
   },
+  runes: {
+    name: "Runes et build",
+    summary: "La page la plus jouée sur ton champion, pendant la sélection.",
+    source: "Sélection des champions du client local + builds des parties collectées",
+    frequency: "Chargé une fois par champion et par poste",
+    transform: "Page de runes, sorts d'invocateur, objets de départ, build principal et ordre des compétences les plus observés à ce poste.",
+    missing:
+      "Rien tant que ton champion n'est pas choisi, ou si le champion n'a pas assez de parties collectées à ce poste. L'overlay n'importe rien dans le client : l'import reste dans la page Builds, déclenché par toi.",
+  },
   clock: {
     name: "Chronomètre et stats",
     summary: "Ton CS et ton KDA sans ouvrir le tableau des scores.",

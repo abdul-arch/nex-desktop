@@ -81,9 +81,10 @@ export const EXAMPLE_BUILD: ChampionBuildDto = {
   games: 0,
   wins: 0,
   positions: [],
-  runePages: [],
-  spells: [],
-  startItems: [],
+  // Page complete : [style principal, 4 perks, style secondaire, 2 perks, 3 fragments].
+  runePages: [{ ids: [8100, 8112, 8126, 8138, 8135, 8200, 8210, 8237, 5008, 5008, 5001], games: 240, wins: 132 }],
+  spells: [{ ids: [4, 14], games: 240, wins: 132 }],
+  startItems: [{ ids: [1056, 2003], games: 240, wins: 132 }],
   coreItems: [{ ids: [3089, 3157, 3135], games: 240, wins: 132 }],
   boots: [],
   lateItems: [],

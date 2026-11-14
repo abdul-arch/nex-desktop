@@ -5,7 +5,7 @@ use crate::error::{AppError, AppResult};
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 
-pub const WIDGETS: [&str; 8] = ["gold", "winprob", "clock", "objectives", "build", "skills", "trinket", "counters"];
+pub const WIDGETS: [&str; 9] = ["gold", "winprob", "clock", "objectives", "build", "skills", "trinket", "counters", "runes"];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -34,6 +34,7 @@ pub fn defaults() -> Vec<WidgetLayout> {
         w("trinket", 0.80, 0.55, false),
         // Selection des champions : a droite, sous la fiche du champion adverse.
         w("counters", 0.72, 0.22, true),
+        w("runes", 0.01, 0.22, true),
     ]
 }
 
