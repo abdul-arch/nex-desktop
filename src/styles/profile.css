@@ -625,17 +625,7 @@ button.pname:hover {
 }
 .rune-art {
   display: block;
-  width: 58px;
-  height: 74px;
-  border-radius: 7px;
-  overflow: hidden;
-}
-.rune-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* L'art de chargement est cadre large : on remonte pour garder le visage. */
-  object-position: center 18%;
+  line-height: 0;
 }
 .rune-keystone {
   position: absolute;

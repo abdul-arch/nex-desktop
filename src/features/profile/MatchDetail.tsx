@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
-import { championLoading, championName, objectiveIcon, positionIcon } from "../../data/assets";
+import { championName, objectiveIcon, positionIcon } from "../../data/assets";
 import {
   MAYHEM_QUEUE,
   findParticipant,
@@ -17,7 +17,7 @@ import type { MatchDto, ParticipantDto, TeamDto, TimelineDto } from "../../platf
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { LineChart } from "../../ui/LineChart";
 import { duration, pct, ROLE_LABEL } from "../../ui/format";
-import { ChampIcon, RemoteImg, ScoreRing, Segmented } from "../../ui/primitives";
+import { ChampIcon, ScoreRing, Segmented } from "../../ui/primitives";
 import { ItemIcon, RuneIcon, SpellIcon } from "./GameIcons";
 import { DetailsTab } from "./DetailsTab";
 
@@ -335,6 +335,7 @@ function PlayerPicker({ match, shown, onPick }: { match: MatchDto; shown: Partic
  *  equipe, comme la maquette ; il n'y a donc rien a choisir dans cet onglet. */
 function RunesGrid({ match }: { match: MatchDto }) {
   const { catalog } = useAppState();
+  const version = useDDragonVersion();
   const key = (p: ParticipantDto) => catalog?.champions[String(p.championId)]?.key ?? p.champion;
   const runeName = (id: number) => catalog?.runes[String(id)]?.name ?? `Rune ${id}`;
   const teams = [100, 200].map((tid) => match.participants.filter((p) => p.teamId === tid));
@@ -350,8 +351,10 @@ function RunesGrid({ match }: { match: MatchDto }) {
             return (
               <div key={p.participantId} className="rune-cell">
                 <div className="rune-portrait">
+                  {/* L'icone carree est un cadrage sur le visage, fiable pour tous les
+                      champions, la ou un rognage de l'art de chargement en couperait certains. */}
                   <span className="rune-art" title={who}>
-                    <RemoteImg src={championLoading(key(p))} alt={who} />
+                    <ChampIcon version={version} champion={key(p)} size={56} rounded={8} />
                   </span>
                   {p.keystone !== null && (
                     <span className="rune-keystone" title={runeName(p.keystone)}>
