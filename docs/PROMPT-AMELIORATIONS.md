@@ -95,7 +95,7 @@ les deux feuilles les plus grosses sont lisibles.
 
 ---
 
-## 2. L'étape du backend embarqué est manuelle, et son oubli est invisible
+## 2. ~~L'étape du backend embarqué est manuelle~~ — fait le 14 novembre 2026
 
 `npm run tauri build` ne compile **que** le frontend : son `beforeBuildCommand` est
 `tsc && vite build`. Le backend embarqué passe par `scripts/build-sidecar.ps1`, qui est un
@@ -108,23 +108,37 @@ normalement et affichait simplement « Non fourni » sur deux cartes, ce qui se 
 bug du code et non comme une version périmée. Le défaut n'a été vu qu'en comparant les
 horodatages des fichiers à la main.
 
-**À faire** : enchaîner le script dans le `beforeBuildCommand` de `tauri.conf.json`, ou dans
-un script npm `build:app` qui fait les deux. Une ligne.
+**Fait** : `beforeBuildCommand` pointe sur `npm run build:app`, qui enchaîne
+`npm run sidecar` puis `npm run build`. Vérifié en lançant `npm run tauri build` sans
+appeler le script : la sortie montre la chaîne et « backend embarque pret ». Le README et
+le commentaire en tête du script disaient tous deux de le lancer à la main : corrigés.
 
 ---
 
-## 3. Le backend en release refuse l'origine du serveur de développement
+## 3. ~~Le backend en release refuse l'origine du serveur de développement~~ — faux
 
-Vérifier une modification dans le navigateur demande d'**arrêter l'application de
-l'utilisateur** pour libérer le port 8787 et lancer `npm run backend`, parce que le backend
-compilé en *release* n'accepte pas `http://localhost:1420` alors que celui de *debug* si.
+**Ce point était une erreur de diagnostic. Il n'y a rien à corriger.** Il reste écrit ici
+pour que personne ne le redécouvre à ses frais.
 
-Sur une session de travail, ce va-et-vient a été fait six fois. À chaque fois l'application
-de l'utilisateur est fermée puis relancée.
+Ce que j'avais conclu : vérifier une modification dans le navigateur obligeait à arrêter
+l'application de l'utilisateur, parce que le backend compilé en *release* n'accepterait pas
+l'origine du serveur de développement.
 
-**À faire** : autoriser l'origine du serveur de développement aussi en release, derrière un
-indicateur explicite (variable d'environnement, ou argument `--dev-origin`), pour qu'une
-vérification n'oblige plus à fermer l'application. Documenter l'indicateur dans le README.
+Ce que dit le code : **il n'y a aucun filtrage d'origine, et aucun CORS, nulle part dans le
+backend.** La page de développement n'en a pas besoin — elle passe par le proxy Vite
+`/nex-api` déclaré dans `vite.config.ts`, qui relaie vers `127.0.0.1:8787`. C'est du
+même-origine, et cela fonctionne avec n'importe quel backend écoutant sur ce port.
+
+Vérifié : page de développement chargée pendant que le backend **installé** tournait,
+`/nex-api/v1/health` répond 200 et l'application affiche le rang et les parties.
+
+D'où venait l'erreur : d'un `fetch("http://127.0.0.1:8787/...")` tapé dans la console de la
+page. Celui-là est bien cross-origin et échoue faute de CORS — mais l'application ne fait
+jamais cet appel. J'ai pris l'échec de ma sonde pour un échec de l'application, et j'ai
+fermé l'application de l'utilisateur sept fois dans la journée sans aucune nécessité.
+
+**La leçon, elle, vaut d'être gardée** : sonder un système par un chemin que le vrai code
+n'emprunte pas mesure la sonde, pas le système.
 
 ---
 
@@ -184,9 +198,10 @@ endroits à risque sont peu nombreux et connus.
 
 ## 8. Ordre conseillé
 
-1. §2 — une ligne, supprime une classe entière d'erreurs silencieuses.
-2. §1.1 et §1.2 — Stylelint et le script de doublons. Le reste du §1 peut suivre.
-3. §3 — débloque la vérification sans fermer l'application de l'utilisateur.
+1. ~~§2~~ — **fait** : le sidecar part depuis `beforeBuildCommand`.
+2. ~~§1~~ — **fait** : Stylelint, le script de doublons branché dans `npm run check`, et
+   les quatre doublons résolus. La base du garde-fou est vide.
+3. ~~§3~~ — **sans objet** : diagnostic faux, rien à corriger.
 4. §5 — court, et évite une confusion de version difficile à diagnostiquer.
 5. §7 — petite fonction, tests simples.
 6. §6 puis §4 — les deux plus longs, les moins urgents.
