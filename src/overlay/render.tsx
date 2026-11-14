@@ -12,6 +12,7 @@ import { kdiff, kgold, teamGold } from "../domain/livegold";
 import { winProbability } from "../domain/winprob";
 import { itemIcon, championIcon, spellIcon } from "../data/assets";
 import type { Catalog, ChampionBuildDto, ChampionSpell, LiveSnapshot, WidgetId, WinProbDto } from "../platform/api";
+import type { Suggestion } from "../features/matchups/draftLogic";
 
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const OBJ_NAMES: Record<string, string> = { dragon: "Dragon", elder: "Dragon ancestral", baron: "Baron Nashor" };
@@ -26,6 +27,8 @@ export interface WidgetInputs {
   build: ChampionBuildDto | null;
   /** Sorts du champion joue, dans l'ordre Q/W/E/R. Vide tant qu'ils ne sont pas charges. */
   spells: ChampionSpell[];
+  /** Counters calcules en selection : `null` hors selection ou tant qu'ils manquent. */
+  counters: { enemy: string; items: Suggestion[] } | null;
   grid: WinProbDto | null;
   /**
    * `true` garde visible un widget qui n'aurait rien a afficher, en montrant son etat
@@ -38,8 +41,15 @@ export interface WidgetInputs {
 }
 
 /** Rendu d'un widget. `null` signifie vraiment « rien a afficher ». */
+/** Modules qui n'ont de sens qu'une fois la partie lancee. */
+const IN_GAME: WidgetId[] = ["gold", "winprob", "clock", "objectives", "build", "skills", "trinket"];
+
 export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
-  const { snap, gameTime, catalog, version, keys, build, spells, grid, config } = i;
+  const { snap, gameTime, catalog, version, keys, build, spells, grid, config, counters } = i;
+  // Hors partie et hors configuration, un widget de partie ne s'affiche pas du tout :
+  // « En attente de partie » par-dessus la selection des champions n'apprendrait rien et
+  // encombrerait l'ecran.
+  if (!snap && !config && IN_GAME.includes(id)) return null;
   const me = snap?.players.find((p) => p.isActive) ?? null;
   const shut = i.onClose ? () => i.onClose!(id) : undefined;
   switch (id) {
@@ -92,6 +102,8 @@ export function renderWidget(id: WidgetId, i: WidgetInputs): React.ReactNode {
       return BuildWidget({ build, owned: me?.items ?? [], catalog, version, live: !!snap, config, onClose: shut });
     case "skills":
       return SkillWidget({ snap, build, keys, config, onClose: shut, championKey: me?.championKey ?? null, version, spells });
+    case "counters":
+      return CountersWidget({ counters, catalog, version, config, onClose: shut });
     case "trinket":
       return snap && me && snap.activeLevel >= 9 && me.items.includes(3340) ? (
         <Widget title="Trinket" onClose={shut}>
@@ -345,6 +357,61 @@ function WinProbWidget({
         {answer.games.toLocaleString("fr-FR")} situations observées · {answer.minute} min, écart ≈{answer.bucket > 0 ? "+" : ""}
         {answer.bucket}K
       </span>
+    </Widget>
+  );
+}
+
+/**
+ * Counters contre l'adversaire de voie, pendant la selection des champions.
+ *
+ * METHODE : aucune n'est inventee ici. Le classement vient de `suggest()`
+ * (src/features/matchups/draftLogic.ts), deja utilise par l'assistant de draft : force au
+ * poste (taux ajuste moins 50 %) plus l'avantage de ligne, attenue par l'effectif.
+ *
+ * Un ecart de taux n'est pas un taux de victoire : les deux sont montres separement, et
+ * l'effectif accompagne chaque ligne.
+ */
+function CountersWidget({
+  counters,
+  catalog,
+  version,
+  config,
+  onClose,
+}: {
+  counters: WidgetInputs["counters"];
+  catalog: Catalog | null;
+  version: string | null;
+  config: boolean;
+  onClose?: () => void;
+}) {
+  if (!counters || counters.items.length === 0)
+    return config ? (
+      <Widget title="Counters" onClose={onClose}>
+        <span className="ov-wait">S'affiche quand ton adversaire de voie est choisi</span>
+      </Widget>
+    ) : null;
+  const name = (id: number) => catalog?.champions[String(id)]?.name ?? `Champion ${id}`;
+  const key = (id: number) => catalog?.champions[String(id)]?.key ?? "";
+  return (
+    <Widget title={`Contre ${counters.enemy}`} onClose={onClose}>
+      {counters.items.slice(0, 3).map((s) => {
+        const icon = championIcon(version, key(s.championId));
+        return (
+          <div key={s.championId} className="ov-counter">
+            {icon ? <img src={icon} alt="" width={24} height={24} /> : <span className="ld-slot" style={{ width: 24, height: 24 }} />}
+            <span className="ov-counter-name">{name(s.championId)}</span>
+            <span className="ov-counter-stats">
+              <b>{(s.adjustedWinRate * 100).toFixed(1)} %</b>
+              {s.laneAdvantage && (
+                <em className={s.laneAdvantage.pp >= 0 ? "pos" : "neg"}>
+                  {s.laneAdvantage.pp >= 0 ? "+" : "−"}
+                  {Math.abs(s.laneAdvantage.pp).toFixed(1)} pts · {s.laneAdvantage.games} p.
+                </em>
+              )}
+            </span>
+          </div>
+        );
+      })}
     </Widget>
   );
 }

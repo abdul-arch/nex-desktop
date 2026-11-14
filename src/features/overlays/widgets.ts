@@ -34,6 +34,16 @@ export const WIDGET_INFO: Record<
     missing:
       "Aucun chiffre si la case compte moins de 60 situations observées, ni avant 2:30 ou après 37:30. Aucun repli sur une case voisine. Deux réserves : l'écart d'or est estimé (cf. Or des équipes), et les parties collectées sont des classées Master et au-dessus.",
   },
+  counters: {
+    name: "Counters",
+    summary: "Les meilleurs choix contre ton adversaire de voie.",
+    source: "Sélection des champions du client local + tier list et matchups des parties collectées",
+    frequency: "Lu une fois par adversaire de voie identifié",
+    transform:
+      "Réutilise la méthode déjà employée par l'assistant de draft : force au poste (taux ajusté − 50 %) plus l'avantage de ligne, atténué par l'effectif (n / (n + 10)). Si l'adversaire perd X points contre un champion, ce champion gagne X points.",
+    missing:
+      "Rien tant que l'adversaire de voie n'est pas choisi, ou si l'échantillon est trop mince. Un écart de taux n'est pas un taux de victoire : les deux sont affichés séparément.",
+  },
   clock: {
     name: "Chronomètre et stats",
     summary: "Ton CS et ton KDA sans ouvrir le tableau des scores.",

@@ -259,7 +259,7 @@ pub async fn stats_meta(window: Window, state: State<'_, AppState>) -> AppResult
 
 #[tauri::command]
 pub async fn stats_tierlist(window: Window, state: State<'_, AppState>, params: backend::StatsParams) -> AppResult<nex_domain::api::TierListDto> {
-    require_main(&window)?;
+    require_main_or_overlay(&window)?;
     params.validate()?;
     backend::stats_tierlist(&state.http, &backend_url(&state)?, &params).await
 }
@@ -307,7 +307,7 @@ pub async fn stats_matchups(
     champion_id: i32,
     params: backend::StatsParams,
 ) -> AppResult<nex_domain::api::MatchupsDto> {
-    require_main(&window)?;
+    require_main_or_overlay(&window)?;
     params.validate()?;
     backend::stats_matchups(&state.http, &backend_url(&state)?, champion_param(champion_id)?, &params).await
 }
@@ -336,7 +336,7 @@ pub fn client_state(window: Window, svc: State<'_, ClientService>) -> AppResult<
 
 #[tauri::command]
 pub fn client_champ_select(window: Window, svc: State<'_, ClientService>) -> AppResult<Option<ChampSelectState>> {
-    require_main(&window)?;
+    require_main_or_overlay(&window)?;
     svc.champ_select.lock().map(|s| s.clone()).map_err(|_| AppError::Unavailable("état indisponible".into()))
 }
 

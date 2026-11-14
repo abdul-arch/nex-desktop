@@ -9,6 +9,7 @@ import { WIDGET_INFO } from "./widgets";
 /** Taille approximative de chaque widget (px CSS a l'echelle 1, cf. overlay.css). */
 const SIZE: Record<WidgetId, [number, number]> = {
   gold: [200, 30],
+  counters: [210, 104],
   winprob: [180, 74],
   clock: [190, 92],
   objectives: [190, 56],

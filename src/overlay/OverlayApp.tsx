@@ -7,6 +7,8 @@ import { MayhemLayer } from "./MayhemLayer";
 import { LoadingPanel } from "./LoadingPanel";
 import { renderWidget } from "./render";
 import { snapPoint } from "../domain/snap";
+import { suggest } from "../features/matchups/draftLogic";
+import type { WidgetInputs } from "./render";
 
 export function OverlayApp() {
   const [layout, setLayout] = useState<WidgetLayout[]>([]);
@@ -18,6 +20,7 @@ export function OverlayApp() {
   const [keys, setKeys] = useState<"AZER" | "QWER">("AZER");
   const [snapOn, setSnapOn] = useState(true);
   const [bgAlpha, setBgAlpha] = useState(86);
+  const [counters, setCounters] = useState<WidgetInputs["counters"]>(null);
   const [build, setBuild] = useState<ChampionBuildDto | null>(null);
   const [grid, setGrid] = useState<WinProbDto | null>(null);
   const [spells, setSpells] = useState<ChampionSpell[]>([]);
@@ -96,6 +99,39 @@ export function OverlayApp() {
     };
   }, [champId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Counters : seulement pendant la selection des champions, et seulement une fois
+  // l'adversaire de voie choisi. Hors selection, `champSelect()` rend `null` et le widget
+  // disparait de lui-meme.
+  useEffect(() => {
+    let alive = true;
+    const read = async () => {
+      const cs = await platform.champSelect().catch(() => null);
+      if (!cs) return alive && setCounters(null);
+      const mine = cs.myTeam.find((x) => x.cellId === cs.localCell);
+      const role = mine?.position ?? null;
+      const enemy = role ? cs.theirTeam.find((x) => x.position === role && x.championId > 0) : null;
+      if (!role || !enemy) return alive && setCounters(null);
+      const params = { position: role, patch: "all" };
+      const [tier, mu] = await Promise.all([
+        platform.statsTierList(params).catch(() => null),
+        platform.statsMatchups(enemy.championId, params).catch(() => null),
+      ]);
+      if (!alive || !tier) return;
+      // Champions deja pris ou bannis : inutiles a proposer.
+      const used = new Set<number>(
+        [...cs.myTeam, ...cs.theirTeam].map((x) => x.championId).concat(cs.myBans, cs.theirBans).filter((id) => id > 0),
+      );
+      const nameOf = (id: number) => catalog?.champions[String(id)]?.name ?? `Champion ${id}`;
+      setCounters({ enemy: nameOf(enemy.championId), items: suggest(tier.champions, mu, used, 5, nameOf, 3) });
+    };
+    void read();
+    const id = window.setInterval(read, 4000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, [catalog]);
+
   // Sorts du champion joue : charges une fois par champion, pour l'icone du rappel de
   // competence. Donnees statiques Data Dragon, aucune information de partie.
   const champKey = me?.championKey ?? null;
@@ -117,7 +153,7 @@ export function OverlayApp() {
   const gameTime = snap.s ? snap.s.gameTime + Math.min(5, Math.max(0, (now - snap.at) / 1000)) : null;
 
   // En configuration, pas de croix : on y place les widgets, on ne les ferme pas.
-  const inputs = { snap: snap.s, gameTime, catalog, version, keys, build, spells, grid, config, onClose: config ? undefined : (id: WidgetId) => setClosed((c) => (c.includes(id) ? c : [...c, id])) };
+  const inputs = { snap: snap.s, gameTime, catalog, version, keys, build, spells, grid, counters, config, onClose: config ? undefined : (id: WidgetId) => setClosed((c) => (c.includes(id) ? c : [...c, id])) };
 
   return (
     <div className={`ov-surface ${config ? "config" : ""}`} style={{ ["--ov-bg" as string]: (bgAlpha / 100).toFixed(2) }}>

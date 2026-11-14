@@ -1,10 +1,10 @@
-import { Clock3, Coins, Eye, Flag, LayoutGrid, Move, Percent, RotateCcw, Snowflake, Sparkles, Swords, Users, X, type LucideIcon } from "lucide-react";
+import { Clock3, Coins, Crosshair, Eye, Flag, LayoutGrid, Move, Percent, RotateCcw, Snowflake, Sparkles, Swords, Users, X, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useAppState } from "../../app/AppState";
 import { useClient } from "../../app/ClientContext";
 import { errorMessage, platform } from "../../platform";
 import type { Catalog, ChampionSpell, LiveSnapshot, WidgetId, WidgetLayout, WinProbDto } from "../../platform/api";
-import { EXAMPLE_BUILD, EXAMPLE_GRID, EXAMPLE_SNAPSHOT } from "../../overlay/example";
+import { EXAMPLE_BUILD, EXAMPLE_COUNTERS, EXAMPLE_GRID, EXAMPLE_SNAPSHOT } from "../../overlay/example";
 // Capture de la Faille fournie par l'utilisateur. Decor uniquement : elle ne porte
 // aucune donnee et ne change jamais, contrairement aux apercus qu'elle accueille.
 import riftArt from "../../assets/rift.webp";
@@ -21,7 +21,7 @@ import { WIDGET_INFO } from "./widgets";
  */
 type ModuleId = WidgetId | "mayhem" | "loading";
 
-type Phase = "En jeu" | "Écran de chargement" | "ARAM Mayhem";
+type Phase = "En jeu" | "Sélection des champions" | "Écran de chargement" | "ARAM Mayhem";
 
 interface ModuleDef {
   id: ModuleId;
@@ -41,11 +41,12 @@ const MODULES: ModuleDef[] = [
   { id: "gold", phase: "En jeu", name: WIDGET_INFO.gold.name, summary: WIDGET_INFO.gold.summary, icon: Coins },
   { id: "winprob", phase: "En jeu", name: WIDGET_INFO.winprob.name, summary: WIDGET_INFO.winprob.summary, icon: Percent },
   { id: "trinket", phase: "En jeu", name: WIDGET_INFO.trinket.name, summary: WIDGET_INFO.trinket.summary, icon: Eye },
+  { id: "counters", phase: "Sélection des champions", name: WIDGET_INFO.counters.name, summary: WIDGET_INFO.counters.summary, icon: Crosshair },
   { id: "loading", phase: "Écran de chargement", name: "Analyse à l'écran de chargement", summary: "Les dix joueurs, leur rang et leurs LP.", icon: Users },
   { id: "mayhem", phase: "ARAM Mayhem", name: "Badges et optimisations", summary: "Tes repères au moment de choisir.", icon: Snowflake },
 ];
 
-const PHASES: Phase[] = ["En jeu", "Écran de chargement", "ARAM Mayhem"];
+const PHASES: Phase[] = ["En jeu", "Sélection des champions", "Écran de chargement", "ARAM Mayhem"];
 
 /** Etat du client, en clair. Dit aussi quand la source est absente. */
 const STAGE_TEXT: Record<string, string> = {
@@ -72,6 +73,7 @@ const FRAMING: Record<ModuleId, string> = {
   build: "13% 74%",
   skills: "40% 88%",
   trinket: "78% 76%",
+  counters: "62% 18%",
   loading: "50% 30%",
   mayhem: "30% 55%",
 };
@@ -129,6 +131,7 @@ export function OverlaysPage() {
     build: EXAMPLE_BUILD,
     spells,
     grid: live ? grid : EXAMPLE_GRID,
+    counters: EXAMPLE_COUNTERS,
     // L'apercu montre l'etat d'attente plutot que rien : une vignette vide n'apprendrait
     // pas a quoi sert le module.
     config: true,

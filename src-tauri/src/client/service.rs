@@ -154,6 +154,12 @@ pub fn spawn(app: AppHandle) {
                     if let Ok(session) = client.get::<Value>(paths::CHAMP_SELECT).await {
                         set(&app, &service.champ_select, Some(model::champ_select(&session)), "client://champselect");
                     }
+                    // Les modules de selection (counters) ont besoin de la fenetre des
+                    // maintenant. Les widgets de partie n'y affichent rien : ils sont
+                    // bornes a la phase ou ils ont un sens.
+                    if !overlay::is_open(&app) && auto_overlay(&app) {
+                        let _ = overlay::open(&app, false);
+                    }
                     Duration::from_millis(1500)
                 }
                 "loading" | "in_game" | "reconnect" => {

@@ -154,6 +154,47 @@ html.overlay-root #root {
   color: var(--ov-sub, var(--muted));
 }
 
+/* Counters : un champion par ligne, avec son taux et l'avantage de ligne. */
+.ov-counter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ov-counter img {
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex: none;
+}
+.ov-counter-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+.ov-counter-stats {
+  display: grid;
+  justify-items: end;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.ov-counter-stats b {
+  font-size: 11.5px;
+}
+/* L'avantage de ligne est un ecart en points, pas un taux : il reste a part. */
+.ov-counter-stats em {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--ov-sub, var(--muted));
+}
+.ov-counter-stats em.pos {
+  color: #97c459;
+}
+.ov-counter-stats em.neg {
+  color: #f0596b;
+}
+
 /* Suite du build : les etapes du build principal, celles deja achetees marquees. */
 .ov-steps {
   display: flex;

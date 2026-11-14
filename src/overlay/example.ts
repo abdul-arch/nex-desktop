@@ -101,6 +101,19 @@ export const EXAMPLE_GRID: WinProbDto = {
 };
 
 /**
+ * Counters d'exemple, pour l'apercu de la page de reglages. Les chiffres sont
+ * illustratifs et la carte qui les porte est marquee « exemple ».
+ */
+export const EXAMPLE_COUNTERS = {
+  enemy: "Zed",
+  items: [
+    { championId: 84, score: 6.1, reasons: [], games: 3120, adjustedWinRate: 0.527, laneAdvantage: { pp: 4.2, games: 180 } },
+    { championId: 38, score: 4.4, reasons: [], games: 2410, adjustedWinRate: 0.514, laneAdvantage: { pp: 3.1, games: 96 } },
+    { championId: 134, score: 3.2, reasons: [], games: 1870, adjustedWinRate: 0.509, laneAdvantage: { pp: 2.4, games: 74 } },
+  ],
+};
+
+/**
  * Composition d'exemple, pour regarder le panneau de chargement hors partie. Les
  * identifiants sont ceux de Data Dragon pour les memes champions que l'instantane.
  */

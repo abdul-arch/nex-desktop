@@ -447,7 +447,7 @@ export interface LoadingRosterDto {
   players: LoadingPlayerDto[];
 }
 
-export type WidgetId = "gold" | "winprob" | "clock" | "objectives" | "build" | "skills" | "trinket";
+export type WidgetId = "gold" | "winprob" | "clock" | "objectives" | "build" | "skills" | "trinket" | "counters";
 
 export interface WidgetLayout {
   id: WidgetId;
