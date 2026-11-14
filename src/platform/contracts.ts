@@ -48,6 +48,10 @@ export interface Settings {
   demoMode: boolean;
   defaultPlatform: string;
   backendUrl: string;
+  /** Clé Riot du backend intégré. En écriture seulement : la lecture renvoie toujours "". */
+  riotApiKey: string;
+  /** Vrai si une clé est enregistrée. La clé elle-même n'est jamais renvoyée. */
+  riotApiKeySet: boolean;
   /** "Pseudo#TAG" ou "" si aucun compte lie. */
   linkedRiotId: string;
   linkedPlatform: string;
@@ -218,6 +222,8 @@ export const DEFAULT_SETTINGS: Settings = {
   demoMode: true,
   defaultPlatform: "EUW1",
   backendUrl: "http://127.0.0.1:8787",
+  riotApiKey: "",
+  riotApiKeySet: false,
   linkedRiotId: "",
   linkedPlatform: "EUW1",
   favoriteChampions: [],

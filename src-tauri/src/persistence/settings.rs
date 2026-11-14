@@ -24,6 +24,12 @@ pub struct Settings {
     pub default_platform: String,
     /// URL de base du backend NEX (https, ou http uniquement en boucle locale).
     pub backend_url: String,
+    /// Cle Riot passee au backend embarque. Jamais renvoyee a l'interface : la commande
+    /// de lecture des reglages la remplace par une chaine vide.
+    pub riot_api_key: String,
+    /// Calcule a la lecture : une cle est enregistree. Jamais persiste.
+    #[serde(default, skip_deserializing)]
+    pub riot_api_key_set: bool,
     /// Compte lie ("Pseudo#TAG", vide si aucun) : alimente le dashboard reel.
     pub linked_riot_id: String,
     pub linked_platform: String,
@@ -68,6 +74,8 @@ impl Default for Settings {
             demo_mode: true,
             default_platform: "EUW1".into(),
             backend_url: DEFAULT_BACKEND_URL.into(),
+            riot_api_key: String::new(),
+            riot_api_key_set: false,
             linked_riot_id: String::new(),
             linked_platform: "EUW1".into(),
             favorite_champions: Vec::new(),
@@ -164,6 +172,19 @@ pub fn apply(mut s: Settings, key: &str, value: &Value) -> AppResult<Settings> {
         "backendUrl" => {
             let raw = value.as_str().ok_or_else(|| AppError::InvalidInput("URL attendue".into()))?;
             s.backend_url = validate_backend_url(raw)?;
+        }
+        // Cle Riot du backend embarque. Validee sur la meme forme que le backend, pour
+        // refuser tout de suite une saisie qui l'empecherait de demarrer. Une chaine vide
+        // efface la cle enregistree.
+        "riotApiKey" => {
+            let raw = value.as_str().ok_or_else(|| AppError::InvalidInput("clé attendue".into()))?.trim();
+            if raw.is_empty() {
+                s.riot_api_key = String::new();
+            } else if raw.starts_with("RGAPI-") && raw.len() <= 100 && !raw.chars().any(char::is_whitespace) {
+                s.riot_api_key = raw.to_string();
+            } else {
+                return Err(AppError::InvalidInput("une clé Riot commence par RGAPI-".into()));
+            }
         }
         "linkedRiotId" => {
             let raw = value.as_str().ok_or_else(|| AppError::InvalidInput("Riot ID attendu".into()))?;

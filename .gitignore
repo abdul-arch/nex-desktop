@@ -43,3 +43,6 @@ docs/perf/*.csv
 *.njsproj
 *.sln
 *.sw?
+
+# Binaire du backend embarque : reconstruit par scripts/build-sidecar.ps1
+src-tauri/binaries/

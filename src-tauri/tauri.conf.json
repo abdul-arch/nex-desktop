@@ -46,6 +46,7 @@
   },
   "bundle": {
     "active": true,
+    "externalBin": ["binaries/nex-backend"],
     "targets": ["nsis"],
     "publisher": "NEX",
     "shortDescription": "Statistiques, overlays et replays pour League of Legends",

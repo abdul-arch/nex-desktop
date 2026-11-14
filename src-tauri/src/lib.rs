@@ -6,6 +6,7 @@
 //! notification, raccourcis) et `overlay`.
 
 mod adapters;
+mod backend_proc;
 mod capture;
 mod client;
 mod commands;
@@ -99,6 +100,7 @@ pub fn run() {
             app.manage(client::service::ClientService::new());
             app.manage(std::sync::Arc::new(capture::service::CaptureService::default()));
             app.manage(std::sync::Arc::new(mayhem::service::MayhemService::default()));
+            app.manage(backend_proc::BackendProcess::default());
 
             let handle = app.handle().clone();
             // Lecture video : protocole d'assets limite au seul dossier Videos\NEX.
@@ -111,6 +113,9 @@ pub fn run() {
                 let h = handle.clone();
                 std::thread::spawn(move || capture::service::recover(&h));
             }
+            // Backend : demarre ici s'il n'ecoute pas deja. Avant l'ouverture de la
+            // fenetre, pour qu'elle ne s'affiche pas une seconde sans donnees.
+            backend_proc::start_if_needed(&handle);
             windows::setup_tray(&handle)?;
             windows::register_shortcuts(&handle);
             if !start_hidden {
@@ -224,10 +229,16 @@ pub fn run() {
     app.run(|handle, event| {
         // Derniere fenetre fermee : en mode zone de notification, NEX reste actif (suivi du
         // client, overlay) sans aucune WebView principale chargee.
-        if let RunEvent::ExitRequested { code: None, api, .. } = event {
-            if windows::tray_mode(handle) {
-                api.prevent_exit();
+        match &event {
+            RunEvent::ExitRequested { code: None, api, .. } => {
+                if windows::tray_mode(handle) {
+                    api.prevent_exit();
+                }
             }
+            // Le backend que nous avons demarre s'arrete avec nous ; un backend lance a
+            // la main n'est pas touche (nous n'en detenons alors aucun processus fils).
+            RunEvent::Exit => backend_proc::stop(handle),
+            _ => {}
         }
     });
 }

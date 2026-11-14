@@ -62,7 +62,15 @@ pub fn app_info(window: Window, state: State<'_, AppState>) -> AppResult<AppInfo
 #[tauri::command]
 pub fn settings_get(window: Window, state: State<'_, AppState>) -> AppResult<Settings> {
     require_main_or_overlay(&window)?;
-    state.db.with(settings::load)
+    state.db.with(settings::load).map(redact)
+}
+
+/// La cle Riot ne ressort jamais vers l'interface : elle s'ecrit, elle ne se relit pas.
+/// `riotApiKeySet` dit seulement si une cle est enregistree.
+fn redact(mut s: Settings) -> Settings {
+    s.riot_api_key_set = !s.riot_api_key.is_empty();
+    s.riot_api_key = String::new();
+    s
 }
 
 #[tauri::command]
@@ -76,7 +84,7 @@ pub fn settings_set(
     if key.len() > 64 {
         return Err(AppError::InvalidInput("cle trop longue".into()));
     }
-    state.db.with(|c| settings::set(c, &key, &value))
+    state.db.with(|c| settings::set(c, &key, &value)).map(redact)
 }
 
 #[tauri::command]

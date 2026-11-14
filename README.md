@@ -82,6 +82,7 @@ Tauri 2 · Rust · React · TypeScript · SQLite.
 | --- | --- |
 | Installer les dépendances | `npm install` |
 | Lancer le backend NEX (clé dans `backend/.env`) | `npm run backend` |
+| Préparer le backend embarqué (avant `tauri build`) | `scripts/build-sidecar.ps1` |
 | Lancer l'app en développement | `npm run tauri dev` |
 | Typage + tests TS + tests Rust (workspace) | `npm run check` |
 | Exécutable release (sans installateur) | `npx tauri build --no-bundle` |
@@ -94,10 +95,31 @@ NEX pour l'utilisateur courant, sans droits administrateur, et accepte `/S` pour
 installation silencieuse. Il n'est pas signé : SmartScreen affichera un avertissement au
 premier lancement.
 
+### Backend embarqué
+
+L'application installée démarre son propre backend et l'arrête en quittant. **Si quelque
+chose écoute déjà sur le port, elle n'y touche pas** : un backend lancé à la main en
+développement garde la main, et sa propre base.
+
+`scripts/build-sidecar.ps1` compile le backend et le dépose sous
+`src-tauri/binaries/nex-backend-<triple>.exe`, où Tauri l'attend. **À lancer avant
+`npx tauri build` dès que le backend change** : sans ce fichier, la compilation de
+l'application échoue, et avec un fichier périmé l'installateur embarquerait un ancien
+backend.
+
+Le backend embarqué range sa base dans `%LOCALAPPDATA%\gg.nex.desktop` — pas dans
+`Roaming`, les parties collectées pesant plusieurs centaines de mégaoctets. C'est une base
+distincte de `backend/nex-backend.sqlite3` utilisée en développement.
+
 ### Configuration
 
 `backend/.env` contient la clé Riot et n'est jamais versionné. Voir
 [backend/README.md](backend/README.md).
+
+Le backend **embarqué** n'a pas de `.env` : sa clé se saisit dans Réglages → « Clé Riot du
+backend intégré ». Elle est enregistrée sur la machine et passée au processus par une
+variable d'environnement au démarrage ; elle n'est jamais réaffichée, jamais renvoyée par
+l'API de l'application, et n'entre pas dans le binaire.
 
 ### Documentation
 

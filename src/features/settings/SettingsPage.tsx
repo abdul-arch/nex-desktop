@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useAppState } from "../../app/AppState";
 import { PLATFORMS } from "../../domain/riotId";
 import { NEX_SCORE_VERSION } from "../../domain/nexScore";
-import { platform } from "../../platform";
+import { errorMessage, platform } from "../../platform";
 import { Segmented } from "../../ui/primitives";
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
@@ -29,6 +29,8 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 export function SettingsPage() {
   const { settings, setSetting, info, staticData, staticDataError, recent, clearRecent, notify, backend, refreshBackend } = useAppState();
   const [urlDraft, setUrlDraft] = useState(settings.backendUrl);
+  // Saisie seule : la cle enregistree n'est jamais relue depuis le backend.
+  const [keyDraft, setKeyDraft] = useState("");
   useEffect(() => setUrlDraft(settings.backendUrl), [settings.backendUrl]);
 
   return (
@@ -112,6 +114,38 @@ export function SettingsPage() {
               <input className="input" value={urlDraft} onChange={(e) => setUrlDraft(e.target.value)} aria-label="URL du backend NEX" spellCheck={false} maxLength={200} />
               <button className="btn btn-sm" type="submit">
                 Tester
+              </button>
+            </form>
+          </Row>
+          <Row
+            label="Clé Riot du backend intégré"
+            hint="Nécessaire seulement si NEX démarre son propre backend. Elle est enregistrée sur cette machine et passée au backend au lancement ; elle n'est jamais réaffichée ni envoyée ailleurs. Un backend lancé à la main garde sa propre clé."
+          >
+            <form
+              style={{ display: "flex", gap: 6 }}
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  await setSetting("riotApiKey", keyDraft.trim());
+                  setKeyDraft("");
+                  notify(keyDraft.trim() ? "Clé enregistrée — elle sera utilisée au prochain démarrage" : "Clé effacée", "success");
+                } catch (err) {
+                  notify(errorMessage(err), "error");
+                }
+              }}
+            >
+              <input
+                className="input"
+                type="password"
+                value={keyDraft}
+                onChange={(e) => setKeyDraft(e.target.value)}
+                placeholder={settings.riotApiKeySet ? "Une clé est enregistrée" : "RGAPI-…"}
+                aria-label="Clé Riot du backend intégré"
+                spellCheck={false}
+                maxLength={100}
+              />
+              <button className="btn btn-sm" type="submit" disabled={!keyDraft.trim() && !settings.riotApiKeySet}>
+                {keyDraft.trim() ? "Enregistrer" : "Effacer"}
               </button>
             </form>
           </Row>
