@@ -14,6 +14,7 @@ import "./styles/recordings.css";
 import "./styles/explore.css";
 import "./styles/mayhem.css";
 import "./styles/leaderboards.css";
+import "./styles/intro.css";
 import App from "./App";
 import { OverlayApp } from "./overlay/OverlayApp";
 import { platform } from "./platform";

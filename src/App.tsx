@@ -21,6 +21,7 @@ import { SettingsPage } from "./features/settings/SettingsPage";
 import { CommandPalette } from "./shell/CommandPalette";
 import { Sidebar } from "./shell/Sidebar";
 import { TopBar } from "./shell/TopBar";
+import { IntroScreen } from "./features/intro/IntroScreen";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { ALL_ROUTES } from "./app/routes";
 import { platform } from "./platform";
@@ -167,12 +168,28 @@ function Shell() {
   );
 }
 
+/**
+ * L'animation de lancement ne joue qu'une fois, au demarrage de la fenetre principale :
+ * ce composant est monte une seule fois, donc ni une navigation ni un rafraichissement
+ * des donnees ne la rejouent. La coque est rendue dessous des le depart, pour que le logo
+ * puisse mesurer sa place d'arrivee et que l'application soit prete au moment du clic.
+ */
+function Lancement() {
+  const [intro, setIntro] = useState(true);
+  return (
+    <>
+      <Shell />
+      {intro && <IntroScreen onEnter={() => setIntro(false)} />}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <AppStateProvider>
       <ClientProvider>
         <NavigationProvider>
-          <Shell />
+          <Lancement />
         </NavigationProvider>
       </ClientProvider>
     </AppStateProvider>

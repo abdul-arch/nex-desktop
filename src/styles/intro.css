@@ -1,0 +1,268 @@
+/* Animation de lancement : le logo se dessine, rejoint l'en-tete, puis l'ecran de
+   bienvenue se compose. Les etapes sont portees par `data-etape` sur `.intro`, pour que
+   le rythme reste decrit a un seul endroit dans le composant. */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: var(--bg);
+  overflow: hidden;
+  /* La barre de titre native reste atteignable : l'intro s'arrete sous elle. */
+  padding-top: var(--titlebar-h, 0px);
+}
+
+/* Illustration en haut, fondue vers le fond sombre en bas. */
+.intro-fond {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 58%;
+  opacity: 0;
+  transition: opacity 900ms ease-out;
+  pointer-events: none;
+}
+.intro[data-etape="3"] .intro-fond,
+.intro[data-etape="4"] .intro-fond,
+.intro[data-etape="5"] .intro-fond {
+  opacity: 0.55;
+}
+.intro-fond img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 42%, transparent 100%);
+}
+
+/* ---------- Logo ---------- */
+
+/* Centre sans transform (inset + margin auto), pour que `transform` serve uniquement au
+   deplacement mesure : le calcul du point d'arrivee reste ainsi exact. */
+.intro-logo {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: max-content;
+  height: max-content;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transform-origin: var(--ox, 50%) var(--oy, 50%);
+  transition: transform 750ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}
+.intro-logo-pose {
+  transform: translate(var(--x, 0px), var(--y, 0px)) scale(var(--e, 0.3));
+}
+.intro-logo-mark {
+  display: block;
+  line-height: 0;
+}
+/* `.brand-mark` fixe 30px pour la barre laterale, ce qui annule l'attribut de taille du
+   SVG : sans cette surcharge le logo d'intro naitrait deja a sa taille finale, et il n'y
+   aurait aucune reduction a voir pendant le deplacement. */
+.intro-logo-mark .brand-mark {
+  width: 96px;
+  height: 96px;
+}
+.intro-logo-nom {
+  font-size: 54px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  opacity: 0;
+  transform: translateX(-14px);
+  transition:
+    opacity 450ms ease-out,
+    transform 450ms ease-out;
+}
+.intro:not([data-etape="0"]) .intro-logo-nom {
+  opacity: 1;
+  transform: none;
+}
+
+/* Trace puis remplissage, sur les formes du masque deja presentes dans le logo.
+   Longueurs mesurees sur la geometrie : hexagone 150, N 70,32. */
+.brand-mark-draw .nex-hex {
+  fill: #000;
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation:
+    nex-trace 900ms ease-out forwards,
+    nex-remplir 450ms ease-out 820ms forwards;
+}
+.brand-mark-draw .nex-n {
+  stroke-dasharray: 70.32;
+  stroke-dashoffset: 70.32;
+  animation: nex-trace 520ms ease-out 1050ms forwards;
+}
+@keyframes nex-trace {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes nex-remplir {
+  to {
+    fill: #fff;
+  }
+}
+
+/* ---------- Ecran de bienvenue ---------- */
+
+.intro-profil {
+  position: absolute;
+  inset: auto 0 0;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 0 24px 9vh;
+  text-align: center;
+}
+/* Chaque element entre a son tour. `--d` decale le depart sans multiplier les regles. */
+.intro-profil > * {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 420ms ease-out,
+    transform 420ms ease-out;
+  transition-delay: var(--d, 0ms);
+}
+.intro[data-etape="3"] .intro-avatar,
+.intro[data-etape="3"] .intro-bienvenue,
+.intro[data-etape="3"] .intro-pseudo,
+.intro[data-etape="4"] .intro-profil > *,
+.intro[data-etape="5"] .intro-profil > * {
+  opacity: 1;
+  transform: none;
+}
+.intro[data-etape="3"] .intro-rang,
+.intro[data-etape="3"] .intro-entrer {
+  opacity: 0;
+}
+.intro-bienvenue {
+  --d: 90ms;
+}
+.intro-pseudo {
+  --d: 180ms;
+}
+
+.intro-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid var(--border-strong);
+  line-height: 0;
+  background: var(--panel-2);
+}
+.intro-avatar img,
+.intro-avatar .img-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.intro-bienvenue {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.intro-pseudo {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+/* Le texte occupe deja sa largeur finale : la revelation rogne, donc rien ne se deplace. */
+.intro-pseudo-texte {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 620ms cubic-bezier(0.22, 1, 0.36, 1) 220ms;
+  overflow-wrap: anywhere;
+}
+.intro:not([data-etape="0"]):not([data-etape="1"]):not([data-etape="2"]) .intro-pseudo-texte {
+  clip-path: inset(0 0 0 0);
+}
+.intro-tag {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.intro-rang {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+}
+.intro-embleme {
+  width: 42px;
+  height: 42px;
+  line-height: 0;
+  margin: -6px 0;
+}
+.intro-embleme img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.intro-rang-nom {
+  font-weight: 600;
+}
+/* Chiffres a largeur fixe et place reservee : le libelle « LP » ne bouge pas pendant
+   que le compteur monte. */
+.intro-lp {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-size: 19px;
+}
+.intro-lp-label {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.intro-entrer {
+  --d: 60ms;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7a6cff, #5795ff);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+.intro-entrer:hover {
+  filter: brightness(1.08);
+}
+.intro-entrer:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Preference systeme : pas de mouvement, l'ecran arrive deja installe. */
+@media (prefers-reduced-motion: reduce) {
+  .intro-logo,
+  .intro-logo-nom,
+  .intro-profil > *,
+  .intro-pseudo-texte,
+  .intro-fond {
+    transition: none;
+  }
+  .brand-mark-draw .nex-hex,
+  .brand-mark-draw .nex-n {
+    animation: none;
+    stroke-dashoffset: 0;
+    fill: #fff;
+  }
+}
