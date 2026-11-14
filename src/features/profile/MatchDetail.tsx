@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
-import { championName, objectiveIcon } from "../../data/assets";
+import { championName, objectiveIcon, spellIcon } from "../../data/assets";
 import {
   MAYHEM_QUEUE,
   findParticipant,
@@ -275,12 +275,28 @@ function TimelineViews({ match, puuid, view }: { match: MatchDto; puuid: string;
   const shown = match.participants.find((p) => p.participantId === shownId) ?? me;
   return (
     <>
-      {view === "build" && <PlayerPicker match={match} shown={shown} onPick={setShownId} />}
-      {view === "build" && <RunesPanel me={shown} />}
-      {tl.loading && !tl.data && <div className="muted" style={{ padding: 12 }}>Chargement de la timeline…</div>}
-      {tl.error != null && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
-      {tl.data && view === "build" && <BuildPanel t={tl.data} me={shown} />}
-      {view === "build" && <PlayerDetails match={match} p={shown} t={tl.data} />}
+      {view === "build" && (
+        <div className="build-tab">
+          <PlayerPicker match={match} shown={shown} onPick={setShownId} />
+          {/* Premiere rangee : runes a gauche, competences a droite, alignees en haut. */}
+          <div className="build-row">
+            <RunesPanel me={shown} />
+            {tl.data ? (
+              <SkillsCard t={tl.data} me={shown} />
+            ) : (
+              <section className="card card-pad skills-card">
+                <div className="panel-label">Ordre des compétences</div>
+                <div className="muted">{tl.loading ? "Chargement de la timeline…" : "Timeline indisponible."}</div>
+              </section>
+            )}
+          </div>
+          {tl.error != null && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
+          {tl.data && <PurchaseCard t={tl.data} me={shown} />}
+          <PlayerDetails match={match} p={shown} t={tl.data} />
+        </div>
+      )}
+      {tl.loading && !tl.data && view !== "build" && <div className="muted" style={{ padding: 12 }}>Chargement de la timeline…</div>}
+      {tl.error != null && view !== "build" && <ErrorPanel error={tl.error} onRetry={() => tl.reload()} compact />}
       {tl.data && view === "gold" && <GoldPanel t={tl.data} match={match} me={me} />}
       {tl.data && view === "story" && <StoryPanel t={tl.data} match={match} me={me} />}
     </>
@@ -292,22 +308,33 @@ function PlayerPicker({ match, shown, onPick }: { match: MatchDto; shown: Partic
   const { catalog } = useAppState();
   const version = useDDragonVersion();
   const key = (p: ParticipantDto) => catalog?.champions[String(p.championId)]?.key ?? p.champion;
+  // Deux blocs de cinq separes : on retrouve son equipe sans compter les portraits.
+  const teams = [100, 200].map((tid) => match.participants.filter((p) => p.teamId === tid));
+  const role = shown.position ? ROLE_LABEL[shown.position] ?? shown.position : null;
+  const button = (p: ParticipantDto) => (
+    <button
+      key={p.participantId}
+      className={p.participantId === shown.participantId ? "active" : ""}
+      data-team={p.teamId}
+      onClick={() => onPick(p.participantId)}
+      aria-pressed={p.participantId === shown.participantId}
+      aria-label={`${p.gameName || "Joueur masqué"} — ${championName(key(p))}`}
+      title={`${p.gameName || "Joueur masqué"} — ${championName(key(p))}`}
+    >
+      <ChampIcon version={version} champion={key(p)} size={32} rounded={7} />
+    </button>
+  );
   return (
     <div className="player-picker">
-      {match.participants.map((p) => (
-        <button
-          key={p.participantId}
-          className={p.participantId === shown.participantId ? "active" : ""}
-          data-team={p.teamId}
-          onClick={() => onPick(p.participantId)}
-          aria-pressed={p.participantId === shown.participantId}
-          title={`${p.gameName || "Joueur masqué"} — ${championName(key(p))}`}
-        >
-          <ChampIcon version={version} champion={key(p)} size={26} rounded={6} />
-        </button>
-      ))}
-      <span className="muted player-picker-name">
-        {shown.gameName || "Joueur masqué"} · {championName(key(shown))}
+      <div className="pp-team">{teams[0].map(button)}</div>
+      <span className="pp-split" aria-hidden="true" />
+      <div className="pp-team">{teams[1].map(button)}</div>
+      <span className="pp-who">
+        <b>{shown.gameName || "Joueur masqué"}</b>
+        <span className="muted">
+          {championName(key(shown))}
+          {role ? ` · ${role}` : ""}
+        </span>
       </span>
     </div>
   );
@@ -328,30 +355,48 @@ function PlayerDetails({ match, p, t }: { match: MatchDto; p: ParticipantDto; t:
     return mine && his ? { gold: mine.totalGold - his.totalGold, xp: mine.xp - his.xp, cs: mine.cs - his.cs } : null;
   }, [match, p, t]);
 
-  const signed = (v: number) => `${v > 0 ? "+" : ""}${v.toLocaleString("fr-FR")}`;
-  const rows: [string, string][] = [];
-  rows.push(["Balises", `${p.wardsPlaced} posées · ${p.wardsKilled} détruites${p.detectorWardsPlaced !== null ? ` · ${p.detectorWardsPlaced} de contrôle` : ""}`]);
-  if (p.ccTimeSec !== null) rows.push(["Contrôle de foule", `${p.ccTimeSec} s`]);
-  if (p.damageToObjectives !== null)
-    rows.push(["Dégâts aux objectifs", `${p.damageToObjectives.toLocaleString("fr-FR")}${p.damageToTurrets !== null ? ` · ${p.damageToTurrets.toLocaleString("fr-FR")} aux tours` : ""}`]);
-  if (p.largestKillingSpree !== null) rows.push(["Plus longue série", String(p.largestKillingSpree)]);
-  if (p.largestMultiKill > 1) rows.push(["Plus grand multi-kill", MULTI_LABEL[p.largestMultiKill] ?? `${p.largestMultiKill} d'affilée`]);
-  if (p.timeDeadSec !== null) rows.push(["Temps passé mort", duration(p.timeDeadSec)]);
-  if (at15) rows.push(["Avance à 15 min", `${signed(at15.gold)} or · ${signed(at15.xp)} XP · ${signed(at15.cs)} CS`]);
+  // Le signe est ecrit, pas seulement porte par la couleur.
+  const signed = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("fr-FR")}`;
+  // Une donnee absente reste absente : jamais remplacee par zero.
+  const na = "—";
+  const blocks: { title: string; value: string; detail?: string }[] = [
+    {
+      title: "Vision",
+      value: `${p.wardsPlaced} balises`,
+      detail: `${p.wardsKilled} détruites${p.detectorWardsPlaced !== null ? ` · ${p.detectorWardsPlaced} de contrôle` : ""}`,
+    },
+    { title: "Contrôle de foule", value: p.ccTimeSec !== null ? `${p.ccTimeSec} s` : na },
+    {
+      title: "Dégâts aux objectifs",
+      value: p.damageToObjectives !== null ? p.damageToObjectives.toLocaleString("fr-FR") : na,
+      detail: p.damageToTurrets !== null ? `${p.damageToTurrets.toLocaleString("fr-FR")} aux tours` : undefined,
+    },
+    {
+      title: "Plus longue série",
+      value: p.largestKillingSpree !== null ? String(p.largestKillingSpree) : na,
+      detail: p.largestMultiKill > 1 ? MULTI_LABEL[p.largestMultiKill] ?? `${p.largestMultiKill} d'affilée` : undefined,
+    },
+    { title: "Temps passé mort", value: p.timeDeadSec !== null ? duration(p.timeDeadSec) : na },
+    {
+      title: "Écart à 15 min",
+      value: at15 ? `${signed(at15.gold)} or` : na,
+      detail: at15 ? `${signed(at15.xp)} XP · ${signed(at15.cs)} CS` : t ? undefined : "demande la timeline",
+    },
+  ];
 
   return (
-    <div className="player-details">
+    <section className="card card-pad stat-blocks">
       <div className="panel-label">Détails</div>
-      <dl>
-        {rows.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd className="num">{v}</dd>
+      <div className="stat-grid">
+        {blocks.map((b) => (
+          <div key={b.title} className="stat-block">
+            <span className="stat-title">{b.title}</span>
+            <b className="num">{b.value}</b>
+            {b.detail && <span className="muted num">{b.detail}</span>}
           </div>
         ))}
-      </dl>
-      {!t && <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "6px 0 0" }}>L'avance à 15 minutes demande la timeline, en cours de chargement.</p>}
-    </div>
+      </div>
+    </section>
   );
 }
 
@@ -362,102 +407,148 @@ const MULTI_LABEL: Record<number, string> = {
   5: "Pentakill",
 };
 
+/** Runes reellement choisies : une seule carte, arbre principal, secondaire et fragments. */
 function RunesPanel({ me }: { me: ParticipantDto }) {
   const { catalog } = useAppState();
+  const name = (id: number) => catalog?.runes[String(id)]?.name ?? `Rune ${id}`;
   const primary = me.perks.slice(0, 4);
   const secondary = me.perks.slice(4);
   return (
-    <div className="runes-panel">
-      <div>
-        <div className="panel-label">
-          <RuneIcon id={me.primaryStyle} size={18} /> {catalog?.runes[String(me.primaryStyle)]?.name ?? "Arbre principal"}
-        </div>
-        <div className="rune-list">
+    <section className="card card-pad rune-card">
+      <div className="panel-label">Runes</div>
+      <div className="rune-trees">
+        <div className="rune-branch">
+          <div className="rune-branch-head">
+            <RuneIcon id={me.primaryStyle} size={18} /> {catalog?.runes[String(me.primaryStyle)]?.name ?? "Arbre principal"}
+          </div>
           {primary.map((id, i) => (
-            <span key={id}>
-              <RuneIcon id={id} size={i === 0 ? 34 : 26} />
-              <small>{catalog?.runes[String(id)]?.name ?? id}</small>
-            </span>
+            // La rune fondamentale est mise en avant : c'est elle qui decide du style de jeu.
+            <div key={id} className={`rune-line ${i === 0 ? "keystone" : ""}`}>
+              <RuneIcon id={id} size={i === 0 ? 38 : 24} />
+              <span>{name(id)}</span>
+            </div>
           ))}
         </div>
-      </div>
-      <div>
-        <div className="panel-label">
-          <RuneIcon id={me.secondaryStyle} size={18} /> {catalog?.runes[String(me.secondaryStyle)]?.name ?? "Arbre secondaire"}
-        </div>
-        <div className="rune-list">
+        <div className="rune-branch">
+          <div className="rune-branch-head">
+            <RuneIcon id={me.secondaryStyle} size={18} /> {catalog?.runes[String(me.secondaryStyle)]?.name ?? "Arbre secondaire"}
+          </div>
           {secondary.map((id) => (
-            <span key={id}>
-              <RuneIcon id={id} size={26} />
-              <small>{catalog?.runes[String(id)]?.name ?? id}</small>
-            </span>
+            <div key={id} className="rune-line">
+              <RuneIcon id={id} size={24} />
+              <span>{name(id)}</span>
+            </div>
+          ))}
+          <div className="rune-branch-head shards-head">Fragments</div>
+          {me.statPerks.map((s, i) => (
+            <div key={i} className="rune-line">
+              <RuneIcon id={s} size={20} />
+              <span>{statShardLabel(s)}</span>
+            </div>
           ))}
         </div>
       </div>
-      <div>
-        <div className="panel-label">Fragments</div>
-        <ul className="shards">
-          {me.statPerks.map((s, i) => (
-            <li key={i}>{statShardLabel(s)}</li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    </section>
   );
 }
 
-function BuildPanel({ t, me }: { t: TimelineDto; me: ParticipantDto }) {
-  const { settings } = useAppState();
-  const groups = useMemo(() => groupPurchases(purchaseOrder(t, me.participantId)), [t, me.participantId]);
+/** Ordre des competences reellement monte, niveau par niveau. */
+function SkillsCard({ t, me }: { t: TimelineDto; me: ParticipantDto }) {
+  const { settings, catalog } = useAppState();
+  const version = useDDragonVersion();
   const skills = useMemo(() => skillOrder(t, me.participantId), [t, me.participantId]);
+  const champKey = catalog?.champions[String(me.championId)]?.key ?? me.champion;
+  // Fiche du champion : uniquement pour les icones de sorts. En cache par champion, donc
+  // changer de participant ne relance pas la lecture d'un champion deja vu.
+  const info = useAsync(champKey ? `champion:${champKey}` : null, () => platform.championInfo(champKey), 3_600_000);
+  // Le tableau s'arrete au dernier niveau reellement atteint, jamais a une borne fixe.
+  const levels = Math.max(skills.length, 1);
   return (
-    <div className="build-panel">
-      <div>
-        <div className="panel-label">Ordre d'achat (timeline)</div>
-        {groups.length === 0 ? (
-          <div className="muted">Aucun achat enregistré.</div>
-        ) : (
-          <ol className="purchase-groups">
-            {groups.map((g, i) => (
-              <li key={i}>
-                <span className="muted num">{mmss(g[0].timestamp)}</span>
-                <span className="item-row">
-                  {g.map((s, j) => (
-                    <span key={j} className={s.kind === "sell" ? "sold" : ""} title={s.kind === "sell" ? "Vendu" : undefined}>
-                      <ItemIcon id={s.itemId} size={24} />
-                    </span>
-                  ))}
-                </span>
-              </li>
-            ))}
-          </ol>
-        )}
-        <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "6px 0 0" }}>
-          Achats réels, annulations retirées, ventes barrées. L'inventaire final est affiché dans l'onglet Équipes.
-        </p>
-      </div>
-      <div>
-        <div className="panel-label">Ordre des compétences</div>
-        {skills.length === 0 ? (
-          <div className="muted">Aucune donnée.</div>
-        ) : (
+    <section className="card card-pad skills-card">
+      <div className="panel-label">Ordre des compétences</div>
+      {skills.length === 0 ? (
+        <div className="muted">Aucune donnée.</div>
+      ) : (
+        <div className="skill-scroll">
           <table className="skill-grid" aria-label="Ordre des compétences">
+            <thead>
+              <tr>
+                <th scope="col">
+                  <span className="sr-only">Compétence</span>
+                </th>
+                {Array.from({ length: levels }, (_, lvl) => (
+                  <th key={lvl} scope="col">
+                    {lvl + 1}
+                  </th>
+                ))}
+              </tr>
+            </thead>
             <tbody>
-              {[1, 2, 3, 4].map((slot) => (
-                <tr key={slot}>
-                  <th scope="row">{skillLabel(slot, settings.abilityKeys)}</th>
-                  {Array.from({ length: Math.max(18, skills.length) }, (_, lvl) => (
-                    <td key={lvl} className={skills[lvl] === slot ? "on" : ""}>
-                      {skills[lvl] === slot ? lvl + 1 : ""}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {[1, 2, 3, 4].map((slot) => {
+                const spell = info.data?.spells[slot - 1];
+                return (
+                  <tr key={slot}>
+                    <th scope="row">
+                      {spell && <img className="skill-spell" src={spellIcon(version, spell.image) ?? ""} alt="" width={22} height={22} />}
+                      <span className="skill-key">{skillLabel(slot, settings.abilityKeys)}</span>
+                    </th>
+                    {Array.from({ length: levels }, (_, lvl) => {
+                      const on = skills[lvl] === slot;
+                      return (
+                        <td key={lvl} className={on ? "on" : ""} title={on ? `${spell?.name ?? skillLabel(slot, settings.abilityKeys)} — niveau ${lvl + 1}` : undefined}>
+                          {on ? lvl + 1 : ""}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** Parcours d'achat : inventaire final, puis la chronologie en groupes. */
+function PurchaseCard({ t, me }: { t: TimelineDto; me: ParticipantDto }) {
+  const groups = useMemo(() => groupPurchases(purchaseOrder(t, me.participantId)), [t, me.participantId]);
+  return (
+    <section className="card card-pad purchase-card">
+      <div className="panel-label">Parcours d'achat</div>
+      <div className="final-items">
+        <span className="muted">Équipement final</span>
+        {me.items.slice(0, 6).map((id, i) => (
+          <ItemIcon key={i} id={id} size={30} />
+        ))}
+        <ItemIcon id={me.items[6]} size={30} trinket />
       </div>
-    </div>
+      {groups.length === 0 ? (
+        <div className="muted">Aucun achat enregistré.</div>
+      ) : (
+        <ol className="purchase-grid">
+          {groups.map((g, i) => (
+            <li key={i}>
+              <span className="muted num">{mmss(g[0].timestamp)}</span>
+              <span className="item-row">
+                {g.map((s, j) => (
+                  // Une vente reste comprehensible sans la couleur : elle est barree et dite.
+                  <span key={j} className={s.kind === "sell" ? "sold" : ""} title={s.kind === "sell" ? "Vendu" : undefined}>
+                    <ItemIcon id={s.itemId} size={28} />
+                    {s.kind === "sell" && <span className="sr-only">Vendu</span>}
+                  </span>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="muted" style={{ fontSize: "var(--fs-xs)", margin: "8px 0 0" }}>
+        Achats réels, annulations retirées, ventes barrées. Les achats proches dans le temps sont regroupés ; le jeu ne dit pas s'il s'agit d'un retour
+        à la boutique.
+      </p>
+    </section>
   );
 }
 

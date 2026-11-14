@@ -3,20 +3,23 @@ import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { itemIcon, runeIcon, spellIcon } from "../../data/assets";
 import { RemoteImg, Tip } from "../../ui/primitives";
 
-const STAT_SHARDS: Record<number, string> = {
-  5008: "Force adaptative",
-  5005: "Vitesse d'attaque",
-  5007: "Accélération de compétence",
-  5001: "PV croissants",
-  5011: "PV",
-  5010: "Vitesse de déplacement",
-  5013: "Ténacité et résistance aux ralentissements",
-  5002: "Armure",
-  5003: "Résistance magique",
+// Les fragments de stats n'existent pas dans runesReforged, donc pas dans le catalogue : leur
+// icone vit sous StatMods, ou le nom de fichier distingue les PV plats (Plus) des PV qui montent
+// avec le niveau (Scaling). Sans cette table, RuneIcon retombait sur la pastille grise « R ».
+const STAT_SHARDS: Record<number, { name: string; icon: string }> = {
+  5008: { name: "Force adaptative", icon: "StatModsAdaptiveForceIcon" },
+  5005: { name: "Vitesse d'attaque", icon: "StatModsAttackSpeedIcon" },
+  5007: { name: "Accélération de compétence", icon: "StatModsCDRScalingIcon" },
+  5001: { name: "PV croissants", icon: "StatModsHealthScalingIcon" },
+  5011: { name: "PV", icon: "StatModsHealthPlusIcon" },
+  5010: { name: "Vitesse de déplacement", icon: "StatModsMovementSpeedIcon" },
+  5013: { name: "Ténacité et résistance aux ralentissements", icon: "StatModsTenacityIcon" },
+  5002: { name: "Armure", icon: "StatModsArmorIcon" },
+  5003: { name: "Résistance magique", icon: "StatModsMagicResIcon" },
 };
 
 export function statShardLabel(id: number): string {
-  return STAT_SHARDS[id] ?? `Fragment ${id}`;
+  return STAT_SHARDS[id]?.name ?? `Fragment ${id}`;
 }
 
 export function ItemIcon({ id, size = 24, trinket = false }: { id: number; size?: number; trinket?: boolean }) {
@@ -51,10 +54,13 @@ export function RuneIcon({ id, size = 20, round = true }: { id: number | null; s
   const { catalog } = useAppState();
   if (!id) return <span className="slot-empty" style={{ width: size, height: size, borderRadius: size / 2 }} />;
   const r = catalog?.runes[String(id)];
+  const shard = STAT_SHARDS[id];
+  const label = r?.name ?? shard?.name ?? `Rune ${id}`;
+  const src = r?.icon ? runeIcon(r.icon) : shard ? runeIcon(`perk-images/StatMods/${shard.icon}.png`) : null;
   return (
-    <Tip text={r?.name ?? `Rune ${id}`}>
+    <Tip text={label}>
       <span className="game-icon rune" style={{ width: size, height: size, borderRadius: round ? size / 2 : 4 }} tabIndex={0}>
-        <RemoteImg src={runeIcon(r?.icon)} alt={r?.name ?? `Rune ${id}`} fallback="R" />
+        <RemoteImg src={src} alt={label} fallback="R" />
       </span>
     </Tip>
   );

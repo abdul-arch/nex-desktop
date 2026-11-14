@@ -443,47 +443,191 @@ button.pname:hover {
   letter-spacing: 0.05em;
   margin-bottom: 8px;
 }
-.runes-panel,
-.build-panel,
 .curves-panel {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 18px;
   margin-bottom: 12px;
 }
-.rune-list {
+
+/* ---------- Onglet Build & runes ---------- */
+.build-tab {
   display: grid;
-  gap: 6px;
+  gap: 12px;
 }
-.rune-list > span {
+/* Runes un peu plus large que les competences, les deux alignees en haut. */
+.build-row {
+  display: grid;
+  grid-template-columns: minmax(0, 57fr) minmax(0, 43fr);
+  gap: 12px;
+  align-items: start;
+}
+
+/* Barre de participants : deux blocs de cinq, separes. */
+.player-picker {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: var(--fs-sm);
+  gap: 10px;
+  flex-wrap: wrap;
 }
-.shards {
-  margin: 0;
-  padding-left: 16px;
-  font-size: var(--fs-sm);
-  display: grid;
+.pp-team {
+  display: flex;
   gap: 4px;
 }
-.purchase-groups {
+.pp-split {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-strong);
+  margin: 2px 4px;
+}
+.player-picker button {
+  padding: 2px;
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+}
+.player-picker button:hover {
+  border-color: var(--border-strong);
+}
+.player-picker button.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.pp-who {
+  display: grid;
+  line-height: 1.25;
+  font-size: var(--fs-sm);
+  margin-left: 4px;
+}
+
+/* Carte Runes : les deux arbres cote a cote, fragments sous le secondaire. */
+.rune-trees {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.rune-branch {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.rune-branch-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.shards-head {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.rune-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: var(--fs-sm);
+  min-width: 0;
+}
+.rune-line span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* La rune fondamentale porte le style de jeu : elle est plus grande et respire. */
+.rune-line.keystone {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* Competences : grille large, defilement limite a la carte. */
+.skill-scroll {
+  overflow-x: auto;
+}
+.skill-grid {
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.skill-grid thead th {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--dim);
+  padding-bottom: 2px;
+}
+.skill-grid tbody th {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-right: 6px;
+  color: var(--text-2);
+}
+.skill-spell {
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.skill-key {
+  font-weight: 700;
+}
+.skill-grid td {
+  width: 22px;
+  height: 22px;
+  text-align: center;
+  /* Une case non renseignee est nettement plus sombre qu'une case montee. */
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  color: transparent;
+}
+.skill-grid td.on {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Parcours d'achat : l'inventaire final, puis la chronologie en grille. */
+.final-items {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-xs);
+}
+.final-items .muted {
+  margin-right: 4px;
+}
+.purchase-grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
 }
-.purchase-groups li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.purchase-grid li {
+  display: grid;
+  gap: 4px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  background: var(--panel-2);
   font-size: var(--fs-xs);
 }
-.purchase-groups .muted {
-  width: 38px;
-  text-align: right;
+.purchase-grid .num {
+  font-weight: 600;
+}
+.purchase-grid .item-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 .sold {
   position: relative;
@@ -499,28 +643,39 @@ button.pname:hover {
   background: var(--red);
   transform: rotate(-35deg);
 }
-.skill-grid {
-  border-collapse: separate;
-  border-spacing: 2px;
-  font-size: 10px;
+
+/* Statistiques : six blocs compacts au lieu d'un tableau pleine largeur. */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
 }
-.skill-grid th {
-  width: 18px;
-  color: var(--text-2);
-}
-.skill-grid td {
-  width: 18px;
-  height: 18px;
-  text-align: center;
+.stat-block {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
   background: var(--panel-2);
-  border-radius: 3px;
-  color: transparent;
 }
-.skill-grid td.on {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
+.stat-title {
+  font-size: var(--fs-xs);
+  color: var(--muted);
 }
+.stat-block b {
+  font-size: var(--fs-md);
+}
+.stat-block .muted {
+  font-size: var(--fs-xs);
+}
+
+/* Fenetre etroite : les deux cartes s'empilent. */
+@media (max-width: 980px) {
+  .build-row,
+  .rune-trees {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .linechart {
   margin: 0;
 }
