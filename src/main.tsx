@@ -16,8 +16,6 @@ import "./styles/mayhem.css";
 import "./styles/leaderboards.css";
 import "./styles/intro.css";
 import App from "./App";
-import { OverlayApp } from "./overlay/OverlayApp";
-import { platform } from "./platform";
 
 // Bloque le menu contextuel natif de la WebView (sauf champs de saisie).
 window.addEventListener("contextmenu", (e) => {
@@ -25,10 +23,10 @@ window.addEventListener("contextmenu", (e) => {
   if (!t.closest("input, textarea")) e.preventDefault();
 });
 
-// Une seule base de code, deux interfaces : la fenetre "overlay" charge uniquement les widgets.
-// (?overlay permet l'apercu dans un navigateur pendant le developpement.)
-const isOverlay = platform.windowLabel === "overlay" || (import.meta.env.DEV && new URLSearchParams(location.search).has("overlay"));
-
+// La fenetre d'overlay a sa propre entree (overlay.html) : elle ne passe plus par ici, et
+// n'embarque donc plus les pages de l'application. Apercu navigateur : /overlay.html.
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>{isOverlay ? <OverlayApp /> : <App />}</React.StrictMode>,
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
 );
