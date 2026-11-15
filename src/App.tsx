@@ -2,7 +2,6 @@ import { X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AppStateProvider, useAppState } from "./app/AppState";
 import { NavigationProvider, useNav } from "./app/navigation";
-import { BuildsPage } from "./features/builds/BuildsPage";
 import { ChampionsPage } from "./features/champions/ChampionsPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { MatchupsPage } from "./features/matchups/MatchupsPage";
@@ -118,9 +117,6 @@ function Shell() {
       break;
     case "champions":
       page = <ChampionsPage />;
-      break;
-    case "builds":
-      page = <BuildsPage />;
       break;
     case "matchups":
       page = <MatchupsPage />;

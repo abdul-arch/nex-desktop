@@ -12,8 +12,8 @@
 //
 // Le tier lui-meme est calcule cote backend : retrait bayesien vers 50 % (K = 40), puis
 // des seuils fixes — S+ a 53,5 %, S a 52 %, A a 50,5 %, B a 49 %, C a 47,5 %.
-import { RotateCcw, Search, Star } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Info, RotateCcw, Search, Star } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
@@ -94,6 +94,10 @@ export function ChampionTable() {
   const [seuilActif, setSeuilActif] = useState(true);
   const [seuil, setSeuil] = useState(SEUIL_DEFAUT);
   const [grouper, setGrouper] = useState(true);
+  // Reprend ce que faisait la page « Builds & tier lists », fondue ici : une ligne par
+  // champion ET par poste, pour comparer un champion a lui-meme d'une voie a l'autre.
+  const [parPoste, setParPoste] = useState(false);
+  const [masquerPetits, setMasquerPetits] = useState(false);
   const [tri, setTri] = useState<{ col: Colonne; desc: boolean }>({ col: "rang", desc: false });
   const [favsSeuls, setFavsSeuls] = useState(false);
 
@@ -119,39 +123,50 @@ export function ChampionTable() {
   );
 
   const nomsParId = useMemo(() => new Map(liste.map((c) => [c.id, c])), [liste]);
+  /** Echantillon minimal pour qu'un champion soit classe, annonce par le backend. */
+  const min = meta.data?.minGames ?? 20;
 
-  /** Une ligne par champion. Sans role choisi, on garde son poste le plus joue : un
-   *  champion ne doit pas occuper cinq lignes du classement. */
+  /** Identite d'une ligne : le champion seul, ou le couple champion+poste. Sert de cle de
+   *  rendu, de classement et de tendance — les trois doivent s'accorder. Nommee `cleLigne`
+   *  et non `cle` : `triees` declare deja un `cle` local qui la masquerait. */
+  const cleLigne = useCallback((c: ChampionStatDto) => (parPoste ? `${c.championId}-${c.position}` : String(c.championId)), [parPoste]);
+
+  /** Une ligne par champion, a son poste le plus joue : un champion ne doit pas occuper
+   *  cinq lignes du classement. En mode « par poste », on garde au contraire chaque couple
+   *  champion+poste tel que le backend le renvoie. */
   const lignes = useMemo(() => {
+    const toutes = tl.data?.champions ?? [];
+    if (parPoste) return [...toutes];
     const parChampion = new Map<number, ChampionStatDto>();
-    for (const c of tl.data?.champions ?? []) {
+    for (const c of toutes) {
       const dejala = parChampion.get(c.championId);
       if (!dejala || c.games > dejala.games) parChampion.set(c.championId, c);
     }
     return [...parChampion.values()];
-  }, [tl.data]);
+  }, [tl.data, parPoste]);
 
   /** Rang de chaque champion sur le patch precedent, pour la tendance. */
   const rangPrecedent = useMemo(() => {
     if (!tlPrec.data) return null;
-    const parChampion = new Map<number, ChampionStatDto>();
+    const parChampion = new Map<string, ChampionStatDto>();
     for (const c of tlPrec.data.champions) {
-      const d = parChampion.get(c.championId);
-      if (!d || c.games > d.games) parChampion.set(c.championId, c);
+      const d = parChampion.get(cleLigne(c));
+      if (!d || c.games > d.games) parChampion.set(cleLigne(c), c);
     }
     const classe = [...parChampion.values()].sort((a, b) => b.adjustedWinRate - a.adjustedWinRate);
-    return new Map(classe.map((c, i) => [c.championId, i + 1]));
-  }, [tlPrec.data]);
+    return new Map(classe.map((c, i) => [cleLigne(c), i + 1]));
+  }, [tlPrec.data, cleLigne]);
 
   // Classement de reference : c'est lui qui donne la colonne « # », avant tout filtrage.
   const classement = useMemo(() => {
     const ordonne = [...lignes].sort((a, b) => b.adjustedWinRate - a.adjustedWinRate || b.games - a.games);
-    return new Map(ordonne.map((c, i) => [c.championId, i + 1]));
-  }, [lignes]);
+    return new Map(ordonne.map((c, i) => [cleLigne(c), i + 1]));
+  }, [lignes, cleLigne]);
 
   const filtrees = useMemo(() => {
     const recherche = pliage(q);
     return lignes.filter((c) => {
+      if (masquerPetits && c.games < min) return false;
       if (seuilActif && c.pickRate < seuil) return false;
       if (favsSeuls && !favs.includes(c.championId)) return false;
       if (recherche) {
@@ -160,7 +175,7 @@ export function ChampionTable() {
       }
       return true;
     });
-  }, [lignes, seuilActif, seuil, favsSeuls, favs, q, nomsParId]);
+  }, [lignes, seuilActif, seuil, favsSeuls, favs, q, nomsParId, masquerPetits, min]);
 
   /** Combien de champions le seuil retire a lui seul. La colonne « # » garde le rang
    *  d'ensemble, donc elle saute des numeros : autant dire lesquels manquent et pourquoi. */
@@ -176,7 +191,7 @@ export function ChampionTable() {
       return i < 0 ? TIERS.length : i;
     };
     const cle: Record<Colonne, (c: ChampionStatDto) => number | string> = {
-      rang: (c) => classement.get(c.championId) ?? 9999,
+      rang: (c) => classement.get(cleLigne(c)) ?? 9999,
       nom,
       tier: rangTier,
       victoire: (c) => c.adjustedWinRate,
@@ -192,7 +207,7 @@ export function ChampionTable() {
       return tri.desc ? -cmp : cmp;
     });
     return out;
-  }, [filtrees, tri, classement, nomsParId]);
+  }, [filtrees, tri, classement, nomsParId, cleLigne]);
 
   /** Groupes dans l'ordre des tiers, vides retires. */
   const groupes = useMemo(() => {
@@ -206,6 +221,8 @@ export function ChampionTable() {
   const reinitialiser = () => {
     setRole("");
     setQ("");
+    setParPoste(false);
+    setMasquerPetits(false);
     setSeuilActif(true);
     setSeuil(SEUIL_DEFAUT);
     setGrouper(true);
@@ -287,6 +304,16 @@ export function ChampionTable() {
           <span>Regrouper par tier</span>
         </label>
 
+        <label className="champ-switch" title="Un champion joué sérieusement à deux postes occupe alors deux lignes">
+          <input type="checkbox" checked={parPoste} onChange={(e) => setParPoste(e.target.checked)} />
+          <span>Détailler par poste</span>
+        </label>
+
+        <label className="champ-switch">
+          <input type="checkbox" checked={masquerPetits} onChange={(e) => setMasquerPetits(e.target.checked)} />
+          <span>Masquer sous {min} parties</span>
+        </label>
+
         <button className="btn btn-sm" aria-pressed={favsSeuls} onClick={() => setFavsSeuls((v) => !v)}>
           <Star size={13} fill={favsSeuls ? "currentColor" : "none"} style={favsSeuls ? { color: "var(--gold)" } : undefined} /> Favoris
         </button>
@@ -357,12 +384,12 @@ export function ChampionTable() {
                     const champ = nomsParId.get(c.championId);
                     const brut = c.games > 0 ? c.wins / c.games : 0;
                     const ecart = (c.adjustedWinRate - 0.5) * 100;
-                    const avant = rangPrecedent?.get(c.championId);
-                    const maintenant = classement.get(c.championId);
+                    const avant = rangPrecedent?.get(cleLigne(c));
+                    const maintenant = classement.get(cleLigne(c));
                     const tendance = avant && maintenant ? avant - maintenant : null;
                     return (
-                      <tr key={c.championId} className="champ-row" onClick={() => champ && ouvrir(c.championId, champ.key)}>
-                        <td className="num rang">{classement.get(c.championId)}</td>
+                      <tr key={cleLigne(c)} className="champ-row" onClick={() => champ && ouvrir(c.championId, champ.key)}>
+                        <td className="num rang">{classement.get(cleLigne(c))}</td>
                         <th scope="row" className="champ-cell">
                           {champ && <ChampIcon version={version} champion={champ.key} size={28} rounded={7} />}
                           <span className="champ-nom">{champ?.name ?? `#${c.championId}`}</span>
@@ -419,6 +446,28 @@ export function ChampionTable() {
           {precedentUtile === null && " La tendance demande un patch précédent d'au moins 200 parties : elle reste vide tant que le lot est trop mince."}
         </p>
       </section>
+
+      {/* Venu de la page « Builds & tier lists », fondue ici : le calcul etait explique la-bas,
+          il doit l'etre a cote du tableau qu'il produit. */}
+      <details className="card card-pad method">
+        <summary>
+          <Info size={14} /> Méthode de classement
+        </summary>
+        <p>
+          Pour chaque champion et chaque poste : taux de victoire ajusté = (victoires + 20) / (parties + 40). Ce retrait vers 50 % évite qu'un
+          champion joué 3 fois avec 3 victoires soit classé premier. Tiers : S+ ≥ 53,5 %, S ≥ 52 %, A ≥ 50,5 %, B ≥ 49 %, C ≥ 47,5 %, D en dessous ;
+          « ? » sous {min} parties. Le pick rate rapporte les parties du champion à ce poste au nombre de parties collectées ; le ban rate compte
+          les parties où il est banni, tous postes confondus.
+        </p>
+        <p>
+          Sans « Détailler par poste », un champion n'occupe qu'une ligne, celle de son poste le plus joué : les colonnes décrivent alors ce poste-là,
+          pas la somme de tous. Coche la case pour voir chaque poste séparément.
+        </p>
+        <p>
+          Source : parties collectées par le backend NEX. Le filtre « Rang » porte sur le rang du joueur dont la partie a été collectée.
+          Ces statistiques décrivent des corrélations observées. Ce ne sont pas des recommandations garanties.
+        </p>
+      </details>
     </div>
   );
 }

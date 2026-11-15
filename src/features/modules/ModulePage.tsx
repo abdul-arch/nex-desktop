@@ -13,12 +13,14 @@ interface ModuleInfo {
 
 const MODULES: Partial<Record<RouteId, ModuleInfo>> = {
   champions: {
-    summary: "Fiches champions : compétences (touches A/Z/E/R ou Q/W/E/R selon tes réglages), runes, sorts, builds, matchups et skins.",
-    needs: ["Catalogue Data Dragon versionné mis en cache par le noyau Rust", "Statistiques agrégées du backend NEX pour les builds et matchups"],
-  },
-  builds: {
-    summary: "Builds et tier lists filtrables par patch, file, rôle, rang et région, avec effectifs et méthode de classement expliquée.",
-    needs: ["Backend NEX : collecte autorisée et agrégations par patch", "Méthode de tier list documentée"],
+    summary:
+      "Tier list filtrable par patch, file, poste, rang et région, avec effectifs et méthode de classement expliquée ; puis la fiche d'un champion : compétences (touches A/Z/E/R ou Q/W/E/R selon tes réglages), runes, sorts, builds, matchups et skins.",
+    needs: [
+      "Catalogue Data Dragon versionné mis en cache par le noyau Rust",
+      "Backend NEX : collecte autorisée et agrégations par patch",
+      "Statistiques agrégées du backend NEX pour la tier list, les builds et les matchups",
+      "Méthode de tier list documentée",
+    ],
   },
   leaderboards: {
     summary: "Classements par file et région, paginés et datés.",

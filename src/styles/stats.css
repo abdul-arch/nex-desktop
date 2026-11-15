@@ -230,12 +230,6 @@
   font-weight: 600;
   text-align: left;
 }
-.cell-role {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-2);
-}
 .method {
   margin-top: 14px;
   font-size: var(--fs-sm);

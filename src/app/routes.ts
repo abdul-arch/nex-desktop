@@ -1,5 +1,4 @@
 import {
-  ChartColumn,
   Crosshair,
   FileChartColumn,
   Film,
@@ -20,7 +19,6 @@ export type RouteId =
   | "dashboard"
   | "profile"
   | "champions"
-  | "builds"
   | "leaderboards"
   | "live"
   | "matchups"
@@ -47,7 +45,6 @@ export const NAV_SECTIONS: { title: string; routes: RouteDef[] }[] = [
       { id: "dashboard", label: "Dashboard", icon: House, phase: 1 },
       { id: "profile", label: "Profil & historique", icon: User, phase: 1 },
       { id: "champions", label: "Champions", icon: Swords, phase: 1 },
-      { id: "builds", label: "Builds & tier lists", icon: ChartColumn, phase: 1 },
       { id: "leaderboards", label: "Classements", icon: Trophy, phase: 1 },
     ],
   },
