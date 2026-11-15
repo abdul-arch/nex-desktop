@@ -422,13 +422,17 @@ html.overlay-root #root {
 
 /* Panneau de l'ecran de chargement : les dix joueurs, deux rangees de cinq. */
 .ld-panel {
+  /* Toute la planche se derive de la largeur d'une carte : un seul reglage a tourner.
+     En vw et non en px fixes — a 118 px la carte occupait 4,6 % d'un ecran 2558 px et
+     devenait illisible, alors qu'elle gardait sa taille sur un 1080p. */
+  --ld-w: clamp(130px, 7.2vw, 200px);
   position: absolute;
   left: 50%;
   top: 6%;
   transform: translateX(-50%);
   display: grid;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: calc(var(--ld-w) * 0.085);
+  padding: calc(var(--ld-w) * 0.102) calc(var(--ld-w) * 0.119);
   border-radius: 12px;
   background: rgba(13, 15, 21, var(--ov-bg, 0.86));
   border: 1px solid rgba(255, 255, 255, 0.09);
@@ -438,19 +442,20 @@ html.overlay-root #root {
 .ld-head {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: calc(var(--ld-w) * 0.085);
+  font-size: calc(var(--ld-w) * 0.1);
   justify-content: space-between;
 }
 .ld-row {
   display: flex;
-  gap: 8px;
+  gap: calc(var(--ld-w) * 0.068);
 }
 /* Carte d'un joueur : illustration en fond, intitules par-dessus, comme l'ecran de
    chargement lui-meme. Ce qui n'est pas lu n'est pas affiche. */
 .ld-card {
   position: relative;
-  width: 118px;
-  height: 188px;
+  width: var(--ld-w);
+  height: calc(var(--ld-w) * 1.593);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -458,7 +463,7 @@ html.overlay-root #root {
   border-radius: 10px;
   background: #11141b;
   border-top: 2px solid transparent;
-  font-size: 11px;
+  font-size: calc(var(--ld-w) * 0.093);
   text-align: center;
 }
 .ld-row.blue .ld-card {
@@ -484,38 +489,38 @@ html.overlay-root #root {
   top: 5px;
   left: 0;
   right: 0;
-  font-size: 10.5px;
+  font-size: calc(var(--ld-w) * 0.089);
   color: rgba(255, 255, 255, 0.75);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 .ld-foot {
   position: relative;
   display: grid;
-  gap: 2px;
-  padding: 8px 6px 7px;
+  gap: calc(var(--ld-w) * 0.017);
+  padding: calc(var(--ld-w) * 0.068) calc(var(--ld-w) * 0.051) calc(var(--ld-w) * 0.059);
   background: linear-gradient(180deg, transparent, rgba(8, 9, 12, 0.92) 38%);
 }
 .ld-name {
-  font-size: 11.5px;
+  font-size: calc(var(--ld-w) * 0.097);
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .ld-me {
-  font-size: 10px;
+  font-size: calc(var(--ld-w) * 0.085);
   color: var(--accent-strong);
   letter-spacing: 0.06em;
 }
 .ld-rank {
   display: grid;
   gap: 1px;
-  font-size: 10.5px;
+  font-size: calc(var(--ld-w) * 0.089);
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
 }
 .ld-rank b {
-  font-size: 11px;
+  font-size: calc(var(--ld-w) * 0.093);
 }
 .ld-rank.muted {
   color: var(--ov-sub, var(--muted));

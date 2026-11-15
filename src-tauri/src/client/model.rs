@@ -136,6 +136,15 @@ fn ids(v: Option<&Value>) -> Vec<i32> {
 /// Ni pseudo, ni poste, ni sorts d'invocateur : ils ne sont pas dans cette reponse.
 /// `my_puuid` sert a marquer le joueur connecte ; passer une chaine vide si on l'ignore.
 pub fn loading_roster(session: &Value, my_puuid: &str) -> Option<LoadingRosterDto> {
+    // Le client garde le `gameData` de la partie precedente jusqu'a ce que la suivante le
+    // remplace. Sans ce garde, la planche s'affichait en pleine selection des champions
+    // avec les dix joueurs de la partie d'avant — vu a l'ecran : le joueur prenait Irelia
+    // pendant que sa carte annoncait Anivia. On ne la montre donc que quand une partie
+    // demarre reellement.
+    let phase = session.get("phase").and_then(Value::as_str).unwrap_or("");
+    if !matches!(stage_of(phase), "loading" | "in_game" | "reconnect") {
+        return None;
+    }
     let data = session.get("gameData")?;
     let champion_of: std::collections::HashMap<&str, i32> = data
         .get("playerChampionSelections")
@@ -629,12 +638,28 @@ mod tests {
     #[test]
     fn loading_roster_sans_joueur_ou_sans_donnees() {
         assert!(loading_roster(&json!({ "phase": "Lobby" }), "").is_none());
-        assert!(loading_roster(&json!({ "gameData": { "teamOne": [], "teamTwo": [] } }), "").is_none());
+        assert!(loading_roster(&json!({ "phase": "InProgress", "gameData": { "teamOne": [], "teamTwo": [] } }), "").is_none());
+    }
+
+    /// Le cas qui a ete vu a l'ecran : nouvelle selection en cours, et le client publie
+    /// encore la composition de la partie precedente. Rien ne doit s'afficher.
+    #[test]
+    fn loading_roster_ignore_la_partie_precedente_pendant_la_selection() {
+        let mut s = session_fixture();
+        for phase in ["ChampSelect", "Lobby", "Matchmaking", "ReadyCheck", "EndOfGame", "WaitingForStats", "None"] {
+            s["phase"] = json!(phase);
+            assert!(loading_roster(&s, "c").is_none(), "composition affichee en phase {phase}");
+        }
+        // Et elle reparait des que la partie demarre.
+        for phase in ["GameStart", "InProgress", "Reconnect"] {
+            s["phase"] = json!(phase);
+            assert!(loading_roster(&s, "c").is_some(), "composition absente en phase {phase}");
+        }
     }
 
     #[test]
     fn loading_roster_tolere_les_champs_absents() {
-        let s = json!({ "gameData": { "teamOne": [{ "puuid": "a" }], "teamTwo": [] } });
+        let s = json!({ "phase": "GameStart", "gameData": { "teamOne": [{ "puuid": "a" }], "teamTwo": [] } });
         let r = loading_roster(&s, "").unwrap();
         assert_eq!(r.game_id, 0);
         assert_eq!(r.queue_id, 0);
