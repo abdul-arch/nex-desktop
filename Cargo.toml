@@ -15,5 +15,11 @@ nex-mayhem = { path = "crates/nex-mayhem" }
 codegen-units = 1
 lto = true
 opt-level = 3
-panic = "abort"
+# `panic = "abort"` etait le choix d'origine, pour la taille du binaire. Il a coute cher :
+# une panique dans n'importe quelle tache de fond — sondage du client League, collecteur,
+# capture — emportait toute l'application, overlay compris, en pleine partie. Vu cinq fois
+# le 15 novembre 2026. En deroulant, la tache fautive meurt seule, le reste survit, et le
+# hook de `paniques.rs` ecrit ce qui s'est passe. Quelques dizaines de kilo-octets contre
+# une application qui reste debout : le compte est vite fait.
+panic = "unwind"
 strip = true

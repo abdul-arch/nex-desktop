@@ -13,6 +13,7 @@ mod commands;
 mod error;
 mod mayhem;
 mod overlay;
+mod paniques;
 mod persistence;
 mod state;
 mod windows;
@@ -66,6 +67,11 @@ fn capture_selftest_run(app: &tauri::AppHandle, title: String) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Avant tout le reste : sans ce hook, une panique disparait sans laisser de trace.
+    // `panic = "abort"` tue le processus immediatement et `strip` efface les symboles.
+    if let Some(d) = paniques::dossier() {
+        paniques::journaliser(d);
+    }
     let args: Vec<String> = std::env::args().collect();
     // --tray : demarrer sans fenetre principale (mesures, demarrage avec Windows).
     let start_hidden = args.iter().any(|a| a == "--tray");
