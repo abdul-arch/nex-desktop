@@ -82,6 +82,17 @@
   align-items: center;
   gap: 12px;
 }
+.champ-charger {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.champ-charger > span {
+  flex: 1 1 260px;
+}
 
 .saved-lists {
   display: grid;
@@ -795,6 +806,70 @@ button.pname:hover {
 
 .linechart {
   margin: 0;
+}
+/* Repere de positionnement de l'infobulle : elle se place en pourcentage de cette zone,
+   exactement comme le SVG projette ses abscisses. */
+.linechart-zone {
+  position: relative;
+}
+.linechart-zone svg {
+  display: block;
+}
+.linechart-survol circle {
+  transition: r 120ms ease-out;
+}
+.linechart-bulle {
+  position: absolute;
+  top: 6px;
+  z-index: 2;
+  pointer-events: none;
+  min-width: 132px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  font-size: var(--fs-xs);
+  line-height: 1.35;
+  white-space: nowrap;
+  /* Seule l'opacite est animee : `transform` porte l'ancrage calcule en ligne, et
+     l'animer ici le remplacerait le temps de l'animation, faisant sauter l'infobulle
+     d'un bord a l'autre. */
+  animation: linechart-bulle-entree 110ms ease-out;
+}
+@keyframes linechart-bulle-entree {
+  from {
+    opacity: 0;
+  }
+}
+.bulle-date {
+  font-weight: 600;
+  color: var(--text);
+}
+.bulle-rang {
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.bulle-lp {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+}
+.bulle-delta {
+  margin-top: 4px;
+  font-weight: 600;
+}
+/* Mouvement reduit : l'infobulle apparait sans glisser. */
+@media (prefers-reduced-motion: reduce) {
+  .linechart-bulle {
+    animation: none;
+  }
+  .linechart-survol circle {
+    transition: none;
+  }
 }
 .linechart .legend {
   display: flex;

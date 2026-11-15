@@ -14,6 +14,8 @@ import { Segmented } from "../../ui/primitives";
 type Q = "RANKED_SOLO_5x5" | "RANKED_FLEX_SR";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+const longDate = (at: number) => new Date(at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+const heure = (at: number) => new Date(at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 const rankText = (s: RankSnapshotDto) => `${TIER_LABEL[s.tier] ?? s.tier}${s.division ? ` ${s.division}` : ""} · ${s.lp} LP`;
 const signed = (n: number) => `${n > 0 ? "+" : ""}${n}`;
 
@@ -92,6 +94,7 @@ function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSna
         series={[{ label: "LP gagnés depuis le premier relevé", color: "var(--accent)", values }]}
         xLabel={(i) => (i === 0 ? shortDate(since) : shortDate(changes[i - 1].at))}
         yFormat={(v) => signed(Math.round(v))}
+        tooltip={(i) => <Bulle changes={changes} i={i} since={since} />}
       />
       {best && (
         <div className="lp-head">
@@ -103,6 +106,46 @@ function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSna
       <p className="muted lp-note">
         Un point par changement observé, pas par partie : si NEX n'a pas lu ce profil entre deux parties, leurs variations sont regroupées.
       </p>
+    </>
+  );
+}
+
+/**
+ * Infobulle d'un point de la courbe.
+ *
+ * CE QU'ELLE NE DIT PAS : « Victoire » ou « Défaite ». Un point est un CHANGEMENT DE LP
+ * entre deux relevés, pas une partie — si NEX n'a pas lu le profil entre deux parties,
+ * leurs variations sont regroupées, et annoncer un résultat serait une invention. Quand
+ * la fenêtre d'observation couvre plus d'une minute, elle est affichée telle quelle, ce
+ * qui laisse juger de ce que le point recouvre.
+ */
+function Bulle({ changes, i, since }: { changes: LpChange[]; i: number; since: number }) {
+  if (i === 0) {
+    return (
+      <>
+        <div className="bulle-date">{longDate(since)}</div>
+        <div className="muted">{heure(since)}</div>
+        <div className="bulle-rang">Premier relevé</div>
+        <div className="muted">Origine de la courbe, aucune variation avant.</div>
+      </>
+    );
+  }
+  const c = changes[i - 1];
+  const s = c.snapshot;
+  const fenetre = c.at - c.from;
+  return (
+    <>
+      <div className="bulle-date">{longDate(c.at)}</div>
+      <div className="muted">{heure(c.at)}</div>
+      <div className="bulle-rang">
+        {TIER_LABEL[s.tier] ?? s.tier}
+        {s.division ? ` ${s.division}` : ""}
+      </div>
+      <div className="bulle-lp num">{s.lp} LP</div>
+      <div className={`bulle-delta num ${c.delta > 0 ? "pos" : c.delta < 0 ? "neg" : "muted"}`}>
+        {signed(c.delta)} LP
+      </div>
+      {fenetre > 60_000 && <div className="muted">relevé entre {heure(c.from)} et {heure(c.at)}</div>}
     </>
   );
 }
