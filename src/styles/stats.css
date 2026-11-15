@@ -253,43 +253,6 @@
   line-height: 1.5;
 }
 
-/* ---------- Grille des champions ---------- */
-.champ-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 8px;
-}
-.champ-card {
-  position: relative;
-  border-radius: 12px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-}
-.champ-card:hover {
-  border-color: var(--border-strong);
-}
-.champ-card-main {
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  width: 100%;
-  padding: 12px 6px 10px;
-  text-align: center;
-}
-.champ-card-main strong {
-  font-size: var(--fs-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.champ-card-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  min-height: 20px;
-}
 .fav-btn {
   position: absolute;
   top: 6px;
@@ -968,5 +931,208 @@ button.variant:hover {
 @container content (max-width: 1100px) {
   .draft-band {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Classement des champions : tableau dense, groupe par tier ---------- */
+
+.champ-recents {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.champ-recents .muted {
+  font-size: var(--fs-xs);
+  margin-right: 2px;
+}
+.champ-recents button {
+  border: 0;
+  background: none;
+  padding: 0;
+  line-height: 0;
+  cursor: pointer;
+  border-radius: 7px;
+  opacity: 0.75;
+}
+.champ-recents button:hover {
+  opacity: 1;
+}
+
+.champ-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.champ-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.champ-switch input[type="checkbox"] {
+  accent-color: var(--accent-strong);
+  cursor: pointer;
+}
+.champ-switch .seuil {
+  width: 52px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: inherit;
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.tier-table-card {
+  padding: 0;
+  overflow: hidden;
+}
+.tier-table-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-xs);
+}
+/* Le tableau est dense par choix : il ne defile de cote qu'en fenetre tres etroite. */
+/* `overflow-x` fait de ce bloc le scrollport auquel l'en-tete collant se raccroche.
+   Sans hauteur bornee il ne defile jamais verticalement : la page defile a sa place et
+   l'en-tete s'en va avec elle, malgre son `position: sticky`. Le borner rend le collant
+   effectif et garde le defilement horizontal quand le panneau est etroit. */
+.tier-table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 272px);
+  overscroll-behavior: contain;
+}
+.tier-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.tier-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+  text-align: right;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.tier-table thead th:nth-child(2) {
+  text-align: left;
+}
+.tier-table th.tri {
+  padding: 0;
+}
+.tier-table th.tri button {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+.tier-table th.tri button:hover {
+  color: var(--text);
+}
+.tier-table th.tri.actif button {
+  color: var(--accent-strong);
+}
+
+.champ-group th {
+  text-align: left;
+  padding: 10px 10px 6px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+.champ-group th .muted {
+  margin-left: 8px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+}
+
+.champ-row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.champ-row:hover {
+  background: var(--panel-2);
+}
+.champ-row td,
+.champ-row th {
+  padding: 5px 10px;
+  text-align: right;
+  font-weight: 500;
+}
+.champ-row .rang {
+  color: var(--muted);
+  width: 44px;
+}
+.champ-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  font-weight: 600;
+  min-width: 0;
+}
+.champ-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.champ-cell .fav-btn {
+  opacity: 0;
+  margin-left: auto;
+}
+.champ-row:hover .fav-btn,
+.champ-cell .fav-btn.on {
+  opacity: 1;
+}
+/* Le signe est ecrit en plus de la couleur : elle n'est jamais seule porteuse. */
+.tier-table .ecart,
+.tier-table .tendance {
+  font-size: var(--fs-xs);
+  width: 62px;
+}
+.tier-table .pos {
+  color: var(--blue);
+}
+.tier-table .neg {
+  color: var(--red);
+}
+
+.champ-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+@container content (max-width: 900px) {
+  .champ-toolbar {
+    gap: 8px;
+  }
+  .tier-table {
+    font-size: var(--fs-xs);
   }
 }

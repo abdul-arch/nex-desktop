@@ -1,25 +1,24 @@
-import { ChevronLeft, ChevronRight, Crosshair, Search, Star, Swords, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Crosshair, Star, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
 import { championLoading, championSplash } from "../../data/assets";
 import { skillLabel } from "../../domain/fromMatch";
 import { platform } from "../../platform";
-import type { ChampionBuildDto, ChampionInfo, MatchupsDto, TierListDto } from "../../platform/api";
+import type { ChampionBuildDto, ChampionInfo, MatchupsDto } from "../../platform/api";
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { pct, ROLE_LABEL } from "../../ui/format";
-import { ChampIcon, EmptyState, PositionIcon, RemoteImg } from "../../ui/primitives";
+import { ChampIcon, EmptyState, RemoteImg } from "../../ui/primitives";
 import { BuildView } from "../stats/BuildView";
+import { ChampionTable } from "./ChampionTable";
 import {
   paramsKey,
   RoleFilter,
   ScopeLine,
   StatsFilters,
-  TierBadge,
   toParams,
   useChampionById,
-  useChampionList,
   useStatsFilters,
   useStatsMeta,
 } from "../stats/statsShared";
@@ -36,7 +35,7 @@ const CLASSES: Record<string, string> = {
 export function ChampionsPage() {
   const { location } = useNav();
   const key = location.params?.champion;
-  return key ? <ChampionDetail champKey={key} initialRole={location.params?.role} /> : <ChampionGrid />;
+  return key ? <ChampionDetail champKey={key} initialRole={location.params?.role} /> : <ChampionTable />;
 }
 
 function useFavorites() {
@@ -46,112 +45,6 @@ function useFavorites() {
   const toggle = (id: number) =>
     setSetting("favoriteChampions", favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id]);
   return { favs, toggle };
-}
-
-function ChampionGrid() {
-  const version = useDDragonVersion();
-  const { navigate } = useNav();
-  const list = useChampionList();
-  const meta = useStatsMeta();
-  const [filters] = useStatsFilters();
-  const { favs, toggle } = useFavorites();
-  const [q, setQ] = useState("");
-  const [role, setRole] = useState("");
-  const [cls, setCls] = useState("");
-  const [onlyFav, setOnlyFav] = useState(false);
-  const params = toParams(filters);
-  const tl = useAsync<TierListDto>(`tierlist:${paramsKey(params)}`, () => platform.statsTierList(params), 60_000);
-
-  // Poste principal et tier de chaque champion dans le perimetre.
-  const statsById = useMemo(() => {
-    const m = new Map<number, { role: string; tier: string; games: number; wins: number; roles: Set<string> }>();
-    for (const c of tl.data?.champions ?? []) {
-      const cur = m.get(c.championId);
-      if (!cur || c.games > cur.games) m.set(c.championId, { role: c.position, tier: c.tier, games: c.games, wins: c.wins, roles: cur?.roles ?? new Set() });
-      m.get(c.championId)!.roles.add(c.position);
-    }
-    return m;
-  }, [tl.data]);
-
-  const shown = list.filter((c) => {
-    if (q && !c.name.toLowerCase().includes(q.toLowerCase())) return false;
-    if (onlyFav && !favs.includes(c.id)) return false;
-    if (cls && !c.tags.includes(cls)) return false;
-    if (role) {
-      const s = statsById.get(c.id);
-      if (!s || !s.roles.has(role)) return false;
-    }
-    return true;
-  });
-
-  return (
-    <div className="page">
-      <div className="page-head">
-        <h1 className="page-title">
-          <Swords aria-hidden="true" /> Champions
-        </h1>
-        <p className="page-sub">Compétences, builds observés, matchups et skins de chaque champion.</p>
-        <div className="spacer" />
-        <StatsFilters meta={meta.data} />
-      </div>
-
-      <div className="grid-toolbar">
-        <label className="search-box">
-          <Search size={14} aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un champion" aria-label="Rechercher un champion" />
-        </label>
-        <RoleFilter value={role} onChange={setRole} />
-        <select className="select" value={cls} onChange={(e) => setCls(e.target.value)} aria-label="Classe">
-          <option value="">Toutes les classes</option>
-          {Object.entries(CLASSES).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
-        </select>
-        <button className="btn btn-sm" aria-pressed={onlyFav} onClick={() => setOnlyFav((v) => !v)}>
-          <Star fill={onlyFav ? "currentColor" : "none"} style={onlyFav ? { color: "var(--gold)" } : undefined} /> Favoris
-        </button>
-        <span className="spacer" />
-        <span className="muted num" style={{ fontSize: "var(--fs-xs)" }}>
-          {shown.length} champions
-          {role && !tl.data?.champions.length ? " · aucun poste connu (pas encore de statistiques)" : ""}
-        </span>
-      </div>
-
-      {list.length === 0 ? (
-        <div className="card card-pad muted">Chargement du catalogue Data Dragon…</div>
-      ) : (
-        <div className="champ-grid">
-          {shown.map((c) => {
-            const s = statsById.get(c.id);
-            const fav = favs.includes(c.id);
-            return (
-              <div key={c.id} className="champ-card">
-                <button className="champ-card-main" onClick={() => navigate("champions", { champion: c.key, ...(role ? { role } : {}) })} aria-label={`Ouvrir ${c.name}`}>
-                  <ChampIcon version={version} champion={c.key} size={56} rounded={12} />
-                  <strong>{c.name}</strong>
-                  <span className="champ-card-meta">
-                    {s ? (
-                      <>
-                        <PositionIcon position={s.role} size={13} />
-                        <TierBadge tier={s.tier} />
-                      </>
-                    ) : (
-                      <span className="muted">{c.tags.map((t) => CLASSES[t] ?? t).join(" · ")}</span>
-                    )}
-                  </span>
-                </button>
-                <button className={`fav-btn ${fav ? "on" : ""}`} aria-pressed={fav} aria-label={fav ? `Retirer ${c.name} des favoris` : `Ajouter ${c.name} aux favoris`} onClick={() => toggle(c.id)}>
-                  <Star size={13} fill={fav ? "currentColor" : "none"} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function ChampionDetail({ champKey, initialRole }: { champKey: string; initialRole?: string }) {
