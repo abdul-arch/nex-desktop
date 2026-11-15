@@ -105,7 +105,20 @@ CREATE TABLE IF NOT EXISTS a_winprob (
 "#;
 
 pub const POSITIONS: [&str; 5] = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
-pub const TIERS: [&str; 3] = ["CHALLENGER", "GRANDMASTER", "MASTER"];
+/// Paliers acceptes par le filtre. L'ordre va du plus haut au plus bas : c'est celui
+/// qu'on retrouve dans le selecteur de l'interface.
+pub const TIERS: [&str; 10] = [
+    "CHALLENGER",
+    "GRANDMASTER",
+    "MASTER",
+    "DIAMOND",
+    "EMERALD",
+    "PLATINUM",
+    "GOLD",
+    "SILVER",
+    "BRONZE",
+    "IRON",
+];
 /// Echantillon minimal pour classer un champion ou afficher une variante sans avertissement.
 pub const MIN_GAMES: u32 = 20;
 
@@ -987,7 +1000,11 @@ mod tests {
         assert!(Filter::resolve(&c, Some("x"), None, None, None).is_err());
         assert!(Filter::resolve(&c, None, Some("XX9"), None, None).is_err());
         assert!(Filter::resolve(&c, None, None, Some(450), None).is_err());
-        assert!(Filter::resolve(&c, None, None, None, Some("IRON")).is_err());
+        assert!(Filter::resolve(&c, None, None, None, Some("BOIS")).is_err());
         assert_eq!(Filter::resolve(&c, None, None, None, None).unwrap().patch, "all");
+        // Les dix paliers passent : le filtre ne s'arrete plus au sommet du classement.
+        for t in TIERS {
+            assert_eq!(Filter::resolve(&c, None, None, None, Some(t)).unwrap().tier, t, "palier refuse : {t}");
+        }
     }
 }

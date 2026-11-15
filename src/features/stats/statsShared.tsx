@@ -7,7 +7,7 @@ import { useAsync } from "../../app/useAsync";
 import { platformLabel } from "../../domain/riotId";
 import { platform } from "../../platform";
 import type { StatsMetaDto, StatsParams, StatsScopeDto } from "../../platform/api";
-import { pct, ROLE_LABEL } from "../../ui/format";
+import { pct, ROLE_LABEL, TIER_LABEL } from "../../ui/format";
 import { ChampIcon, PositionIcon, Segmented, Tip } from "../../ui/primitives";
 
 // ---------- Filtres partages entre ecrans (conserves pendant la session) ----------
@@ -55,16 +55,25 @@ export function useStatsMeta() {
   return useAsync<StatsMetaDto>("stats-meta", () => platform.statsMeta(), 30_000);
 }
 
+/** Les dix paliers, du plus haut au plus bas, plus l'option « tous ». Les noms viennent
+ *  de `TIER_LABEL` : une seule table de traduction dans l'application, pas deux. */
 export const TIER_NAMES: Record<string, string> = {
-  all: "Master+",
-  CHALLENGER: "Challenger",
-  GRANDMASTER: "Grand Maître",
-  MASTER: "Maître",
+  all: "Tous les rangs",
+  ...Object.fromEntries(
+    ["CHALLENGER", "GRANDMASTER", "MASTER", "DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"].map(
+      (t) => [t, TIER_LABEL[t] ?? t],
+    ),
+  ),
 };
 
 export function StatsFilters({ meta, extra }: { meta: StatsMetaDto | null; extra?: React.ReactNode }) {
   const [f, set] = useStatsFilters();
   const patches = meta?.patches ?? [];
+  // Chaque rang affiche ce que le collecteur en a ramasse. Un rang ouvert mais pas encore
+  // parcouru affiche « 0 partie » : le tableau vide qu'on obtiendra en le choisissant
+  // s'explique alors avant le clic, et non apres.
+  const partiesParRang = useMemo(() => new Map(meta?.tiers ?? []), [meta]);
+  const totalParties = useMemo(() => (meta?.tiers ?? []).reduce((n, [, c]) => n + c, 0), [meta]);
   return (
     <div className="stats-filters">
       <label className="field">
@@ -91,11 +100,14 @@ export function StatsFilters({ meta, extra }: { meta: StatsMetaDto | null; extra
       <label className="field">
         <span>Rang</span>
         <select className="select" value={f.tier} onChange={(e) => set({ tier: e.target.value })} aria-label="Rang">
-          {Object.entries(TIER_NAMES).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v}
-            </option>
-          ))}
+          {Object.entries(TIER_NAMES).map(([k, v]) => {
+            const n = k === "all" ? totalParties : (partiesParRang.get(k) ?? 0);
+            return (
+              <option key={k} value={k}>
+                {v} · {n} partie{n > 1 ? "s" : ""}
+              </option>
+            );
+          })}
         </select>
       </label>
       <label className="field">

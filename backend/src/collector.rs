@@ -77,11 +77,18 @@ struct LeagueItem {
     league_points: i32,
 }
 
+/// Les trois paliers du sommet ont chacun leur liste complete en un appel.
 const LEAGUES: [(&str, &str); 3] = [
     ("CHALLENGER", "challengerleagues"),
     ("GRANDMASTER", "grandmasterleagues"),
     ("MASTER", "masterleagues"),
 ];
+
+/// En dessous de Maitre il n'existe pas de liste : il faut demander division par division.
+const TIERS_PAR_DIVISION: [&str; 7] = ["DIAMOND", "EMERALD", "PLATINUM", "GOLD", "SILVER", "BRONZE", "IRON"];
+/// Les quatre divisions, et non la seule I : le haut d'un palier joue deja comme le palier
+/// au-dessus, et echantillonner la I seule decrirait mal le palier qu'on pretend mesurer.
+const DIVISIONS: [&str; 4] = ["I", "II", "III", "IV"];
 
 /// GET avec rythme : on ne dort que si la donnee n'est pas deja en cache.
 async fn paced(s: &AppState, pace: Duration, key: &str, url: reqwest::Url, fresh: Freshness, transform: fn(String) -> BResult<String>) -> BResult<String> {
@@ -111,7 +118,80 @@ async fn seeds(s: &AppState, cfg: &CollectorConfig, platform: Platform) -> BResu
         list.entries.sort_by_key(|e| std::cmp::Reverse(e.league_points));
         out.extend(list.entries.into_iter().take(cfg.players_per_tier).map(|e| (e.puuid, tier)));
     }
-    Ok(out)
+    for tier in TIERS_PAR_DIVISION {
+        let par_division = (cfg.players_per_tier / DIVISIONS.len()).max(1);
+        for division in DIVISIONS {
+            let url = RiotClient::url(
+                &host,
+                &["lol", "league", "v4", "entries", "RANKED_SOLO_5x5", tier, division],
+                &[("page", "1".into())],
+            )?;
+            let key = format!("league-entries:{host}:{tier}:{division}");
+            let body = paced(s, cfg.pace, &key, url, Freshness::Ttl(Duration::from_secs(6 * 3600)), Ok).await?;
+            // Reponse a plat, contrairement aux ligues du sommet qui emballent dans `entries`.
+            let mut entries: Vec<LeagueItem> = serde_json::from_str(&body)?;
+            entries.retain(|e| validate_puuid(&e.puuid).is_ok());
+            // Pas de tri par LP ici : au sommet on veut les meilleurs, dans une division on
+            // veut un echantillon representatif. Trier remonterait le haut de la division.
+            entries.truncate(par_division);
+            out.extend(entries.into_iter().map(|e| (e.puuid, tier)));
+        }
+    }
+    Ok(alterner_les_paliers(out))
+}
+
+/// Alterne les paliers au lieu de les enchainer.
+///
+/// POURQUOI : a dix paliers et cent joueurs chacun, les cent joueurs de Fer arrivaient en
+/// 901e position. Avec un appel espace de 2,5 s et les chronologies activees, le collecteur
+/// met des heures a y parvenir — une session qui ne tourne pas la nuit entiere ne les
+/// atteignait jamais, et le palier restait vide sans que rien ne l'explique. En alternant,
+/// chaque palier avance au meme rythme et se remplit des la premiere heure.
+fn alterner_les_paliers(joueurs: Vec<(String, &'static str)>) -> Vec<(String, &'static str)> {
+    let mut files: Vec<(&'static str, Vec<String>)> = Vec::new();
+    for (puuid, tier) in joueurs {
+        match files.iter_mut().find(|(t, _)| *t == tier) {
+            Some((_, f)) => f.push(puuid),
+            None => files.push((tier, vec![puuid])),
+        }
+    }
+    let plus_longue = files.iter().map(|(_, f)| f.len()).max().unwrap_or(0);
+    let mut sortie = Vec::new();
+    for i in 0..plus_longue {
+        for (tier, f) in files.iter() {
+            if let Some(p) = f.get(i) {
+                sortie.push((p.clone(), *tier));
+            }
+        }
+    }
+    sortie
+}
+
+#[cfg(test)]
+mod tests {
+    use super::alterner_les_paliers;
+
+    #[test]
+    fn alterne_les_paliers_sans_perdre_personne() {
+        let entree: Vec<(String, &'static str)> = [("a", "CHALLENGER"), ("b", "CHALLENGER"), ("c", "IRON"), ("d", "IRON"), ("e", "IRON")]
+            .into_iter()
+            .map(|(p, t)| (p.to_string(), t))
+            .collect();
+        let sortie = alterner_les_paliers(entree);
+        assert_eq!(sortie.len(), 5, "aucun joueur ne doit disparaitre");
+        // Fer n'attend plus la fin de Challenger : son premier joueur passe en 2e position.
+        assert_eq!(sortie[0], ("a".into(), "CHALLENGER"));
+        assert_eq!(sortie[1], ("c".into(), "IRON"));
+        assert_eq!(sortie[2], ("b".into(), "CHALLENGER"));
+        assert_eq!(sortie[3], ("d".into(), "IRON"));
+        // La file la plus longue finit seule, sans trou.
+        assert_eq!(sortie[4], ("e".into(), "IRON"));
+    }
+
+    #[test]
+    fn alterne_supporte_une_liste_vide() {
+        assert!(alterner_les_paliers(Vec::new()).is_empty());
+    }
 }
 
 async fn collect_player(s: &AppState, cfg: &CollectorConfig, items: &ItemClasses, platform: Platform, puuid: &str, tier: &str) -> BResult<u32> {
