@@ -10,6 +10,11 @@ pub struct Config {
     pub max_concurrency: usize,
     /// Limites applicatives : (nombre, fenetre en secondes). Cle de dev Riot : 20/1 s et 100/120 s.
     pub app_limits: Vec<(u32, u64)>,
+    /// Mode public : nom d'hote accepte en plus de la boucle locale (ex. `nex.lol`).
+    /// Absent = backend local reserve a l'application, comme toujours.
+    pub public_host: Option<String>,
+    /// Dossier du front compile a servir en meme origine (le `dist/` de Vite). Absent = API seule.
+    pub static_dir: Option<PathBuf>,
 }
 
 impl std::fmt::Debug for Config {
@@ -18,6 +23,8 @@ impl std::fmt::Debug for Config {
             .field("riot_api_key", &self.riot_api_key.as_ref().map(|_| "<definie>"))
             .field("bind", &self.bind)
             .field("db_path", &self.db_path)
+            .field("public_host", &self.public_host)
+            .field("static_dir", &self.static_dir)
             .field("max_concurrency", &self.max_concurrency)
             .field("app_limits", &self.app_limits)
             .finish()
@@ -68,7 +75,22 @@ impl Config {
             .unwrap_or(4)
             .clamp(1, 32);
         let app_limits = parse_limits(&env("RIOT_APP_LIMITS").unwrap_or_else(|| "20:1,100:120".into()))?;
-        Ok(Self { riot_api_key, bind, db_path, max_concurrency, app_limits })
+        // Mode public, opt-in explicite. Un hote avec schema, chemin ou port est refuse :
+        // la comparaison porte sur le nom seul, et accepter autre chose masquerait une faute
+        // de configuration jusqu'au premier visiteur.
+        let public_host = env("NEX_BACKEND_PUBLIC_HOST").map(|h| h.trim().to_ascii_lowercase()).filter(|h| !h.is_empty());
+        if let Some(h) = &public_host {
+            if h.contains("://") || h.contains('/') || h.contains(':') || h.chars().any(char::is_whitespace) {
+                return Err("NEX_BACKEND_PUBLIC_HOST doit etre un nom d'hote nu (ex. nex.lol)".into());
+            }
+        }
+        let static_dir = env("NEX_BACKEND_STATIC").map(PathBuf::from);
+        if let Some(d) = &static_dir {
+            if !d.join("index.html").is_file() {
+                return Err(format!("NEX_BACKEND_STATIC : aucun index.html dans {}", d.display()));
+            }
+        }
+        Ok(Self { riot_api_key, bind, db_path, max_concurrency, app_limits, public_host, static_dir })
     }
 }
 
@@ -112,6 +134,8 @@ mod tests {
             db_path: "x".into(),
             max_concurrency: 1,
             app_limits: vec![],
+            public_host: None,
+            static_dir: None,
         };
         assert!(!format!("{c:?}").contains("secret"));
     }

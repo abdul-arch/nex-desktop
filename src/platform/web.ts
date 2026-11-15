@@ -67,7 +67,16 @@ const KEY = "nex.web.v1";
 
 // Base du backend pour le web : en developpement, proxy Vite (/nex-api -> 127.0.0.1:8787).
 // Un site deploye devra pointer vers un backend HTTPS avec CORS et limites par client.
-const API_BASE = import.meta.env.DEV ? "/nex-api" : null;
+// Base de l'API.
+//
+// En developpement, Vite relaie `/nex-api` vers le backend local. En production la base est
+// VIDE : meme origine, le backend sert aussi le front et l'API vit en `/v1`. Aucun CORS a
+// configurer. `VITE_API_BASE` permet une origine separee, a condition d'ouvrir le CORS cote
+// backend — ce que ce depot ne fait pas, et ne devrait faire qu'avec une liste blanche.
+//
+// Avant : `null` hors developpement, et chaque appel levait « backend injoignable ». La
+// version web etait bridee au mode dev par cette seule ligne.
+const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? (import.meta.env.DEV ? "/nex-api" : "");
 
 const webUnavailable = {
   code: "unavailable" as const,
@@ -75,7 +84,6 @@ const webUnavailable = {
 };
 
 async function api<T>(segments: string[], query: Record<string, string | number | undefined> = {}, body?: unknown): Promise<T> {
-  if (!API_BASE) throw webUnavailable;
   const qs = Object.entries(query)
     .filter(([, v]) => v !== undefined)
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
@@ -252,9 +260,9 @@ export function createWebPlatform(): Platform {
     backendHealth: async () => {
       try {
         const h = await api<{ version: string; riotKeyConfigured: boolean }>(["v1", "health"]);
-        return { url: API_BASE ?? "", reachable: true, riotKeyConfigured: h.riotKeyConfigured, version: h.version, error: null };
+        return { url: API_BASE || location.origin, reachable: true, riotKeyConfigured: h.riotKeyConfigured, version: h.version, error: null };
       } catch (e) {
-        return { url: API_BASE ?? "", reachable: false, riotKeyConfigured: false, version: null, error: (e as { message?: string }).message ?? webUnavailable.message };
+        return { url: API_BASE || location.origin, reachable: false, riotKeyConfigured: false, version: null, error: (e as { message?: string }).message ?? webUnavailable.message };
       }
     },
     playerProfile: async (riotId, plat, refresh = false) => {

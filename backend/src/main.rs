@@ -102,7 +102,18 @@ async fn main() {
     let key_present = config.riot_api_key.is_some();
     let riot = riot::RiotClient::new(config.riot_api_key.clone(), &config.app_limits, config.max_concurrency, store);
     let collector = collector::CollectorHandle::new(collector_cfg);
-    let state = Arc::new(routes::AppState { riot, collector: collector.clone() });
+    let state = Arc::new(routes::AppState {
+        riot,
+        collector: collector.clone(),
+        public_host: config.public_host.clone(),
+        static_dir: config.static_dir.clone(),
+    });
+    if let Some(h) = &config.public_host {
+        tracing::info!(hote = %h, "mode public : cet hote est accepte en plus de la boucle locale");
+    }
+    if let Some(d) = &config.static_dir {
+        tracing::info!(dossier = %d.display(), "front servi en meme origine");
+    }
     if collector.config.enabled {
         if key_present {
             let http = reqwest::Client::builder()

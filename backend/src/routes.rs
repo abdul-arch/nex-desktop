@@ -15,6 +15,10 @@ use std::time::Duration;
 pub struct AppState {
     pub riot: RiotClient,
     pub collector: Arc<crate::collector::CollectorHandle>,
+    /// Mode public : hote accepte en plus de la boucle locale. `None` = backend local.
+    pub public_host: Option<String>,
+    /// Front compile a servir en repli des routes `/v1`. `None` = API seule.
+    pub static_dir: Option<std::path::PathBuf>,
 }
 
 pub type Shared = Arc<AppState>;
@@ -22,7 +26,7 @@ pub type Shared = Arc<AppState>;
 const HOUR: Duration = Duration::from_secs(3600);
 
 pub fn router(state: Shared) -> Router {
-    Router::new()
+    let api = Router::new()
         .route("/v1/health", get(health))
         .route("/v1/players/{platform}/{game_name}/{tag_line}", get(player))
         .route("/v1/matches/{platform}/by-puuid/{puuid}", get(match_page))
@@ -45,8 +49,25 @@ pub fn router(state: Shared) -> Router {
         .route("/v1/stats/icons", get(stats_icons))
         .route("/v1/stats/champion/{champion_id}/build", get(stats_build))
         .route("/v1/stats/champion/{champion_id}/matchups", get(stats_matchups))
-        .layer(axum::middleware::from_fn(local_only))
-        .with_state(state)
+        .layer(axum::middleware::from_fn_with_state(state.clone(), local_only));
+    // Mode public : le front compile est servi en meme origine, en repli de tout ce qui
+    // n'est pas `/v1`. Une route inconnue rend `index.html` pour que les adresses du front
+    // survivent au rechargement. Pas de CORS a configurer : page et API partagent l'origine,
+    // et `Sec-Fetch-Site` reste `same-origin` — le garde ci-dessus garde tout son sens.
+    // Les fichiers statiques ne passent pas par ce garde : ils ne touchent pas au quota Riot
+    // et ne contiennent rien de secret.
+    let api = match &state.static_dir {
+        Some(dir) => {
+            // `fallback`, et non `not_found_service` : ce dernier sert bien le fichier mais
+            // force le statut a 404 — il est fait pour une page d'erreur personnalisee. Une
+            // adresse du front doit repondre 200 avec index.html, sinon le navigateur la
+            // traite en echec. Mesure : 404 avec l'un, 200 avec l'autre.
+            let index = tower_http::services::ServeFile::new(dir.join("index.html"));
+            api.fallback_service(tower_http::services::ServeDir::new(dir).fallback(index))
+        }
+        None => api,
+    };
+    api.with_state(state)
 }
 
 /// Le backend local ne repond qu'a l'application NEX (et a l'apercu Vite) :
@@ -56,7 +77,12 @@ pub fn router(state: Shared) -> Router {
 ///   site ne peut pas consommer le quota Riot via des requetes intersites.
 ///
 /// Les clients non navigateurs (noyau Rust de NEX) n'envoient pas `Sec-Fetch-Site`.
-pub fn check_local(headers: &axum::http::HeaderMap) -> BResult<()> {
+///
+/// En mode public, UN hote supplementaire est accepte, celui de la configuration — et pas
+/// « n'importe lequel » : la protection contre le DNS rebinding tient toujours a ce que
+/// l'hote attendu soit nomme. Le controle `Sec-Fetch-Site` ne change pas : la page etant
+/// servie par ce meme backend, ses appels sont `same-origin`, et un site tiers reste refuse.
+pub fn check_local(headers: &axum::http::HeaderMap, public_host: Option<&str>) -> BResult<()> {
     if let Some(host) = headers.get(axum::http::header::HOST) {
         let host = host.to_str().unwrap_or("");
         let name = if let Some(rest) = host.strip_prefix('[') {
@@ -64,7 +90,10 @@ pub fn check_local(headers: &axum::http::HeaderMap) -> BResult<()> {
         } else {
             host.rsplit_once(':').map_or(host, |(h, _)| h)
         };
-        if !matches!(name.to_ascii_lowercase().as_str(), "127.0.0.1" | "localhost" | "::1") {
+        let name = name.to_ascii_lowercase();
+        let local = matches!(name.as_str(), "127.0.0.1" | "localhost" | "::1");
+        let public = public_host.is_some_and(|p| p == name);
+        if !local && !public {
             return Err(BackendError::Forbidden("hote non autorise".into()));
         }
     }
@@ -76,9 +105,9 @@ pub fn check_local(headers: &axum::http::HeaderMap) -> BResult<()> {
     Ok(())
 }
 
-async fn local_only(req: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
+async fn local_only(State(s): State<Shared>, req: axum::extract::Request, next: axum::middleware::Next) -> axum::response::Response {
     use axum::response::IntoResponse;
-    match check_local(req.headers()) {
+    match check_local(req.headers(), s.public_host.as_deref()) {
         Ok(()) => next.run(req).await,
         Err(e) => e.into_response(),
     }
@@ -602,7 +631,7 @@ mod tests {
             timelines: false,
             players_per_tier: 1,
         });
-        (router(Arc::new(AppState { riot, collector })), store)
+        (router(Arc::new(AppState { riot, collector, public_host: None, static_dir: None })), store)
     }
 
     #[tokio::test]

@@ -36,6 +36,10 @@ export interface RouteDef {
   icon: LucideIcon;
   /** Etape de livraison (cf. docs/ARCHITECTURE.md) ; 1 = disponible maintenant. */
   phase: number;
+  /** Propre a l'application de bureau : client League local, fenetre native, capture.
+   *  En web, l'adaptateur rend des valeurs neutres et la page s'afficherait VIDE —
+   *  ce qui ressemble a une panne. Elle est donc retiree de la navigation. */
+  bureau?: true;
 }
 
 export const NAV_SECTIONS: { title: string; routes: RouteDef[] }[] = [
@@ -51,11 +55,11 @@ export const NAV_SECTIONS: { title: string; routes: RouteDef[] }[] = [
   {
     title: "En jeu",
     routes: [
-      { id: "live", label: "Partie en direct", icon: Radio, phase: 1 },
+      { id: "live", label: "Partie en direct", icon: Radio, phase: 1, bureau: true },
       { id: "matchups", label: "Matchups & draft", icon: Crosshair, phase: 1 },
       { id: "mayhem", label: "ARAM Mayhem", icon: Sparkles, phase: 1 },
-      { id: "overlays", label: "Overlays", icon: LayoutGrid, phase: 1 },
-      { id: "recordings", label: "Enregistrements", icon: Film, phase: 1 },
+      { id: "overlays", label: "Overlays", icon: LayoutGrid, phase: 1, bureau: true },
+      { id: "recordings", label: "Enregistrements", icon: Film, phase: 1, bureau: true },
     ],
   },
   {

@@ -35,6 +35,7 @@ export function Sidebar() {
   const { navigate } = useNav();
   const version = useDDragonVersion();
   const collapsed = settings.sidebarCollapsed;
+  const web = platform.windowLabel === "web";
   const solo = demoPlayer.ranks.find((r) => r.queue === "RANKED_SOLO_5x5");
   // Compte lie : icone, niveau et rang reels (meme cle de cache que le dashboard et le profil).
   const linked = !settings.demoMode && settings.linkedRiotId ? settings.linkedRiotId : "";
@@ -56,14 +57,19 @@ export function Sidebar() {
       </div>
 
       <nav className="nav">
-        {NAV_SECTIONS.map((s) => (
-          <div className="nav-section" key={s.title}>
-            <div className="nav-section-title">{s.title}</div>
-            {s.routes.map((r) => (
-              <NavItem key={r.id} r={r} collapsed={collapsed} />
-            ))}
-          </div>
-        ))}
+        {/* En web, les pages propres au bureau sortent de la barre plutot que d'y rester
+            inertes. Le signal vient de l'adaptateur (`windowLabel`), jamais d'un test Tauri
+            dans un composant : le choix de plateforme reste a un seul endroit. */}
+        {NAV_SECTIONS.map((s) => ({ ...s, routes: s.routes.filter((r) => !(web && r.bureau)) }))
+          .filter((s) => s.routes.length > 0)
+          .map((s) => (
+            <div className="nav-section" key={s.title}>
+              <div className="nav-section-title">{s.title}</div>
+              {s.routes.map((r) => (
+                <NavItem key={r.id} r={r} collapsed={collapsed} />
+              ))}
+            </div>
+          ))}
       </nav>
 
       <div className="sidebar-footer">

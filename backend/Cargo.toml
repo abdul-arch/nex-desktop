@@ -19,6 +19,8 @@ dotenvy = "0.15.7"
 sha2 = "0.10.9"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+# Sert le front compile (mode public, meme origine) : ServeDir + repli sur index.html.
+tower-http = { version = "0.6", features = ["fs"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
