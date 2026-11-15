@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
+import { ChampionSeasonTable } from "./ChampionSeasonTable";
 import { championName, profileIcon } from "../../data/assets";
 import { useClient } from "../../app/ClientContext";
 import { findParticipant, mergeLocalMatches, toSummary } from "../../domain/fromMatch";
@@ -150,6 +151,9 @@ function ProfileLoaded({
   const isMine = settings.linkedRiotId.toLowerCase() === riotId.toLowerCase() && settings.linkedPlatform === profile.platform;
 
   const [queue, setQueue] = useState<QueueFilter>("all");
+  // Vue « tous les champions » : etat local et non parametre de route, pour ne pas
+  // remonter la page et reperdre les parties deja chargees page par page.
+  const [vueChampions, setVueChampions] = useState(false);
   const [matches, setMatches] = useState<MatchDto[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -235,7 +239,6 @@ function ProfileLoaded({
     [shown, profile.puuid],
   );
   const counted = summaries.filter(isCountable);
-  const champs = championAggregates(summaries).slice(0, 6);
   const roles = roleDistribution(summaries);
   // Distinctions par partie, sur le meme echantillon que le reste de la colonne.
   const awards = useMemo(() => awardsByMatch(shown, profile.puuid), [shown, profile.puuid]);
@@ -245,6 +248,11 @@ function ProfileLoaded({
   const lp = useMemo(() => attributeLp(summaries, ranks.data ?? []), [summaries, ranks.data]);
   // Parties portant leur ±LP : la carte de session l'affiche, et sans lui elle montre « — ».
   const avecLp = useMemo(() => summaries.map((s) => ({ ...s, lpDelta: lp.get(s.id) ?? null })), [summaries, lp]);
+  // Sur `avecLp` et non `summaries` : c'est la version ou les variations de LP ont ete
+  // rattachees depuis les releves de rang. Agreger `summaries` donnait « LP non lus »
+  // partout, alors que la donnee etait a deux lignes de la.
+  const tousChampions = useMemo(() => championAggregates(avecLp), [avecLp]);
+  const champs = tousChampions.slice(0, 7);
   // Fin de la partie la plus recente chargee, pour « Dernière partie il y a … ».
   const lastPlayed = summaries.length ? Math.max(...summaries.map((m) => m.startedAt + m.durationSec * 1000)) : null;
   const period = counted.length
@@ -253,6 +261,18 @@ function ProfileLoaded({
 
   const solo = profile.ranks.find((r) => r.queue === "RANKED_SOLO_5x5");
   const flex = profile.ranks.find((r) => r.queue === "RANKED_FLEX_SR");
+
+  if (vueChampions) {
+    return (
+      <ChampionSeasonTable
+        champions={tousChampions}
+        version={version}
+        parties={counted.length}
+        periode={period ?? "période inconnue"}
+        onClose={() => setVueChampions(false)}
+      />
+    );
+  }
 
   return (
     <div className="profile">
@@ -339,11 +359,19 @@ function ProfileLoaded({
                   <ChampIcon version={version} champion={c.champion} size={28} rounded={14} />
                   <span>
                     <b>{championName(c.champion)}</b>
-                    <span className="muted num">
-                      {kdaOf(c.kills, c.deaths, c.assists).toFixed(1)} KDA
+                    {/* LP non observés et 0 LP gagné ne sont pas la même chose : on n'écrit
+                        un chiffre que s'il a été mesuré. */}
+                    <span className={`muted num ${c.lpDelta === null ? "" : c.lpDelta >= 0 ? "lp-gagne" : "lp-perdu"}`}>
+                      {c.lpDelta === null ? "LP non lus" : `${c.lpDelta >= 0 ? "+" : "−"}${Math.abs(c.lpDelta)} LP`}
                     </span>
                   </span>
-                  <span className="num" style={{ textAlign: "right" }}>
+                  <span className="champ-kda">
+                    <b>{kdaOf(c.kills, c.deaths, c.assists).toFixed(2)}</b>
+                    <span className="muted">
+                      {(c.kills / c.games).toFixed(1)} / {(c.deaths / c.games).toFixed(1)} / {(c.assists / c.games).toFixed(1)}
+                    </span>
+                  </span>
+                  <span className="champ-wr">
                     <b className={(winRate(c.wins, c.games - c.wins) ?? 0) >= 0.5 ? "win" : "loss"}>{pct(winRate(c.wins, c.games - c.wins))}</b>
                     <span className="muted">
                       {c.games} partie{c.games > 1 ? "s" : ""}
@@ -352,6 +380,14 @@ function ProfileLoaded({
                 </li>
               ))}
             </ul>
+            {/* Propose aussi quand la carte montre deja tout le monde : la vue complete
+                ajoute LP, maxima, CS, degats, or et series, que la carte n'a pas la place
+                de porter. Le libelle dit laquelle des deux situations on est. */}
+            {tousChampions.length > 0 && (
+              <button className="btn btn-sm" style={{ width: "100%", marginTop: 8 }} onClick={() => setVueChampions(true)}>
+                {tousChampions.length > champs.length ? `Voir les ${tousChampions.length} champions` : "Voir le détail complet"}
+              </button>
+            )}
           </section>
           <section className="card card-pad">
             <div className="card-title">Rôles</div>

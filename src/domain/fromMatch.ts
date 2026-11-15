@@ -74,6 +74,8 @@ export function toSummary(m: MatchDto, puuid: string): MatchSummary | null {
     damageToChampions: me.damageToChampions,
     teamDamageToChampions: team.reduce((a, p) => a + p.damageToChampions, 0),
     visionScore: me.visionScore,
+    goldEarned: me.goldEarned,
+    largestMultiKill: me.largestMultiKill,
     soloKills: me.soloKills,
     goldDiffAt15: goldDiffAt15(m, me),
     // Non fourni par match-v5 : une variation de LP exige des observations enregistrees.

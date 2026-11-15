@@ -21,6 +21,8 @@ function m(extra: Partial<MatchSummary> = {}): MatchSummary {
     damageToChampions: 20000,
     teamDamageToChampions: 80000,
     visionScore: 20,
+    goldEarned: 12000,
+    largestMultiKill: 0,
     soloKills: null,
     goldDiffAt15: null,
     lpDelta: null,

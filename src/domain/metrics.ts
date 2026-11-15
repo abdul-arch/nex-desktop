@@ -202,17 +202,60 @@ export interface ChampionAggregate {
   kills: number;
   deaths: number;
   assists: number;
+  /** Somme des variations de LP observees, et `null` si aucune partie n'en portait :
+   *  zero LP gagnes et LP non observes ne sont pas la meme chose. */
+  lpDelta: number | null;
+  maxKills: number;
+  maxDeaths: number;
+  /** Sommes brutes : l'affichage divise par `games` quand il veut une moyenne. */
+  cs: number;
+  damage: number;
+  gold: number;
+  /** Nombre de PARTIES comptant au moins un double, triple, quadra ou penta. Riot ne
+   *  publie que la plus longue serie de chaque partie, pas leur compte : une partie avec
+   *  deux doubles compte donc pour une. L'affichage doit le dire. */
+  doubles: number;
+  triples: number;
+  quadras: number;
+  pentas: number;
 }
 
 export function championAggregates(matches: MatchSummary[]): ChampionAggregate[] {
   const map = new Map<string, ChampionAggregate>();
   for (const m of matches.filter(isCountable)) {
-    const a = map.get(m.champion) ?? { champion: m.champion, games: 0, wins: 0, kills: 0, deaths: 0, assists: 0 };
+    const a = map.get(m.champion) ?? {
+      champion: m.champion,
+      games: 0,
+      wins: 0,
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      lpDelta: null,
+      maxKills: 0,
+      maxDeaths: 0,
+      cs: 0,
+      damage: 0,
+      gold: 0,
+      doubles: 0,
+      triples: 0,
+      quadras: 0,
+      pentas: 0,
+    };
     a.games++;
     if (m.win) a.wins++;
     a.kills += m.kills;
     a.deaths += m.deaths;
     a.assists += m.assists;
+    if (m.lpDelta !== null) a.lpDelta = (a.lpDelta ?? 0) + m.lpDelta;
+    if (m.kills > a.maxKills) a.maxKills = m.kills;
+    if (m.deaths > a.maxDeaths) a.maxDeaths = m.deaths;
+    a.cs += m.cs;
+    a.damage += m.damageToChampions;
+    a.gold += m.goldEarned;
+    if (m.largestMultiKill >= 5) a.pentas++;
+    else if (m.largestMultiKill === 4) a.quadras++;
+    else if (m.largestMultiKill === 3) a.triples++;
+    else if (m.largestMultiKill === 2) a.doubles++;
     map.set(m.champion, a);
   }
   return [...map.values()].sort((x, y) => y.games - x.games || y.wins - x.wins);

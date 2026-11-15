@@ -42,10 +42,27 @@
 }
 .champ-table li {
   display: grid;
-  grid-template-columns: 28px 1fr auto;
+  /* Icone, identite (nom + LP), KDA, puis victoires. La colonne du milieu porte le
+     detail k/d/a : c'est elle qui dit si un KDA tient a des eliminations ou a des aides. */
+  grid-template-columns: 28px minmax(0, 1fr) auto auto;
   gap: 8px;
   align-items: center;
   font-size: var(--fs-sm);
+}
+.champ-table .champ-kda {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.champ-table .champ-wr {
+  text-align: right;
+  min-width: 64px;
+  font-variant-numeric: tabular-nums;
+}
+.champ-table .lp-gagne {
+  color: var(--win);
+}
+.champ-table .lp-perdu {
+  color: var(--loss);
 }
 .champ-table li > span {
   display: grid;
@@ -54,6 +71,18 @@
 .champ-table .muted {
   font-size: var(--fs-xs);
 }
+/* Vue « tous les champions » : remplace le profil, donc elle porte son propre rythme
+   vertical plutot que d'heriter de la grille a deux colonnes. */
+.champ-saison {
+  display: grid;
+  gap: 14px;
+}
+.champ-saison .page-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .saved-lists {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

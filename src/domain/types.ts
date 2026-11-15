@@ -27,6 +27,12 @@ export interface MatchSummary {
   damageToChampions: number;
   teamDamageToChampions: number;
   visionScore: number;
+  /** Or total gagne sur la partie. Deja normalise par le backend ; il ne remontait
+   *  simplement pas jusqu'ici. */
+  goldEarned: number;
+  /** Plus longue serie d'eliminations de la partie : 2 double, 3 triple, 4 quadra,
+   *  5 penta. Riot ne publie pas le compte des series, seulement la plus longue. */
+  largestMultiKill: number;
   soloKills: number | null;
   /** Ecart d'or avec l'adversaire direct a 15:00, si timeline disponible. */
   goldDiffAt15: number | null;

@@ -100,6 +100,8 @@ function makeMatches(): MatchSummary[] {
       damageToChampions: Math.round(teamDamage * share),
       teamDamageToChampions: teamDamage,
       visionScore: Math.round(min * (p.role === "UTILITY" ? 2 : 0.7) * (0.8 + rnd() * 0.5)),
+      goldEarned: Math.round(min * (380 + rnd() * 140) + kills * 300 + assists * 95),
+      largestMultiKill: kills >= 12 && rnd() > 0.7 ? 3 : kills >= 6 && rnd() > 0.5 ? 2 : rnd() > 0.96 ? 4 : 0,
       soloKills: hasTimeline ? Math.round(rnd() * 3.2) : null,
       goldDiffAt15: hasTimeline ? Math.round((rnd() - 0.42 + form) * 1600) : null,
       lpDelta: lp,

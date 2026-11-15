@@ -24,6 +24,8 @@ function match(p: Partial<MatchSummary> = {}): MatchSummary {
     damageToChampions: 18000,
     teamDamageToChampions: 72000,
     visionScore: 20,
+    goldEarned: 12000,
+    largestMultiKill: 0,
     soloKills: 1,
     goldDiffAt15: 300,
     lpDelta: 20,
@@ -79,6 +81,46 @@ describe("métriques", () => {
     expect(c[0]).toMatchObject({ champion: "Ahri", games: 2, wins: 1 });
     const roles = roleDistribution(ms);
     expect(roles.find((r) => r.role === "MIDDLE")?.share).toBeCloseTo(2 / 3, 5);
+  });
+
+  it("somme les LP observés et laisse null quand aucun ne l'est", () => {
+    // Zéro LP gagné et LP non observés ne sont pas la même chose : la carte doit pouvoir
+    // afficher « — » plutôt qu'un « 0 LP » qui ressemble à une mesure.
+    const avec = championAggregates([match({ champion: "Ahri", lpDelta: 22 }), match({ champion: "Ahri", lpDelta: -17 })]);
+    expect(avec[0].lpDelta).toBe(5);
+    const sans = championAggregates([match({ champion: "Ahri", lpDelta: null }), match({ champion: "Ahri", lpDelta: null })]);
+    expect(sans[0].lpDelta).toBeNull();
+    // Une seule partie observée suffit à rendre la somme lisible.
+    const partiel = championAggregates([match({ champion: "Ahri", lpDelta: 19 }), match({ champion: "Ahri", lpDelta: null })]);
+    expect(partiel[0].lpDelta).toBe(19);
+  });
+
+  it("retient les maxima et somme ce qui servira aux moyennes", () => {
+    const c = championAggregates([
+      match({ champion: "Ahri", kills: 4, deaths: 9, cs: 180, damageToChampions: 20000, goldEarned: 11000 }),
+      match({ champion: "Ahri", kills: 21, deaths: 2, cs: 260, damageToChampions: 31000, goldEarned: 15000 }),
+    ]);
+    expect(c[0]).toMatchObject({ maxKills: 21, maxDeaths: 9, cs: 440, damage: 51000, gold: 26000 });
+    // Les sommes se divisent par `games` : c'est l'affichage qui décide de la moyenne.
+    expect(c[0].cs / c[0].games).toBe(220);
+  });
+
+  it("compte une partie par série, au niveau le plus haut atteint", () => {
+    // Riot ne publie que la plus longue série de chaque partie. Une partie avec un penta
+    // ne compte donc pas aussi un double : c'est une limite de la source, pas un choix.
+    const c = championAggregates([
+      match({ champion: "Ahri", largestMultiKill: 2 }),
+      match({ champion: "Ahri", largestMultiKill: 2 }),
+      match({ champion: "Ahri", largestMultiKill: 3 }),
+      match({ champion: "Ahri", largestMultiKill: 5 }),
+      match({ champion: "Ahri", largestMultiKill: 0 }),
+    ]);
+    expect(c[0]).toMatchObject({ doubles: 2, triples: 1, quadras: 0, pentas: 1, games: 5 });
+  });
+
+  it("ignore les parties annulées, comme le reste des agrégats", () => {
+    const c = championAggregates([match({ champion: "Ahri", kills: 30, remake: true }), match({ champion: "Ahri", kills: 3 })]);
+    expect(c[0]).toMatchObject({ games: 1, maxKills: 3 });
   });
 });
 
