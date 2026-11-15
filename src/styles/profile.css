@@ -807,69 +807,19 @@ button.pname:hover {
 .linechart {
   margin: 0;
 }
-/* Repere de positionnement de l'infobulle : elle se place en pourcentage de cette zone,
-   exactement comme le SVG projette ses abscisses. */
-.linechart-zone {
-  position: relative;
-}
-.linechart-zone svg {
-  display: block;
-}
-.linechart-survol circle {
-  transition: r 120ms ease-out;
-}
-
-/* ---------- Carte des LP, format compact ---------- */
-
-/* Une seule ligne d'en-tete qui change de contenu au survol : le rang courant au repos,
-   le point vise pendant. Hauteur fixe pour que la courbe ne saute pas quand le texte
-   change de nombre de lignes. */
-.lp-lecture {
+/* Cadre de la carte peinte. Le halo du composant deborde volontairement de sa carte (un
+   tiers de largeur de chaque cote) ; ici il est rogne au cadre, sinon il baverait sur les
+   cartes de rang au-dessus. Centre : la carte a une largeur en pixels, la colonne non. */
+.lp-cadre {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 8px;
-  min-height: 38px;
-  margin-bottom: 2px;
-  font-size: var(--fs-sm);
-}
-.lp-vise {
-  display: grid;
-  gap: 1px;
-}
-.lp-vise-rang {
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--accent-strong);
-}
-.lp-vise-ligne {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.lp-vise-lp {
-  font-size: var(--fs-md);
-  color: var(--text);
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 14px;
+  margin: 4px 0 8px;
 }
 .lp-pied {
   min-height: 18px;
   font-size: var(--fs-xs);
-}
-@keyframes linechart-bulle-entree {
-  from {
-    opacity: 0;
-  }
-}
-/* Mouvement reduit : l'infobulle apparait sans glisser. */
-@media (prefers-reduced-motion: reduce) {
-  .linechart-bulle {
-    animation: none;
-  }
-  .linechart-survol circle {
-    transition: none;
-  }
 }
 .linechart .legend {
   display: flex;

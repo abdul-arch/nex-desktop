@@ -2,12 +2,12 @@
 //
 // Riot ne sert que le rang courant : cette carte ne montre que ce que NEX a observe depuis
 // le premier releve. Aucune reconstitution du passe, aucune interpolation entre deux releves.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAsync } from "../../app/useAsync";
 import { ladderPoints, type LpChange, lpChanges, lpSeries } from "../../domain/lp";
 import { platform } from "../../platform";
 import type { RankSnapshotDto } from "../../platform/api";
-import { LineChart } from "../../ui/LineChart";
+import { PeakChart } from "../../ui/PeakChart";
 import { TIER_LABEL } from "../../ui/format";
 import { Segmented } from "../../ui/primitives";
 
@@ -77,53 +77,47 @@ function Empty({ latest }: { latest: RankSnapshotDto | undefined }) {
 
 function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSnapshotDto | undefined; best: RankSnapshotDto | null }) {
   const { values, net, since } = lpSeries(changes)!;
-  // Point survole. L'en-tete porte l'information a la place d'une bulle flottante : sur une
-  // carte de cette largeur, une bulle recouvrirait la courbe qu'on essaie de lire.
-  const [survol, setSurvol] = useState<number | null>(null);
-  const vise = survol === null ? null : survol === 0 ? null : changes[survol - 1];
+
+  // Largeur mesuree sur la carte : le composant veut des pixels, et la colonne laterale
+  // n'a pas de largeur fixe. Bornee pour que la carte reste lisible sans ecraser la colonne.
+  const cadre = useRef<HTMLDivElement>(null);
+  const [largeur, setLargeur] = useState(360);
+  useEffect(() => {
+    const el = cadre.current;
+    if (!el) return;
+    const mesure = () => setLargeur(Math.round(Math.min(480, Math.max(260, el.clientWidth))));
+    mesure();
+    const ro = new ResizeObserver(mesure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Un libelle par point, et il porte TOUT ce que le point sait : le rang reel, les LP reels,
+  // la date. La serie tracee est le gain cumule depuis le premier releve — c'est ce que la
+  // courbe montre et ce que la lecture annonce (« +30 LP »), jamais une valeur entre deux
+  // releves. Le composant s'accroche au point le plus proche, il n'interpole pas.
+  const libelles = [
+    `Premier relevé · ${dateHeure(since)}`,
+    ...changes.map((c) => `${TIER_LABEL[c.snapshot.tier] ?? c.snapshot.tier}${c.snapshot.division ? ` ${c.snapshot.division}` : ""} · ${c.snapshot.lp} LP · ${dateHeure(c.at)}`),
+  ];
 
   return (
     <>
-      <div className="lp-lecture">
-        {vise ? (
-          <span className="lp-vise">
-            <span className="lp-vise-rang">
-              {TIER_LABEL[vise.snapshot.tier] ?? vise.snapshot.tier}
-              {vise.snapshot.division ? ` ${vise.snapshot.division}` : ""}
-            </span>
-            <span className="lp-vise-ligne">
-              <b className="lp-vise-lp num">{vise.snapshot.lp} LP</b>
-              <span className="muted num">{dateHeure(vise.at)}</span>
-              <span className={`num ${vise.delta > 0 ? "pos" : vise.delta < 0 ? "neg" : "muted"}`}>{signed(vise.delta)}</span>
-            </span>
-          </span>
-        ) : survol === 0 ? (
-          <span className="lp-vise">
-            <span className="lp-vise-rang">Premier relevé</span>
-            <span className="lp-vise-ligne">
-              <span className="muted num">{dateHeure(since)}</span>
-              <span className="muted">origine de la courbe</span>
-            </span>
-          </span>
-        ) : (
-          <>
-            {latest && <span className="lp-now num">{rankText(latest)}</span>}
-            <span className={`num ${net > 0 ? "pos" : net < 0 ? "neg" : "muted"}`}>{signed(net)} LP</span>
-            <span className="muted num">
-              depuis le {shortDate(since)} · {changes.length} relevé{changes.length > 1 ? "s" : ""}
-            </span>
-          </>
-        )}
+      <div ref={cadre} className="lp-cadre">
+        <PeakChart
+          width={largeur}
+          data={values}
+          labels={libelles}
+          value={latest?.lp ?? 0}
+          valueSuffix=" LP"
+          title={latest ? `${TIER_LABEL[latest.tier] ?? latest.tier}${latest.division ? ` ${latest.division}` : ""}` : ""}
+          caption={`${signed(net)} LP depuis le ${shortDate(since)} · ${changes.length} relevé${changes.length > 1 ? "s" : ""}`}
+          updatedText="Relevé par NEX"
+          trend={net > 0 ? "up" : net < 0 ? "down" : "none"}
+          formatValue={(v) => `${signed(Math.round(v))} LP`}
+          font="'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
+        />
       </div>
-
-      <LineChart
-        ariaLabel="Courbe des LP depuis le premier relevé"
-        height={78}
-        compact
-        series={[{ label: "LP", color: "var(--accent)", values }]}
-        onHover={setSurvol}
-      />
-
       <div className="lp-pied">
         {best && (
           <span className="muted">
