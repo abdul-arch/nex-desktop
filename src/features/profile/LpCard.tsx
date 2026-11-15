@@ -79,13 +79,16 @@ function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSna
   const { values, net, since } = lpSeries(changes)!;
 
   // Largeur mesuree sur la carte : le composant veut des pixels, et la colonne laterale
-  // n'a pas de largeur fixe. Bornee pour que la carte reste lisible sans ecraser la colonne.
+  // n'a pas de largeur fixe. Le format 540:696 est fixe par le composant (toute sa
+  // geometrie est en unites de carte), la largeur est donc le seul levier sur la hauteur.
+  // Plafonnee a 300 px — 390 px de haut — apres un premier essai a 480 px qui donnait une
+  // carte de 537 px, trop grande pour une colonne laterale.
   const cadre = useRef<HTMLDivElement>(null);
-  const [largeur, setLargeur] = useState(360);
+  const [largeur, setLargeur] = useState(280);
   useEffect(() => {
     const el = cadre.current;
     if (!el) return;
-    const mesure = () => setLargeur(Math.round(Math.min(480, Math.max(260, el.clientWidth))));
+    const mesure = () => setLargeur(Math.round(Math.min(300, Math.max(220, el.clientWidth * 0.72))));
     mesure();
     const ro = new ResizeObserver(mesure);
     ro.observe(el);
