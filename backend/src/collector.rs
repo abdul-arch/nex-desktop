@@ -2,12 +2,14 @@
 //!
 //! Source : joueurs des ligues Challenger / Grand Maitre / Maitre (league-v4) des plateformes
 //! configurees, leurs parties classees Solo/Duo recentes (match-v5) et, si active, les timelines.
-//! Rythme volontairement lent (une requete Riot au plus toutes les `pace`) pour laisser la
-//! priorite aux requetes des utilisateurs, qui partagent les memes limites.
+//! Rythme volontairement lent (une requete Riot au plus toutes les `pace`), et priorite basse
+//! dans le client Riot : il n'emet que si la reserve des visiteurs reste libre, et se tait
+//! des qu'un visiteur essuie un refus de debit (voir `limiter`).
 
 use crate::analytics;
 use crate::error::{BResult, BackendError};
 use crate::items::{self, ItemClasses};
+use crate::limiter::Priority;
 use crate::riot::{Freshness, RiotClient};
 use crate::routes::AppState;
 use nex_domain::api::{CollectorStatusDto, MatchDto, TimelineDto};
@@ -90,13 +92,31 @@ const TIERS_PAR_DIVISION: [&str; 7] = ["DIAMOND", "EMERALD", "PLATINUM", "GOLD",
 /// au-dessus, et echantillonner la I seule decrirait mal le palier qu'on pretend mesurer.
 const DIVISIONS: [&str; 4] = ["I", "II", "III", "IV"];
 
-/// GET avec rythme : on ne dort que si la donnee n'est pas deja en cache.
+/// GET du collecteur : rythme, priorite basse, et patience.
+///
+/// On ne dort que si la donnee n'est pas deja en cache. Avant d'emettre, on attend que la
+/// reserve des visiteurs soit libre (`wait_background_slot`), hors du verrou de
+/// deduplication. Un refus de debit n'est pas une erreur pour le collecteur : il laisse la
+/// fenetre se vider et reessaie la meme requete, au lieu d'abandonner le joueur en cours.
 async fn paced(s: &AppState, pace: Duration, key: &str, url: reqwest::Url, fresh: Freshness, transform: fn(String) -> BResult<String>) -> BResult<String> {
     let cached = s.riot.store().get(key)?.is_some_and(|c| c.fresh);
-    if !cached {
-        tokio::time::sleep(pace).await;
+    if cached {
+        return s.riot.get_cached_as(Priority::Background, key, url, fresh, false, transform).await;
     }
-    s.riot.get_cached_with(key, url, fresh, false, transform).await
+    let mut essais = 0;
+    loop {
+        essais += 1;
+        tokio::time::sleep(pace).await;
+        s.riot.wait_background_slot().await;
+        match s.riot.get_cached_as(Priority::Background, key, url.clone(), fresh, false, transform).await {
+            // Un visiteur est passe entre l'attente et l'envoi, ou Riot a dit stop : on
+            // laisse la fenetre se vider et on reessaie, cinq fois au plus.
+            Err(BackendError::RateLimited(secs)) if essais < 5 => {
+                tracing::debug!(secs, essais, cle = %key, "collecteur : debit refuse, nouvel essai");
+            }
+            r => return r,
+        }
+    }
 }
 
 fn norm_match(raw: String) -> BResult<String> {
@@ -248,6 +268,13 @@ pub async fn run(state: Arc<AppState>, handle: Arc<CollectorHandle>, http: reqwe
             }
         }
         let classes = &items.as_ref().expect("objets charges").0;
+        // Un tour ou aucune plateforme n'a livre ses joueurs n'est pas un tour complet :
+        // `handle_error` a deja attendu, on recommence sans la pause de dix minutes.
+        // POURQUOI : au demarrage, un seul refus de debit pendant les semences (31 appels,
+        // 77 s a 2,5 s d'ecart) laissait le collecteur muet dix minutes, puis rejouait la
+        // meme scene. Mesure du 15 novembre 2026 : 0 partie en 180 s, « limite de debit
+        // Riot atteinte » en derniere erreur, total fige.
+        let mut un_tour = false;
         for platform in &cfg.platforms {
             let players = match seeds(&state, &cfg, *platform).await {
                 Ok(p) => p,
@@ -256,6 +283,7 @@ pub async fn run(state: Arc<AppState>, handle: Arc<CollectorHandle>, http: reqwe
                     continue;
                 }
             };
+            un_tour = true;
             for (puuid, tier) in players {
                 match collect_player(&state, &cfg, classes, *platform, &puuid, tier).await {
                     Ok(n) if n > 0 => {
@@ -268,7 +296,9 @@ pub async fn run(state: Arc<AppState>, handle: Arc<CollectorHandle>, http: reqwe
             }
         }
         // Tour complet termine : pause avant de recommencer.
-        tokio::time::sleep(Duration::from_secs(600)).await;
+        if un_tour {
+            tokio::time::sleep(Duration::from_secs(600)).await;
+        }
     }
 }
 

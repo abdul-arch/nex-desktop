@@ -10,6 +10,9 @@ pub struct Config {
     pub max_concurrency: usize,
     /// Limites applicatives : (nombre, fenetre en secondes). Cle de dev Riot : 20/1 s et 100/120 s.
     pub app_limits: Vec<(u32, u64)>,
+    /// Requetes de la plus grande fenetre gardees aux visiteurs : le collecteur n'emet que
+    /// s'il en reste davantage de libres. Voir `collector_reserve`.
+    pub collector_reserve: u32,
     /// Mode public : nom d'hote accepte en plus de la boucle locale (ex. `nex.lol`).
     /// Absent = backend local reserve a l'application, comme toujours.
     pub public_host: Option<String>,
@@ -27,6 +30,7 @@ impl std::fmt::Debug for Config {
             .field("static_dir", &self.static_dir)
             .field("max_concurrency", &self.max_concurrency)
             .field("app_limits", &self.app_limits)
+            .field("collector_reserve", &self.collector_reserve)
             .finish()
     }
 }
@@ -48,6 +52,29 @@ pub fn parse_limits(raw: &str) -> Result<Vec<(u32, u64)>, String> {
             Ok((n, s))
         })
         .collect()
+}
+
+/// Reserve de la fenetre Riot gardee aux visiteurs (`NEX_COLLECTOR_RESERVE`), en requetes
+/// de la plus grande fenetre de `RIOT_APP_LIMITS`. Le collecteur n'emet que s'il reste plus
+/// que cela de libre ; les requetes interactives, elles, passent toujours.
+///
+/// Defaut : 40 % de la fenetre, soit 40 sur les 100 / 2 min d'une cle personnelle. Un profil
+/// a froid vaut environ 34 requetes (compte, invocateur, ligues, 20 parties, 10 chronologies) :
+/// la reserve en loge un entier. Et le collecteur a 2,5 s d'ecart emet au plus 48 requetes par
+/// 2 min, moins que les 60 qui lui restent : sans visiteur, la reserve ne le freine pas.
+/// Au-dela de 52, elle le freinerait meme a vide.
+pub fn collector_reserve(raw: Option<&str>, limits: &[(u32, u64)]) -> Result<u32, String> {
+    let quota = limits.iter().map(|&(n, _)| n).max().unwrap_or(0);
+    let reserve = match raw {
+        Some(v) => v.parse::<u32>().map_err(|_| "NEX_COLLECTOR_RESERVE invalide (nombre de requetes attendu)".to_string())?,
+        None => quota * 2 / 5,
+    };
+    if reserve >= quota {
+        return Err(format!(
+            "NEX_COLLECTOR_RESERVE={reserve} : doit rester sous la plus grande fenetre de RIOT_APP_LIMITS ({quota}), sinon le collecteur n'emettrait jamais"
+        ));
+    }
+    Ok(reserve)
 }
 
 impl Config {
@@ -75,6 +102,7 @@ impl Config {
             .unwrap_or(4)
             .clamp(1, 32);
         let app_limits = parse_limits(&env("RIOT_APP_LIMITS").unwrap_or_else(|| "20:1,100:120".into()))?;
+        let collector_reserve = collector_reserve(env("NEX_COLLECTOR_RESERVE").as_deref(), &app_limits)?;
         // Mode public, opt-in explicite. Un hote avec schema, chemin ou port est refuse :
         // la comparaison porte sur le nom seul, et accepter autre chose masquerait une faute
         // de configuration jusqu'au premier visiteur.
@@ -90,12 +118,13 @@ impl Config {
                 return Err(format!("NEX_BACKEND_STATIC : aucun index.html dans {}", d.display()));
             }
         }
-        Ok(Self { riot_api_key, bind, db_path, max_concurrency, app_limits, public_host, static_dir })
+        Ok(Self { riot_api_key, bind, db_path, max_concurrency, app_limits, collector_reserve, public_host, static_dir })
     }
 }
 
 /// Collecteur : NEX_COLLECTOR=on, NEX_COLLECTOR_PLATFORMS=EUW1,KR, NEX_COLLECTOR_PACE_MS=2500,
-/// NEX_COLLECTOR_TIMELINES=true, NEX_COLLECTOR_PLAYERS=100 (par ligue).
+/// NEX_COLLECTOR_TIMELINES=true, NEX_COLLECTOR_PLAYERS=100 (par ligue). La reserve laissee
+/// aux visiteurs (NEX_COLLECTOR_RESERVE) se lit avec les limites, dans `Config::from_env`.
 pub fn collector_from_env() -> Result<crate::collector::CollectorConfig, String> {
     let enabled = matches!(env("NEX_COLLECTOR").as_deref(), Some("on" | "true" | "1"));
     let platforms = env("NEX_COLLECTOR_PLATFORMS")
@@ -134,9 +163,22 @@ mod tests {
             db_path: "x".into(),
             max_concurrency: 1,
             app_limits: vec![],
+            collector_reserve: 0,
             public_host: None,
             static_dir: None,
         };
         assert!(!format!("{c:?}").contains("secret"));
+    }
+
+    #[test]
+    fn reserve_du_collecteur() {
+        let limites = [(20, 1), (100, 120)];
+        assert_eq!(collector_reserve(None, &limites).unwrap(), 40, "defaut : 40 % de la plus grande fenetre");
+        assert_eq!(collector_reserve(Some("52"), &limites).unwrap(), 52);
+        assert_eq!(collector_reserve(Some("0"), &limites).unwrap(), 0, "zero : aucune reserve, l'ancien comportement");
+        assert!(collector_reserve(Some("100"), &limites).is_err(), "toute la fenetre : le collecteur n'emettrait jamais");
+        assert!(collector_reserve(Some("abc"), &limites).is_err());
+        assert!(collector_reserve(Some("-1"), &limites).is_err());
+        assert_eq!(collector_reserve(None, &[(20, 1)]).unwrap(), 8, "le defaut suit la fenetre configuree");
     }
 }

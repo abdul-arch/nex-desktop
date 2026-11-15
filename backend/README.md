@@ -17,6 +17,7 @@ Depuis la racine du dépôt, le backend lit **uniquement** `backend/.env` (copie
 | `NEX_BACKEND_DB` | Fichier de cache | `backend/nex-backend.sqlite3` |
 | `RIOT_MAX_CONCURRENCY` | Requêtes Riot simultanées | 4 |
 | `RIOT_APP_LIMITS` | Fenêtres `n:secondes` | `20:1,100:120` |
+| `NEX_COLLECTOR_RESERVE` | Requêtes de la plus grande fenêtre gardées aux visiteurs : le collecteur n'émet que s'il en reste davantage de libres | 40 % de la fenêtre (40 sur 100) |
 
 Une clé de développement Riot expire au bout de 24 h. Le backend répond alors `503 unavailable` (« clé Riot refusée ou expirée »).
 
@@ -47,6 +48,8 @@ Les erreurs ont toujours la forme `{ code, message, retryAfterSecs? }` : `invali
 
 Collecteur (désactivé par défaut) : `NEX_COLLECTOR=on`, `NEX_COLLECTOR_PLATFORMS=EUW1,KR`, `NEX_COLLECTOR_PACE_MS` (plancher 1 200 ms), `NEX_COLLECTOR_TIMELINES`, `NEX_COLLECTOR_PLAYERS`. La méthode est décrite dans [docs/METHODE_STATISTIQUE.md](../docs/METHODE_STATISTIQUE.md).
 
+Le collecteur passe **après** les visiteurs. Les deux partagent les fenêtres de `RIOT_APP_LIMITS`, mais une requête interactive (profil, parties, rangs, classement, partie en cours) prend un jeton dès qu'il en reste un, alors que le collecteur n'émet que s'il reste plus de `NEX_COLLECTOR_RESERVE` jetons libres (40 sur 100 par défaut ; chaque autre fenêtre en garde la même part, 8 sur 20 à la seconde). Un profil à froid vaut environ 34 requêtes et tient donc dans la réserve. Dès qu'un visiteur essuie un refus de débit, local ou 429 Riot, le collecteur se tait pour la durée du `Retry-After` (après la levée du blocage global s'il y en a un), puis reprend seul. Sans visiteur, la réserve ne le freine pas : à 2,5 s d'écart il émet au plus 48 requêtes par 2 min, sous les 60 qui lui restent.
+
 Observation du 7 novembre 2026 : Riot renvoie environ un 429 par minute sur `match-v5 …/timeline` avec `X-Rate-Limit-Type: server`. Il s'agit d'un étranglement côté Riot, pas d'un dépassement du quota de la clé. Le backend respecte `Retry-After` (3 à 10 s) puis reprend. Le type de limite est journalisé à chaque 429.
 
 Une clé de **développement** Riot sert au développement, pas à une collecte à grande échelle. Une mise en production exigera une clé produit enregistrée auprès de Riot.
@@ -54,7 +57,7 @@ Une clé de **développement** Riot sert au développement, pas à une collecte 
 ## Garanties
 
 - Toutes les entrées sont validées (Riot ID, plateforme, PUUID, identifiant de match, pagination). Chaque segment d'URL vers Riot est encodé.
-- Limites de débit à fenêtres glissantes et concurrence bornée. Après un 429, Riot est bloqué pendant la durée `Retry-After`.
+- Limites de débit à fenêtres glissantes et concurrence bornée. Après un 429, Riot est bloqué pendant la durée `Retry-After`. Les visiteurs passent avant le collecteur, qui laisse toujours `NEX_COLLECTOR_RESERVE` requêtes libres.
 - Une seule requête Riot par clé de cache à la fois : les appels identiques sont mutualisés.
 - Si Riot est en panne, le backend sert la dernière valeur connue, même expirée.
 - Les matchs et timelines sont stockés **normalisés** et versionnés (`m:v1:…`, `tl:v1:…`) pour éviter de garder les réponses brutes volumineuses.

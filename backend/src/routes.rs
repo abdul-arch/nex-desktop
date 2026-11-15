@@ -623,7 +623,7 @@ mod tests {
     fn app(key: Option<&str>) -> (Router, Arc<Store>) {
         let store = Arc::new(Store::memory().unwrap());
         store.with(crate::analytics::init).unwrap();
-        let riot = RiotClient::new(key.map(str::to_string), &[(20, 1)], 2, store.clone());
+        let riot = RiotClient::new(key.map(str::to_string), &[(20, 1)], 0, 2, store.clone());
         let collector = crate::collector::CollectorHandle::new(crate::collector::CollectorConfig {
             enabled: false,
             platforms: vec![],

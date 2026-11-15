@@ -100,7 +100,7 @@ async fn main() {
         }
     };
     let key_present = config.riot_api_key.is_some();
-    let riot = riot::RiotClient::new(config.riot_api_key.clone(), &config.app_limits, config.max_concurrency, store);
+    let riot = riot::RiotClient::new(config.riot_api_key.clone(), &config.app_limits, config.collector_reserve, config.max_concurrency, store);
     let collector = collector::CollectorHandle::new(collector_cfg);
     let state = Arc::new(routes::AppState {
         riot,
@@ -115,6 +115,11 @@ async fn main() {
         tracing::info!(dossier = %d.display(), "front servi en meme origine");
     }
     if collector.config.enabled {
+        tracing::info!(
+            reserve = config.collector_reserve,
+            fenetre = config.app_limits.iter().map(|&(n, _)| n).max().unwrap_or(0),
+            "budget Riot : le collecteur laisse cette reserve de la plus grande fenetre aux visiteurs"
+        );
         if key_present {
             let http = reqwest::Client::builder()
                 .user_agent(concat!("NEX-Backend/", env!("CARGO_PKG_VERSION")))
