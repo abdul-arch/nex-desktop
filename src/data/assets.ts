@@ -17,6 +17,22 @@ export function championSplash(key: string, skin = 0): string | null {
   return `${DD}/img/champion/splash/${key}_${skin}.jpg`;
 }
 
+/**
+ * Splash « centre » (1280x720), servi par CommunityDragon.
+ *
+ * POURQUOI UNE SECONDE SOURCE : le splash Data Dragon pousse le champion vers la droite et
+ * laisse le tiers gauche vide. Sur une vignette ca ne se voit pas, mais en fond plein ecran
+ * le sujet tombe nettement hors du centre — et `object-position` n'y peut rien quand le
+ * cadre a presque le meme rapport que l'image : il n'y a alors aucun debordement a decaler.
+ * Cette variante-la est cadree au milieu a la source.
+ *
+ * Skin de base seulement. Si l'image manque, `RemoteImg` laisse le fond sombre en place.
+ */
+export function championSplashCentre(key: string): string | null {
+  if (!ok(key)) return null;
+  return `https://cdn.communitydragon.org/latest/champion/${key}/splash-art/centered`;
+}
+
 /** Illustration verticale (~308x560), plus legere : cartes et galeries. */
 export function championLoading(key: string, skin = 0): string | null {
   if (!ok(key) || !Number.isInteger(skin) || skin < 0) return null;

@@ -8,7 +8,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useAsync } from "../../app/useAsync";
-import { championName, championSplash, profileIcon, rankEmblem } from "../../data/assets";
+import { championSplashCentre, profileIcon, rankEmblem } from "../../data/assets";
 import { demoPlayer } from "../../data/demo";
 import { digitsOf } from "../../domain/countUp";
 import { toSummary } from "../../domain/fromMatch";
@@ -105,7 +105,8 @@ export function IntroScreen({ onEnter }: { onEnter: () => void }) {
   const lp = solo ? solo.lp : null;
   const lpAffiche = useCountUp(lp, etape >= 4, reduit ? 0 : DUREE_LP);
 
-  // Illustration : le champion le plus joue sur les dernieres parties. Meme cle de cache et
+  // Illustration : le champion le plus joue sur les dernieres parties. Il n'est plus nomme
+  // a l'ecran, il ne sert qu'a choisir le fond. Meme cle de cache et
   // meme appel que le tableau de bord, donc une seule lecture pour les deux, et le tableau
   // de bord s'ouvre ensuite sans attendre.
   const puuid = mine.data?.puuid ?? null;
@@ -135,19 +136,8 @@ export function IntroScreen({ onEnter }: { onEnter: () => void }) {
     <div className="intro" data-etape={etape} role="dialog" aria-modal="true" aria-label="Bienvenue sur NEX">
       {cleChampion && (
         <div className="intro-fond" aria-hidden="true">
-          <RemoteImg src={championSplash(cleChampion)} alt="" />
+          <RemoteImg src={championSplashCentre(cleChampion)} alt="" />
         </div>
-      )}
-
-      {/* Dit pourquoi ce champion est la : le nombre de parties, mesure sur l'echantillon
-          lu. Riot expose aussi des points de maitrise, que l'application ne lit pas encore. */}
-      {plusJoue && (
-        <p className="intro-champion">
-          <b>{championName(plusJoue.champion)}</b>
-          <span className="muted">
-            {plusJoue.games} partie{plusJoue.games > 1 ? "s" : ""} sur {parties.data?.matches.length ?? 0}
-          </span>
-        </p>
       )}
 
       <div
