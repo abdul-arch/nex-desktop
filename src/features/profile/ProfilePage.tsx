@@ -1,5 +1,5 @@
 import { Link2, RotateCw, Search, Star, User } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppState, useDDragonVersion } from "../../app/AppState";
 import { useNav } from "../../app/navigation";
 import { useAsync } from "../../app/useAsync";
@@ -14,7 +14,7 @@ import { attributeLp } from "../../domain/lp";
 import { frequentTeammates } from "../../domain/teammates";
 import { championAggregates, isCountable, kdaOf, roleDistribution, winRate } from "../../domain/metrics";
 import { parseRiotId, platformLabel } from "../../domain/riotId";
-import { errorMessage, platform } from "../../platform";
+import { errorMessage, isPlatformError, platform } from "../../platform";
 import type { MatchDto, PlayerProfileDto, RankDto, RankSnapshotDto } from "../../platform/api";
 import { ErrorPanel } from "../../ui/ErrorPanel";
 import { pct, ROLE_LABEL, TIER_LABEL, timeAgo } from "../../ui/format";
@@ -37,6 +37,24 @@ const QUEUE_TAB: Record<QueueFilter, string> = {
   "2400": "ARAM Mayhem",
 };
 const PAGE = 10;
+/** Profondeur d'historique que le backend accepte de parcourir (`start` y est borne). */
+const LIMITE_HISTORIQUE = 1000;
+/**
+ * Attente avant de redemander une page refusee pour limite de debit, et de combien elle
+ * s'allonge a chaque refus consecutif.
+ *
+ * POURQUOI UN RECUL PROGRESSIF : le backend annonce parfois « reessaie dans 1 s ». En
+ * obeissant a la lettre, on redemande aussitot, on consomme le peu de budget qui vient de
+ * se liberer, et on se fait refuser a nouveau — vu a l'ecran, cinq minutes bloquees sur
+ * « 170 parties lues ». Le collecteur occupe en permanence environ la moitie du quota
+ * (une requete toutes les 2,5 s sur 100 par 2 minutes) : il faut laisser le budget
+ * remonter, pas le grignoter des qu'il apparait.
+ */
+const ATTENTE_SECONDES = 10;
+const ATTENTE_SUPPLEMENT = 5;
+const ATTENTE_MAX = 60;
+/** Garde-fou : au-dela, c'est que la limite ne se leve pas, et il faut le dire. */
+const MAX_ATTENTES = 60;
 
 export function ProfilePage({ onSearch }: { onSearch: () => void }) {
   const { location } = useNav();
@@ -154,6 +172,14 @@ function ProfileLoaded({
   // Vue « tous les champions » : etat local et non parametre de route, pour ne pas
   // remonter la page et reperdre les parties deja chargees page par page.
   const [vueChampions, setVueChampions] = useState(false);
+  /** Lecture de tout l'historique : `null` au repos, sinon le nombre de parties lues. */
+  const [lectureTotale, setLectureTotale] = useState<number | null>(null);
+  const [lectureMessage, setLectureMessage] = useState<string | null>(null);
+  const stopLecture = useRef(false);
+  /** Nombre de parties en main, lisible sans attendre un rendu. L'updater de `setMatches`
+   *  ne s'execute pas sur-le-champ : lire `prev.length` depuis la boucle donnait un
+   *  depart faux, et la pagination sautait des pages. */
+  const nbMatches = useRef(0);
   const [matches, setMatches] = useState<MatchDto[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -203,6 +229,88 @@ function ProfileLoaded({
     },
     [profile.platform, profile.puuid, queue],
   );
+
+  /**
+   * Lit l'historique jusqu'au bout, page apres page.
+   *
+   * Declenchee par le joueur et jamais seule : chaque page coute un appel Riot par
+   * partie non deja en cache, sur le quota que le collecteur partage. On prend des pages
+   * de 20 — le maximum accepte par le backend — pour diviser par deux le nombre
+   * d'allers-retours, et on s'arrete a 1000, la borne de `start` cote backend.
+   */
+  const lireToutLHistorique = useCallback(async () => {
+    stopLecture.current = false;
+    setLectureMessage(null);
+    let debut = nbMatches.current;
+    setLectureTotale(debut);
+    const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    let attentes = 0;
+    try {
+      let encore = true;
+      while (encore && !stopLecture.current && debut < LIMITE_HISTORIQUE) {
+        try {
+          const page = await platform.playerMatches({
+            platform: profile.platform,
+            puuid: profile.puuid,
+            start: debut,
+            count: 20,
+            queue: queue === "all" ? undefined : Number(queue),
+            timelines: 0,
+          });
+          if (page.matches.length === 0) break;
+          setMatches((prev) => [...prev, ...page.matches.filter((m) => !prev.some((p) => p.id === m.id))]);
+          debut += page.matches.length;
+          encore = page.hasMore;
+          setHasMore(page.hasMore);
+          setLectureTotale(debut);
+          setLectureMessage(null);
+          attentes = 0;
+        } catch (e) {
+          // La limite de debit de Riot n'est pas une panne : elle se leve toute seule.
+          // On patiente et on redemande LA MEME page, au lieu d'abandonner avec un
+          // tableau incomplet. Le compte a rebours dit que ca travaille encore, et le
+          // bouton « Arreter » reste actif pendant l'attente.
+          // Sur le code et non sur le texte du message : c'est ce que le backend promet,
+          // et le message, lui, change de langue et de formulation.
+          //
+          // `unavailable` est repris au meme titre que `rate_limited` : c'est la ou
+          // atterrit un 502 de Riot, vu a l'ecran apres 210 parties. Une passerelle qui
+          // bronche est passagere comme une limite de debit, et abandonner la laissait un
+          // tableau incomplet alors qu'il suffisait d'attendre.
+          const code = isPlatformError(e) ? e.code : "";
+          const passager = code === "rate_limited" || code === "unavailable";
+          if (!passager || ++attentes > MAX_ATTENTES) throw e;
+          const annonce = (e as { retryAfterSecs?: number }).retryAfterSecs ?? 0;
+          const delai = Math.min(ATTENTE_MAX, Math.max(annonce, ATTENTE_SECONDES + ATTENTE_SUPPLEMENT * (attentes - 1)));
+          for (let reste = delai; reste > 0 && !stopLecture.current; reste--) {
+            setLectureMessage(
+              code === "unavailable"
+                ? `Riot n'a pas répondu — nouvelle tentative dans ${reste} s.`
+                : attentes > 2
+                  ? `Quota Riot saturé — reprise dans ${reste} s. Le collecteur de NEX partage ce quota, la lecture avance donc par paliers.`
+                  : `Riot limite les requêtes — reprise dans ${reste} s.`,
+            );
+            await pause(1000);
+          }
+        }
+      }
+      if (debut >= LIMITE_HISTORIQUE) {
+        setLectureMessage(`${LIMITE_HISTORIQUE} parties lues : c'est la profondeur d'historique que le backend accepte de parcourir.`);
+      } else if (!encore) {
+        setLectureMessage(null);
+      } else if (stopLecture.current) {
+        setLectureMessage(`Lecture arrêtée à ${debut} parties. Les suivantes restent disponibles.`);
+      }
+    } catch (e) {
+      setLectureMessage(`Lecture interrompue à ${debut} parties : ${errorMessage(e)}`);
+    } finally {
+      setLectureTotale(null);
+    }
+  }, [profile.platform, profile.puuid, queue]);
+
+  useEffect(() => {
+    nbMatches.current = matches.length;
+  }, [matches]);
 
   useEffect(() => {
     const token = { cancelled: false };
@@ -270,6 +378,13 @@ function ProfileLoaded({
         parties={counted.length}
         periode={period ?? "période inconnue"}
         onClose={() => setVueChampions(false)}
+        peutCharger={hasMore}
+        lectureEnCours={lectureTotale}
+        message={lectureMessage}
+        onToutCharger={() => void lireToutLHistorique()}
+        onArreter={() => {
+          stopLecture.current = true;
+        }}
       />
     );
   }

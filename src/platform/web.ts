@@ -89,13 +89,16 @@ async function api<T>(segments: string[], query: Record<string, string | number 
   }
   const text = await res.text();
   if (!res.ok) {
-    let e: { code?: string; message?: string } | null = null;
+    let e: { code?: string; message?: string; retryAfterSecs?: number } | null = null;
     try {
       e = JSON.parse(text);
     } catch {
       /* corps non JSON */
     }
-    if (e?.code) throw { code: e.code === "upstream" ? "unavailable" : e.code, message: e.message ?? "" };
+    // `retryAfterSecs` accompagne `rate_limited` : le backend sait quand la limite se
+    // leve, et le jeter obligeait l'appelant a deviner un delai.
+    if (e?.code)
+      throw { code: e.code === "upstream" ? "unavailable" : e.code, message: e.message ?? "", retryAfterSecs: e.retryAfterSecs };
     throw { code: "unavailable", message: `backend NEX injoignable ou en erreur (${res.status})` };
   }
   return JSON.parse(text) as T;

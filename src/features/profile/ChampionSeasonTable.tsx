@@ -37,6 +37,11 @@ export function ChampionSeasonTable({
   parties,
   periode,
   onClose,
+  peutCharger,
+  lectureEnCours,
+  message,
+  onToutCharger,
+  onArreter,
 }: {
   champions: ChampionAggregate[];
   version: string | null;
@@ -45,6 +50,14 @@ export function ChampionSeasonTable({
   /** Periode couverte par ces parties, telle que la page l'a calculee. */
   periode: string;
   onClose: () => void;
+  /** Reste-t-il des parties plus anciennes a lire ? */
+  peutCharger: boolean;
+  /** Nombre de parties lues pendant une lecture complete, `null` au repos. */
+  lectureEnCours: number | null;
+  /** Pourquoi la lecture s'est arretee, ou ce qu'elle attend. */
+  message: string | null;
+  onToutCharger: () => void;
+  onArreter: () => void;
 }) {
   const [tri, setTri] = useState<{ col: Colonne; desc: boolean }>({ col: "rang", desc: false });
 
@@ -123,6 +136,40 @@ export function ChampionSeasonTable({
           {champions.length} champion{champions.length > 1 ? "s" : ""} · {parties} partie{parties > 1 ? "s" : ""} ({periode})
         </span>
       </div>
+
+      {/* La lecture complete est declenchee par le joueur, jamais seule : elle coute un
+          appel Riot par partie absente du cache, sur le quota partage avec le collecteur.
+          Elle s'interrompt a la demande, et ce qui a deja ete lu reste affiche. */}
+      {(peutCharger || lectureEnCours !== null || message) && (
+        <div className="card card-pad champ-charger">
+          {lectureEnCours === null ? (
+            <>
+              <span>
+                {message ?? (
+                  <>
+                    Ce tableau ne couvre que les parties déjà lues. L'historique complet se lit par pages de vingt, et
+                    chaque partie inconnue consomme un appel à l'API Riot.
+                  </>
+                )}
+              </span>
+              {peutCharger && (
+                <button className="btn btn-primary btn-sm" onClick={onToutCharger}>
+                  {message ? "Reprendre la lecture" : "Lire tout l'historique"}
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <span className="num">
+                <b>{lectureEnCours} parties lues…</b> {message ?? "le tableau se complète au fur et à mesure."}
+              </span>
+              <button className="btn btn-sm" onClick={onArreter}>
+                Arrêter
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="card table-card">
         <table className="data-table">
