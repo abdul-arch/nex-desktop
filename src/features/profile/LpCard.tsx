@@ -18,6 +18,10 @@ const dateHeure = (at: number) =>
   new Date(at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const rankText = (s: RankSnapshotDto) => `${TIER_LABEL[s.tier] ?? s.tier}${s.division ? ` ${s.division}` : ""} · ${s.lp} LP`;
 const signed = (n: number) => `${n > 0 ? "+" : ""}${n}`;
+/** L'accent de la charte, lu dans les jetons CSS : la carte peinte se decale vers lui au lieu
+ *  de garder le bleu dans lequel elle a ete peinte. Repli sur la valeur du jeton si la feuille
+ *  n'est pas encore la. */
+const accentNex = () => (typeof getComputedStyle === "function" ? getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() : "") || "#8279f4";
 
 export function LpCard({ puuid, plat }: { puuid: string; plat: string }) {
   const [queue, setQueue] = useState<Q>("RANKED_SOLO_5x5");
@@ -109,6 +113,8 @@ function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSna
       <div ref={cadre} className="lp-cadre">
         <PeakChart
           width={largeur}
+          accent={accentNex()}
+          radius={24}
           data={values}
           labels={libelles}
           value={latest?.lp ?? 0}

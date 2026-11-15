@@ -16,9 +16,10 @@ import * as React from "react";
 /* Geometrie de la carte, en unites de carte (540 de large, 696 de haut). */
 const CW = 540;
 const CH = 696;
+/** Rayon d'angle par defaut, en unites de carte. Parametrable : la charte NEX arrondit ses
+ *  cartes a une dizaine de pixels, et 56 unites en font 31 a 300 px de large. */
 const CR = 56;
 const HN = CH / CW;
-const RN = CR / CW;
 const BX = 0.32 * CW;
 const BY = 0.16 * CW;
 
@@ -113,6 +114,8 @@ export interface PeakChartProps {
   accent?: string;
   /** Largeur de la carte en pixels. La hauteur suit le rapport 540:696. */
   width?: number;
+  /** Rayon des angles, en unites de carte (540 = la largeur). 56 par defaut. */
+  radius?: number;
   /** Secondes par cycle. 0 joue l'apparition une fois, puis respire lentement. */
   loop?: number;
   /** Peint le fond granuleux et centre la carte dans le parent. */
@@ -151,12 +154,12 @@ function erf(x: number) {
 }
 const phi = (x: number) => 0.5 * (1 + erf(x / Math.SQRT2));
 /** Distance signee au contour de la carte, en largeurs de carte, negative a l'interieur. */
-function sdf(u: number, v: number) {
-  const qx = Math.abs(u - 0.5) - (0.5 - RN);
-  const qy = Math.abs(v - HN / 2) - (HN / 2 - RN);
+function sdf(u: number, v: number, rn: number) {
+  const qx = Math.abs(u - 0.5) - (0.5 - rn);
+  const qy = Math.abs(v - HN / 2) - (HN / 2 - rn);
   const ox = Math.max(qx, 0);
   const oy = Math.max(qy, 0);
-  return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(qx, qy), 0) - RN;
+  return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(qx, qy), 0) - rn;
 }
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -203,7 +206,8 @@ function makeCanvas(w: number, h: number) {
 }
 
 /** Peint le halo de la carte a `px` pixels par largeur de carte : le champ au repos, et une copie plus vive pour la respiration. */
-function buildField(px: number, seed: number) {
+function buildField(px: number, seed: number, cr: number) {
+  const rn = cr / CW;
   const w = Math.round(px);
   const h = Math.round(px * HN);
   const rest = makeCanvas(w, h);
@@ -252,7 +256,7 @@ function buildField(px: number, seed: number) {
         const vs = v + o.off;
         const dx = Math.min(u, 1 - u),
           dy = Math.min(vs, HN - vs);
-        const ratio = Math.min(1, phi((-sdf(u, vs) - o.sp) / o.sg) / Math.max(1e-9, phi((Math.min(dx, dy) - o.sp) / o.sg)));
+        const ratio = Math.min(1, phi((-sdf(u, vs, rn) - o.sp) / o.sg) / Math.max(1e-9, phi((Math.min(dx, dy) - o.sp) / o.sg)));
         const k = 1 - phi((dx - o.sp) / o.sg) * phi((dy - o.sp) / o.sg) * ratio;
         const m = o.a * k;
         r += m * (o.rgb[0] - r);
@@ -498,6 +502,7 @@ export function PeakChart({
   onPeriodChange,
   accent = BASE_ACCENT,
   width = 420,
+  radius = CR,
   loop = 0,
   backdrop = false,
   formatValue,
@@ -605,7 +610,7 @@ export function PeakChart({
     canvas.style.width = `${canvas.width / dpr}px`;
     canvas.style.height = `${canvas.height / dpr}px`;
     const fieldPx = Math.min(width * dpr, Math.max(width, 700));
-    const { rest: field, lift: bright } = buildField(fieldPx, 11);
+    const { rest: field, lift: bright } = buildField(fieldPx, 11, radius);
     const grid = buildGrid(width * dpr);
     const halo = buildHalo(width);
     const tLand = (frac: number) => T_DRAW0 + T_DRAW * inverseEase(frac);
@@ -618,11 +623,11 @@ export function PeakChart({
 
     const roundRect = () => {
       ctx.beginPath();
-      ctx.moveTo(CR, 0);
-      ctx.arcTo(CW, 0, CW, CH, CR);
-      ctx.arcTo(CW, CH, 0, CH, CR);
-      ctx.arcTo(0, CH, 0, 0, CR);
-      ctx.arcTo(0, 0, CW, 0, CR);
+      ctx.moveTo(radius, 0);
+      ctx.arcTo(CW, 0, CW, CH, radius);
+      ctx.arcTo(CW, CH, 0, CH, radius);
+      ctx.arcTo(0, CH, 0, 0, radius);
+      ctx.arcTo(0, 0, CW, 0, radius);
       ctx.closePath();
     };
 
@@ -820,7 +825,7 @@ export function PeakChart({
       if (raf) cancelAnimationFrame(raf);
       L.kick = () => {};
     };
-  }, [width, u]);
+  }, [width, u, radius]);
 
   // fermer le menu au clic exterieur et sur Echap
   React.useEffect(() => {
@@ -888,7 +893,7 @@ export function PeakChart({
     <div
       ref={cardRef}
       data-peak-chart=""
-      style={{ position: "relative", width, height: width * HN, borderRadius: px(CR), flex: "none", fontFamily: font, color: "#fff", userSelect: "none", WebkitUserSelect: "none" }}
+      style={{ position: "relative", width, height: width * HN, borderRadius: px(radius), flex: "none", fontFamily: font, color: "#eceef6", userSelect: "none", WebkitUserSelect: "none" }}
     >
       <canvas ref={canvasRef} aria-hidden style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none", filter: tint }} />
       <div
@@ -898,7 +903,7 @@ export function PeakChart({
         onPointerCancel={onLeave}
         style={{ position: "absolute", left: 0, top: px(96), width: "100%", height: px(330), touchAction: "pan-y", cursor: "crosshair" }}
       />
-      <p data-part="updated" style={{ ...textBase, left: px(45.6), top: px(43.6), fontSize: px(18.6), fontStretch: "107.7%", fontWeight: 200, color: "#99a3b6" }}>
+      <p data-part="updated" style={{ ...textBase, left: px(45.6), top: px(43.6), fontSize: px(18.6), fontStretch: "107.7%", fontWeight: 300, color: "#8b8fa3" }}>
         {updatedText}
       </p>
 
@@ -1018,8 +1023,8 @@ export function PeakChart({
           gap: px(7),
           padding: `${px(7)} ${px(11)}`,
           borderRadius: px(11),
-          background: "rgba(18,36,72,0.55)",
-          border: "1px solid rgba(160,195,255,0.18)",
+          background: "rgba(20,21,29,0.9)",
+          border: "1px solid rgba(255,255,255,0.12)",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
           whiteSpace: "nowrap",
@@ -1027,11 +1032,11 @@ export function PeakChart({
           fontStretch: "116%",
         }}
       >
-        <span ref={readValRef} style={{ fontSize: px(16), fontWeight: 600, color: "#fff" }} />
-        <span ref={readLabRef} style={{ fontSize: px(12.5), color: "#9fb0cc" }} />
+        <span ref={readValRef} style={{ fontSize: px(16), fontWeight: 600, color: "#eceef6" }} />
+        <span ref={readLabRef} style={{ fontSize: px(12.5), color: "#8b8fa3" }} />
       </div>
 
-      <p data-part="title" style={{ ...textBase, left: 0, right: 0, textAlign: "center", top: px(441.4), fontSize: px(20.2), fontStretch: "115%", fontWeight: 200, color: "#9298a5" }}>
+      <p data-part="title" style={{ ...textBase, left: 0, right: 0, textAlign: "center", top: px(441.4), fontSize: px(20.2), fontStretch: "115%", fontWeight: 300, color: "#8b8fa3" }}>
         {title}
       </p>
       <div ref={numRef} style={{ position: "absolute", left: 0, right: 0, top: px(469), display: "flex", justifyContent: "center", opacity: 0 }}>
@@ -1057,7 +1062,7 @@ export function PeakChart({
           )}
         </div>
       </div>
-      <p data-part="caption" style={{ ...textBase, left: 0, right: 0, textAlign: "center", top: px(560.9), fontSize: px(11.6), fontStretch: "108%", fontWeight: 250, color: "#9299a8" }}>
+      <p data-part="caption" style={{ ...textBase, left: 0, right: 0, textAlign: "center", top: px(560.9), fontSize: px(11.6), fontStretch: "108%", fontWeight: 300, color: "#8b8fa3" }}>
         {caption}
       </p>
     </div>
