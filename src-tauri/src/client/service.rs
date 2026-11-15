@@ -14,6 +14,7 @@ use crate::overlay;
 use crate::persistence::{now_secs, settings};
 use crate::state::AppState;
 use serde_json::Value;
+use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
@@ -23,7 +24,19 @@ pub struct ClientService {
     pub champ_select: Mutex<Option<ChampSelectState>>,
     pub live: Mutex<Option<LiveSnapshot>>,
     pub lcu: Mutex<Option<Lcu>>,
+    /// Riot ID deja lus, par puuid.
+    ///
+    /// POURQUOI : le panneau de chargement redemande la composition toutes les 2 s, et
+    /// chaque lecture refaisait dix appels au client pour retrouver les pseudos — soit
+    /// environ six requetes par seconde pendant que le client charge la partie, pour une
+    /// correspondance qui ne bouge pas. Un joueur renomme garde son ancien pseudo jusqu'au
+    /// vidage du cache ou au redemarrage : c'est le prix, et il est largement payant ici.
+    riot_ids: Mutex<HashMap<String, (String, String)>>,
 }
+
+/// Au-dela, on vide : dix joueurs par partie, la table ne sert a rien passe quelques
+/// centaines d'entrees et rien ne doit grossir sans fin dans une app qui tourne des jours.
+const MAX_RIOT_IDS: usize = 500;
 
 impl ClientService {
     pub fn new() -> Self {
@@ -32,6 +45,26 @@ impl ClientService {
             champ_select: Mutex::new(None),
             live: Mutex::new(None),
             lcu: Mutex::new(None),
+            riot_ids: Mutex::new(HashMap::new()),
+        }
+    }
+
+    /// Riot ID connu pour ce puuid, s'il a deja ete lu.
+    pub fn riot_id(&self, puuid: &str) -> Option<(String, String)> {
+        self.riot_ids.lock().ok()?.get(puuid).cloned()
+    }
+
+    /// Retient un Riot ID lu dans le client. Un pseudo vide n'est pas retenu : la lecture
+    /// a echoue, et la figer empecherait le sondage suivant de reessayer.
+    pub fn remember_riot_id(&self, puuid: &str, game_name: &str, tag_line: &str) {
+        if game_name.is_empty() {
+            return;
+        }
+        if let Ok(mut m) = self.riot_ids.lock() {
+            if m.len() >= MAX_RIOT_IDS {
+                m.clear();
+            }
+            m.insert(puuid.to_string(), (game_name.to_string(), tag_line.to_string()));
         }
     }
 
@@ -240,5 +273,39 @@ fn leave_game(app: &AppHandle, service: &ClientService) {
         if let Some(m) = app.try_state::<std::sync::Arc<crate::mayhem::service::MayhemService>>() {
             m.on_leave(app);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ClientService, MAX_RIOT_IDS};
+
+    #[test]
+    fn le_cache_rend_ce_qu_il_a_retenu() {
+        let svc = ClientService::new();
+        assert_eq!(svc.riot_id("p1"), None, "rien avant la premiere lecture");
+        svc.remember_riot_id("p1", "Katsuki Sama", "EUW");
+        assert_eq!(svc.riot_id("p1"), Some(("Katsuki Sama".into(), "EUW".into())));
+    }
+
+    #[test]
+    fn un_pseudo_vide_n_est_pas_retenu() {
+        // La lecture a echoue : la figer condamnerait la carte a « Pseudo non lu » pour
+        // toute la partie, alors que le sondage suivant aurait pu reussir.
+        let svc = ClientService::new();
+        svc.remember_riot_id("p1", "", "");
+        assert_eq!(svc.riot_id("p1"), None);
+    }
+
+    #[test]
+    fn la_table_ne_grossit_pas_sans_fin() {
+        let svc = ClientService::new();
+        for i in 0..=MAX_RIOT_IDS {
+            svc.remember_riot_id(&format!("p{i}"), &format!("joueur{i}"), "EUW");
+        }
+        let reste = svc.riot_ids.lock().unwrap().len();
+        assert!(reste <= MAX_RIOT_IDS, "la table a depasse son plafond : {reste}");
+        // Le dernier ecrit est toujours la : vider ne doit pas perdre l'entree en cours.
+        assert!(svc.riot_id(&format!("p{MAX_RIOT_IDS}")).is_some());
     }
 }

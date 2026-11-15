@@ -367,13 +367,24 @@ pub async fn loading_roster(window: Window, svc: State<'_, ClientService>) -> Ap
         .and_then(|v| v.get("puuid").and_then(serde_json::Value::as_str).map(str::to_string))
         .unwrap_or_default();
     let Some(mut roster) = crate::client::model::loading_roster(&session, &me) else { return Ok(None) };
-    // Riot ID de chaque joueur : dix lectures du client local, l'une apres l'autre. Ce
-    // sont des requetes vers 127.0.0.1, de quelques millisecondes, et aucune n'atteint
-    // Riot. Un echec laisse le pseudo vide, et la carte le dit plutot que d'inventer.
+    // Riot ID de chaque joueur : une lecture du client local par puuid inconnu. Ce sont des
+    // requetes vers 127.0.0.1, et aucune n'atteint Riot. Un echec laisse le pseudo vide, et
+    // la carte le dit plutot que d'inventer.
+    //
+    // Le panneau rappelle cette commande toutes les 2 s : sans le cache du service, les dix
+    // lectures repartaient a chaque fois, pour une correspondance qui ne change pas de toute
+    // la partie. Une fois les dix joueurs connus, un sondage ne coute plus que la session et
+    // le compte connecte.
     for p in roster.players.iter_mut() {
+        if let Some((game_name, tag_line)) = svc.riot_id(&p.puuid) {
+            p.game_name = game_name;
+            p.tag_line = tag_line;
+            continue;
+        }
         if let Ok(v) = lcu.summoner_by_puuid(&p.puuid).await {
             p.game_name = v.get("gameName").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
             p.tag_line = v.get("tagLine").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
+            svc.remember_riot_id(&p.puuid, &p.game_name, &p.tag_line);
         }
     }
     Ok(Some(roster))
