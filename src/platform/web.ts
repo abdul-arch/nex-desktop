@@ -2,6 +2,12 @@
 // Pas de client local, pas de fenetre native ; preferences en memoire + localStorage.
 import { parseRiotId } from "../domain/riotId";
 import { DEFAULT_SETTINGS, type Platform, type SavedPlayer, type Settings } from "./contracts";
+
+// Defauts du web. Le bureau demarre en mode demonstration a son premier lancement — c'est
+// un choix de produit, et le reglage est ensuite conserve en base. Sur le web, chaque
+// origine neuve repartirait de ce defaut : un visiteur du site public verrait des donnees
+// fictives en premier. Contraire a la regle « aucune statistique simulee » : demo coupee.
+const DEFAUTS_WEB: Settings = { ...DEFAULT_SETTINGS, demoMode: false };
 import { EXAMPLE_RANKS, EXAMPLE_ROSTER, EXAMPLE_SNAPSHOT } from "../overlay/example";
 import type {
   LeaderboardDto,
@@ -144,7 +150,7 @@ function load(): WebStore {
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<WebStore>;
       return {
-        settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
+        settings: { ...DEFAUTS_WEB, ...parsed.settings },
         favorites: parsed.favorites ?? [],
         recent: parsed.recent ?? [],
         nextId: parsed.nextId ?? 1,
@@ -153,7 +159,7 @@ function load(): WebStore {
   } catch {
     /* stockage indisponible : on reste en memoire */
   }
-  return { settings: { ...DEFAULT_SETTINGS }, favorites: [], recent: [], nextId: 1 };
+  return { settings: { ...DEFAUTS_WEB }, favorites: [], recent: [], nextId: 1 };
 }
 
 const defaultOverlayLayout = (): WidgetLayout[] => [
