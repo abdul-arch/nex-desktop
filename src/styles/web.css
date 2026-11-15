@@ -1,0 +1,399 @@
+/* ---------- Le site : coquille web ----------
+   Meme charte que l'application (tokens.css), mais une page et non une fenetre : barre de
+   navigation en haut, contenu centre et borne, pied de page. Rien du bureau — pas de
+   barre laterale, pas de poignee de fenetre, pas de « Replier ». */
+
+.site {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* --- barre haute --- */
+.site-barre {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 58px;
+  padding: 0 clamp(16px, 4vw, 40px);
+  background: rgba(11, 12, 16, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.site-marque {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.site-marque span {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.site-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 6px;
+}
+.site-nav a {
+  padding: 7px 11px;
+  border-radius: var(--radius);
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+.site-nav a:hover {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.site-nav a[aria-current="page"] {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.site-recherche {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  cursor: text;
+  flex: 0 1 320px;
+  min-width: 0;
+}
+.site-recherche:hover {
+  border-color: var(--accent);
+  color: var(--text-2);
+}
+.site-recherche span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-recherche kbd {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--dim);
+}
+
+/* --- contenu --- */
+.site-contenu {
+  flex: 1;
+  width: min(1240px, 100% - 2 * clamp(16px, 4vw, 40px));
+  margin: 0 auto;
+  padding: 22px 0 48px;
+}
+/* Les pages de l'application portent leur propre `.page` avec un en-tete : il reste
+   valable ici, il n'a simplement plus la fenetre autour. */
+.site-contenu .page {
+  padding: 0;
+}
+
+/* --- accueil --- */
+.accueil-hero {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: clamp(40px, 9vh, 96px) 0 30px;
+}
+.accueil-hero h1 {
+  margin: 0;
+  font-size: clamp(30px, 4.6vw, 48px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 14ch;
+}
+.accueil-hero p {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--muted);
+  font-size: var(--fs-md);
+}
+.accueil-form {
+  display: flex;
+  width: min(640px, 100%);
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  overflow: hidden;
+  box-shadow: 0 18px 50px -24px rgba(0, 0, 0, 0.9);
+}
+.accueil-form:focus-within {
+  border-color: var(--accent);
+}
+.accueil-form select {
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text-2);
+  padding: 0 12px;
+  font: inherit;
+  font-size: var(--fs-sm);
+}
+.accueil-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 0 16px;
+  height: 52px;
+  font: inherit;
+  font-size: var(--fs-md);
+  outline: none;
+}
+.accueil-form input::placeholder {
+  color: var(--dim);
+}
+.accueil-form button {
+  border: 0;
+  padding: 0 22px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.accueil-form button:hover {
+  background: var(--accent-strong);
+}
+.accueil-erreur {
+  color: var(--loss, #f08a8a);
+  font-size: var(--fs-sm);
+  min-height: 1.2em;
+}
+.accueil-source {
+  color: var(--dim);
+  font-size: var(--fs-xs);
+}
+
+.accueil-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 34px;
+}
+.accueil-carte {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--panel);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 120ms ease-out, transform 120ms ease-out;
+}
+.accueil-carte:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.accueil-carte b {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-md);
+}
+.accueil-carte span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+}
+.accueil-carte em {
+  font-style: normal;
+  color: var(--accent-strong);
+  font-size: var(--fs-xs);
+}
+
+/* --- pied --- */
+.site-pied {
+  border-top: 1px solid var(--border);
+  padding: 22px clamp(16px, 4vw, 40px) 30px;
+  color: var(--dim);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  text-align: center;
+}
+.site-pied p {
+  margin: 0 auto;
+  max-width: 78ch;
+}
+
+@media (max-width: 720px) {
+  .site-nav {
+    display: none;
+  }
+  .site-recherche {
+    flex-basis: 0;
+  }
+  .site-recherche kbd {
+    display: none;
+  }
+}
+
+/* --- accueil : cartes de donnees --- */
+.accueil-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+.accueil-bloc {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 16px 16px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--panel);
+}
+.accueil-bloc header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.accueil-bloc h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--fs-md);
+}
+.accueil-bloc h2 .muted {
+  font-weight: 400;
+  font-size: var(--fs-xs);
+}
+.accueil-bloc header a {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.accueil-bloc header a:hover {
+  color: var(--text);
+}
+.accueil-etat {
+  margin: 6px 0 10px;
+  font-size: var(--fs-sm);
+}
+.accueil-lignes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.accueil-lignes li + li {
+  border-top: 1px solid var(--border);
+}
+.accueil-lignes button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 6px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.accueil-lignes button:hover {
+  background: var(--panel-2);
+}
+.accueil-poste {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 86px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+.accueil-rang {
+  width: 26px;
+  color: var(--muted);
+  text-align: right;
+}
+.accueil-champ {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.accueil-champ b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.accueil-taux {
+  margin-left: auto;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.accueil-taux .muted {
+  font-weight: 400;
+  font-size: var(--fs-xs);
+}
+.accueil-app {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  background: linear-gradient(160deg, var(--panel), var(--panel-2));
+  color: var(--text);
+  text-decoration: none;
+}
+.accueil-app:hover {
+  border-color: var(--accent);
+}
+.accueil-app b {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-md);
+}
+.accueil-app span {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.accueil-app em {
+  font-style: normal;
+  color: var(--accent-strong);
+  font-size: var(--fs-xs);
+}

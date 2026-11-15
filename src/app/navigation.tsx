@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { RouteId } from "./routes";
 
 export interface Location {
@@ -73,6 +73,66 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       canForward: state.index < state.stack.length - 1,
     }),
     [state, navigate, back, forward],
+  );
+  return <NavContext.Provider value={api}>{children}</NavContext.Provider>;
+}
+
+/**
+ * Navigation adossee a l'URL du navigateur, pour le site.
+ *
+ * Meme contexte que `NavigationProvider` : les pages lisent `location.params` et appellent
+ * `navigate()` sans savoir laquelle des deux les porte. Ici `navigate` ecrit l'adresse
+ * (`pushState`), et le bouton Retour du navigateur (`popstate`) relit l'adresse. La pile
+ * d'historique est celle du navigateur, pas la notre.
+ *
+ * `lire` et `ecrire` sont fournis par le site : ce fichier ne connait pas ses adresses.
+ */
+export function NavigationUrlProvider({
+  children,
+  lire,
+  ecrire,
+}: {
+  children: ReactNode;
+  lire: (pathname: string, search: string) => Location;
+  ecrire: (l: Location) => string;
+}) {
+  const [location, setLocation] = useState<Location>(() => lire(window.location.pathname, window.location.search));
+  // Le dernier emplacement connu, lisible sans attendre un rendu : `pushState` est un effet,
+  // il ne doit pas vivre dans un updater (que React peut rejouer en mode strict).
+  const courant = useRef(location);
+  courant.current = location;
+
+  const navigate = useCallback(
+    (route: RouteId, params?: Record<string, string>) => {
+      const next: Location = { route, params };
+      if (sameLocation(courant.current, next)) return;
+      window.history.pushState(null, "", ecrire(next));
+      courant.current = next;
+      setLocation(next);
+    },
+    [ecrire],
+  );
+
+  useEffect(() => {
+    const onPop = () => {
+      const l = lire(window.location.pathname, window.location.search);
+      courant.current = l;
+      setLocation(l);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [lire]);
+
+  const api = useMemo<NavApi>(
+    () => ({
+      location,
+      navigate,
+      back: () => window.history.back(),
+      forward: () => window.history.forward(),
+      canBack: window.history.length > 1,
+      canForward: false,
+    }),
+    [location, navigate],
   );
   return <NavContext.Provider value={api}>{children}</NavContext.Provider>;
 }

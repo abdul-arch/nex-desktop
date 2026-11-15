@@ -15,7 +15,10 @@ import "./styles/explore.css";
 import "./styles/mayhem.css";
 import "./styles/leaderboards.css";
 import "./styles/intro.css";
+import "./styles/web.css";
 import App from "./App";
+import WebApp from "./web/WebApp";
+import { platform } from "./platform";
 
 // Bloque le menu contextuel natif de la WebView (sauf champs de saisie).
 window.addEventListener("contextmenu", (e) => {
@@ -25,8 +28,12 @@ window.addEventListener("contextmenu", (e) => {
 
 // La fenetre d'overlay a sa propre entree (overlay.html) : elle ne passe plus par ici, et
 // n'embarque donc plus les pages de l'application. Apercu navigateur : /overlay.html.
+//
+// Dans un navigateur, c'est le SITE qui s'affiche : barre haute, accueil, adresses
+// partageables. `?desktop` garde la coque de bureau sous Vite, pour la developper sans
+// lancer l'application.
+const site = platform.windowLabel === "web" && !new URLSearchParams(location.search).has("desktop");
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  <React.StrictMode>{site ? <WebApp /> : <App />}</React.StrictMode>,
 );

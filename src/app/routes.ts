@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 
 export type RouteId =
+  // Accueil du site web : pas d'entree de menu, le bureau n'y va jamais.
+  | "accueil"
   | "dashboard"
   | "profile"
   | "champions"
