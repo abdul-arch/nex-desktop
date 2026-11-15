@@ -367,6 +367,23 @@ function ProfileLoaded({
     ? `${new Date(Math.min(...counted.map((m) => m.startedAt))).toLocaleDateString("fr-FR")} – ${new Date(Math.max(...counted.map((m) => m.startedAt))).toLocaleDateString("fr-FR")}`
     : null;
 
+  /**
+   * Ouvre la vue complete = lire tout l'historique, sans bouton a presser.
+   *
+   * Deux gardes. Sur SON propre compte seulement : ouvrir le profil d'un inconnu ne doit
+   * pas declencher des dizaines d'appels Riot en son nom. Et une seule fois par visite,
+   * sinon un `hasMore` qui repasse a vrai relancerait la lecture en boucle.
+   */
+  const dejaLance = useRef(false);
+  useEffect(() => {
+    if (!vueChampions || !isMine || !hasMore || lectureTotale !== null || dejaLance.current) return;
+    dejaLance.current = true;
+    void lireToutLHistorique();
+  }, [vueChampions, isMine, hasMore, lectureTotale, lireToutLHistorique]);
+  useEffect(() => {
+    if (!vueChampions) dejaLance.current = false;
+  }, [vueChampions]);
+
   const solo = profile.ranks.find((r) => r.queue === "RANKED_SOLO_5x5");
   const flex = profile.ranks.find((r) => r.queue === "RANKED_FLEX_SR");
 
