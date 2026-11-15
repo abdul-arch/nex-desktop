@@ -17,22 +17,6 @@ export function championSplash(key: string, skin = 0): string | null {
   return `${DD}/img/champion/splash/${key}_${skin}.jpg`;
 }
 
-/**
- * Splash « centre » (1280x720), servi par CommunityDragon.
- *
- * POURQUOI UNE SECONDE SOURCE : le splash Data Dragon pousse le champion vers la droite et
- * laisse le tiers gauche vide. Sur une vignette ca ne se voit pas, mais en fond plein ecran
- * le sujet tombe nettement hors du centre — et `object-position` n'y peut rien quand le
- * cadre a presque le meme rapport que l'image : il n'y a alors aucun debordement a decaler.
- * Cette variante-la est cadree au milieu a la source.
- *
- * Skin de base seulement. Si l'image manque, `RemoteImg` laisse le fond sombre en place.
- */
-export function championSplashCentre(key: string): string | null {
-  if (!ok(key)) return null;
-  return `https://cdn.communitydragon.org/latest/champion/${key}/splash-art/centered`;
-}
-
 /** Illustration verticale (~308x560), plus legere : cartes et galeries. */
 export function championLoading(key: string, skin = 0): string | null {
   if (!ok(key) || !Number.isInteger(skin) || skin < 0) return null;
@@ -74,6 +58,30 @@ const CD = "https://raw.communitydragon.org/latest/plugins";
 const TIERS = ["iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"];
 const POSITIONS: Record<string, string> = { TOP: "top", JUNGLE: "jungle", MIDDLE: "middle", BOTTOM: "bottom", UTILITY: "utility" };
 const OBJECTIVES = ["baron", "dragon", "herald", "tower", "inhibitor"] as const;
+
+/**
+ * Splash « centre » (1280x720), fichier du client League servi par CommunityDragon.
+ *
+ * POURQUOI UNE SECONDE SOURCE : le splash Data Dragon pousse le champion vers la droite et
+ * laisse le tiers gauche vide. Sur une vignette ca ne se voit pas, mais en fond plein ecran
+ * le sujet tombe nettement hors du centre — et `object-position` n'y peut rien quand le
+ * cadre a presque le meme rapport que l'image : il n'y a alors aucun debordement a decaler.
+ * Cette variante-la est cadree au milieu a la source.
+ *
+ * L'hote est `raw.communitydragon.org`, celui des emblemes de rang, et le seul miroir
+ * CommunityDragon autorise par la CSP de l'application. La variante `cdn.` existe aussi et
+ * repond parfaitement dans un navigateur, mais la WebView la bloque : le fond disparaissait.
+ *
+ * Le dossier porte le nom interne du champion en minuscules, qui est la cle Data Dragon
+ * abaissee — verifie sur les cas tordus (MonkeyKing, Kaisa, Belveth, KSante, Chogath).
+ *
+ * Skin de base seulement. Si l'image manque, `RemoteImg` laisse le fond sombre en place.
+ */
+export function championSplashCentre(key: string): string | null {
+  if (!ok(key)) return null;
+  const nom = key.toLowerCase();
+  return `${CD}/rcp-be-lol-game-data/global/default/assets/characters/${nom}/skins/base/images/${nom}_splash_centered_0.jpg`;
+}
 
 /** Embleme de rang officiel (grande taille, ~80 Ko) : bandeaux et cartes de rang. */
 export function rankEmblem(tier: string): string | null {
