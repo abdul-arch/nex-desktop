@@ -14,8 +14,8 @@ import { Segmented } from "../../ui/primitives";
 type Q = "RANKED_SOLO_5x5" | "RANKED_FLEX_SR";
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-const longDate = (at: number) => new Date(at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-const heure = (at: number) => new Date(at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const dateHeure = (at: number) =>
+  new Date(at).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const rankText = (s: RankSnapshotDto) => `${TIER_LABEL[s.tier] ?? s.tier}${s.division ? ` ${s.division}` : ""} · ${s.lp} LP`;
 const signed = (n: number) => `${n > 0 ? "+" : ""}${n}`;
 
@@ -77,75 +77,64 @@ function Empty({ latest }: { latest: RankSnapshotDto | undefined }) {
 
 function Chart({ changes, latest, best }: { changes: LpChange[]; latest: RankSnapshotDto | undefined; best: RankSnapshotDto | null }) {
   const { values, net, since } = lpSeries(changes)!;
+  // Point survole. L'en-tete porte l'information a la place d'une bulle flottante : sur une
+  // carte de cette largeur, une bulle recouvrirait la courbe qu'on essaie de lire.
+  const [survol, setSurvol] = useState<number | null>(null);
+  const vise = survol === null ? null : survol === 0 ? null : changes[survol - 1];
 
   return (
     <>
-      <div className="lp-head">
-        {latest && <span className="lp-now num">{rankText(latest)}</span>}
-        <span className={`num ${net > 0 ? "pos" : net < 0 ? "neg" : "muted"}`}>{signed(net)} LP</span>
-        <span className="muted num">
-          depuis le {shortDate(since)} · {changes.length} changement{changes.length > 1 ? "s" : ""}
-        </span>
+      <div className="lp-lecture">
+        {vise ? (
+          <span className="lp-vise">
+            <span className="lp-vise-rang">
+              {TIER_LABEL[vise.snapshot.tier] ?? vise.snapshot.tier}
+              {vise.snapshot.division ? ` ${vise.snapshot.division}` : ""}
+            </span>
+            <span className="lp-vise-ligne">
+              <b className="lp-vise-lp num">{vise.snapshot.lp} LP</b>
+              <span className="muted num">{dateHeure(vise.at)}</span>
+              <span className={`num ${vise.delta > 0 ? "pos" : vise.delta < 0 ? "neg" : "muted"}`}>{signed(vise.delta)}</span>
+            </span>
+          </span>
+        ) : survol === 0 ? (
+          <span className="lp-vise">
+            <span className="lp-vise-rang">Premier relevé</span>
+            <span className="lp-vise-ligne">
+              <span className="muted num">{dateHeure(since)}</span>
+              <span className="muted">origine de la courbe</span>
+            </span>
+          </span>
+        ) : (
+          <>
+            {latest && <span className="lp-now num">{rankText(latest)}</span>}
+            <span className={`num ${net > 0 ? "pos" : net < 0 ? "neg" : "muted"}`}>{signed(net)} LP</span>
+            <span className="muted num">
+              depuis le {shortDate(since)} · {changes.length} relevé{changes.length > 1 ? "s" : ""}
+            </span>
+          </>
+        )}
       </div>
+
       <LineChart
         ariaLabel="Courbe des LP depuis le premier relevé"
-        height={150}
-        zeroLine
-        series={[{ label: "LP gagnés depuis le premier relevé", color: "var(--accent)", values }]}
-        xLabel={(i) => (i === 0 ? shortDate(since) : shortDate(changes[i - 1].at))}
-        yFormat={(v) => signed(Math.round(v))}
-        tooltip={(i) => <Bulle changes={changes} i={i} since={since} />}
+        height={78}
+        compact
+        series={[{ label: "LP", color: "var(--accent)", values }]}
+        onHover={setSurvol}
       />
-      {best && (
-        <div className="lp-head">
-          <span className="muted">Meilleur relevé</span>
-          <span className="num" style={{ fontWeight: 600 }}>{rankText(best)}</span>
-          <span className="muted num">le {shortDate(best.at)}</span>
-        </div>
-      )}
-      <p className="muted lp-note">
-        Un point par changement observé, pas par partie : si NEX n'a pas lu ce profil entre deux parties, leurs variations sont regroupées.
-      </p>
-    </>
-  );
-}
 
-/**
- * Infobulle d'un point de la courbe.
- *
- * CE QU'ELLE NE DIT PAS : « Victoire » ou « Défaite ». Un point est un CHANGEMENT DE LP
- * entre deux relevés, pas une partie — si NEX n'a pas lu le profil entre deux parties,
- * leurs variations sont regroupées, et annoncer un résultat serait une invention. Quand
- * la fenêtre d'observation couvre plus d'une minute, elle est affichée telle quelle, ce
- * qui laisse juger de ce que le point recouvre.
- */
-function Bulle({ changes, i, since }: { changes: LpChange[]; i: number; since: number }) {
-  if (i === 0) {
-    return (
-      <>
-        <div className="bulle-date">{longDate(since)}</div>
-        <div className="muted">{heure(since)}</div>
-        <div className="bulle-rang">Premier relevé</div>
-        <div className="muted">Origine de la courbe, aucune variation avant.</div>
-      </>
-    );
-  }
-  const c = changes[i - 1];
-  const s = c.snapshot;
-  const fenetre = c.at - c.from;
-  return (
-    <>
-      <div className="bulle-date">{longDate(c.at)}</div>
-      <div className="muted">{heure(c.at)}</div>
-      <div className="bulle-rang">
-        {TIER_LABEL[s.tier] ?? s.tier}
-        {s.division ? ` ${s.division}` : ""}
+      <div className="lp-pied">
+        {best && (
+          <span className="muted">
+            Meilleur relevé <b className="num">{rankText(best)}</b> le {shortDate(best.at)}
+          </span>
+        )}
       </div>
-      <div className="bulle-lp num">{s.lp} LP</div>
-      <div className={`bulle-delta num ${c.delta > 0 ? "pos" : c.delta < 0 ? "neg" : "muted"}`}>
-        {signed(c.delta)} LP
-      </div>
-      {fenetre > 60_000 && <div className="muted">relevé entre {heure(c.from)} et {heure(c.at)}</div>}
+      <p className="muted lp-note">
+        Un point par relevé de rang, pas par partie : Riot ne publie que le rang courant, NEX l'enregistre à chaque lecture du profil,
+        et la courbe part de là.
+      </p>
     </>
   );
 }

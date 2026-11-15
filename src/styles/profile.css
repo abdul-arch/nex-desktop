@@ -818,49 +818,49 @@ button.pname:hover {
 .linechart-survol circle {
   transition: r 120ms ease-out;
 }
-.linechart-bulle {
-  position: absolute;
-  top: 6px;
-  z-index: 2;
-  pointer-events: none;
-  min-width: 132px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+
+/* ---------- Carte des LP, format compact ---------- */
+
+/* Une seule ligne d'en-tete qui change de contenu au survol : le rang courant au repos,
+   le point vise pendant. Hauteur fixe pour que la courbe ne saute pas quand le texte
+   change de nombre de lignes. */
+.lp-lecture {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 38px;
+  margin-bottom: 2px;
+  font-size: var(--fs-sm);
+}
+.lp-vise {
+  display: grid;
+  gap: 1px;
+}
+.lp-vise-rang {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   font-size: var(--fs-xs);
-  line-height: 1.35;
-  white-space: nowrap;
-  /* Seule l'opacite est animee : `transform` porte l'ancrage calcule en ligne, et
-     l'animer ici le remplacerait le temps de l'animation, faisant sauter l'infobulle
-     d'un bord a l'autre. */
-  animation: linechart-bulle-entree 110ms ease-out;
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+.lp-vise-ligne {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.lp-vise-lp {
+  font-size: var(--fs-md);
+  color: var(--text);
+}
+.lp-pied {
+  min-height: 18px;
+  font-size: var(--fs-xs);
 }
 @keyframes linechart-bulle-entree {
   from {
     opacity: 0;
   }
-}
-.bulle-date {
-  font-weight: 600;
-  color: var(--text);
-}
-.bulle-rang {
-  margin-top: 6px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-size: var(--fs-xs);
-  color: var(--text-2);
-}
-.bulle-lp {
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text);
-}
-.bulle-delta {
-  margin-top: 4px;
-  font-weight: 600;
 }
 /* Mouvement reduit : l'infobulle apparait sans glisser. */
 @media (prefers-reduced-motion: reduce) {

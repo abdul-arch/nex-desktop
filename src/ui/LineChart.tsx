@@ -15,7 +15,8 @@ export function LineChart({
   yFormat = (v: number) => `${Math.round(v)}`,
   zeroLine = false,
   ariaLabel,
-  tooltip,
+  onHover,
+  compact = false,
 }: {
   series: Series[];
   height?: number;
@@ -24,11 +25,17 @@ export function LineChart({
   zeroLine?: boolean;
   ariaLabel: string;
   /**
-   * Contenu de l'infobulle pour le point survole. L'absence de cette fonction desactive
-   * tout le survol : les graphiques qui ne la passent pas se comportent exactement comme
-   * avant, marqueurs et ligne compris.
+   * Prevenu du point survole, ou de `null` a la sortie. L'absence de cette fonction
+   * desactive tout le survol : les graphiques qui ne la passent pas se comportent
+   * exactement comme avant, ligne et marqueur compris.
+   *
+   * Le composant ne dessine PAS d'infobulle : il dit quel point est vise, et l'appelant
+   * en fait ce qu'il veut. La carte des LP affiche ainsi le rang et les points dans son
+   * en-tete, au lieu d'une bulle qui recouvre la courbe.
    */
-  tooltip?: (i: number) => React.ReactNode;
+  onHover?: (i: number | null) => void;
+  /** Sans axes, sans graduations, sans legende : une sparkline. */
+  compact?: boolean;
 }) {
   const width = 520;
   const pad = { l: 44, r: 10, t: 10, b: 20 };
@@ -53,19 +60,18 @@ export function LineChart({
    * conteneur n'est pas large de 520 px — c'est-a-dire toujours.
    */
   const [survol, setSurvol] = useState<number | null>(null);
+  const viser = (i: number | null) => {
+    setSurvol(i);
+    onHover?.(i);
+  };
   const pointer = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (!tooltip) return;
+    if (!onHover) return;
     const r = e.currentTarget.getBoundingClientRect();
     if (r.width === 0) return;
     const enUnites = ((e.clientX - r.left) / r.width) * width;
     const i = Math.round(((enUnites - pad.l) / (width - pad.l - pad.r)) * (n - 1));
-    setSurvol(Math.min(n - 1, Math.max(0, i)));
+    viser(Math.min(n - 1, Math.max(0, i)));
   };
-  /** Position de l'infobulle en pourcentage de la largeur : la meme projection que le SVG. */
-  const pourcent = survol === null ? 0 : (x(survol) / width) * 100;
-  // Pres des bords, l'infobulle s'aligne au lieu d'etre centree : elle reste ainsi dans le
-  // cadre sans avoir a mesurer sa largeur.
-  const ancrage = pourcent < 22 ? "0" : pourcent > 78 ? "-100%" : "-50%";
 
   return (
     <figure className="linechart" aria-label={ariaLabel} role="img">
@@ -77,27 +83,29 @@ export function LineChart({
         height={height}
         onPointerMove={pointer}
         onPointerDown={pointer}
-        onPointerLeave={() => setSurvol(null)}
-        style={tooltip ? { touchAction: "pan-y" } : undefined}
+        onPointerLeave={() => viser(null)}
+        style={onHover ? { touchAction: "pan-y" } : undefined}
       >
-        {ticks.map((t, i) => (
+        {!compact &&
+          ticks.map((t, i) => (
           <g key={i}>
             <line x1={pad.l} x2={width - pad.r} y1={y(t)} y2={y(t)} stroke="var(--border)" strokeWidth="1" />
             <text x={pad.l - 6} y={y(t) + 3} textAnchor="end" fontSize="10" fill="var(--dim)">
               {yFormat(t)}
-            </text>
-          </g>
-        ))}
+              </text>
+            </g>
+          ))}
         {zeroLine && min < 0 && max > 0 && (
           <line x1={pad.l} x2={width - pad.r} y1={y(0)} y2={y(0)} stroke="var(--muted)" strokeDasharray="3 3" />
         )}
-        {Array.from({ length: n }, (_, i) =>
-          i % step === 0 ? (
+        {!compact &&
+          Array.from({ length: n }, (_, i) =>
+            i % step === 0 ? (
             <text key={i} x={x(i)} y={height - 5} textAnchor="middle" fontSize="10" fill="var(--dim)">
               {xLabel(i)}
-            </text>
-          ) : null,
-        )}
+              </text>
+            ) : null,
+          )}
         {series.map((s) => {
           let d = "";
           s.values.forEach((v, i) => {
@@ -117,7 +125,7 @@ export function LineChart({
             />
           );
         })}
-        {survol !== null && tooltip && (
+        {survol !== null && onHover && (
           <g className="linechart-survol" pointerEvents="none">
             <line x1={x(survol)} x2={x(survol)} y1={pad.t} y2={height - pad.b} stroke="var(--muted)" strokeWidth="1" strokeDasharray="4 4" />
             {series.map((s) => {
@@ -128,12 +136,8 @@ export function LineChart({
           </g>
         )}
       </svg>
-      {survol !== null && tooltip && (
-        <div className="linechart-bulle" style={{ left: `${pourcent}%`, transform: `translateX(${ancrage})` }} role="status">
-          {tooltip(survol)}
-        </div>
-      )}
       </div>
+      {!compact && (
       <figcaption className="legend">
         {series.map((s) => (
           <span key={s.label}>
@@ -141,6 +145,7 @@ export function LineChart({
           </span>
         ))}
       </figcaption>
+      )}
     </figure>
   );
 }
